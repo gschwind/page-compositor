@@ -4,6 +4,7 @@ AM_CXXFLAGS =  \
 	-std=c++11 \
 	-rdynamic \
 	@LTO@ \
+	@PIXMAN_CFLAGS@ \
 	@CAIRO_CFLAGS@ \
 	@PANGO_CFLAGS@ \
 	@WAYLAND_CFLAGS@ \
@@ -15,15 +16,20 @@ BUILT_SOURCES = \
 
 page_compositor_SOURCES = \
 	page-compositor.cxx \
+	compositor.cxx \
+	xdg-shell.cxx \
+	xdg-surface.cxx \
+	xdg-popup.cxx \
 	xdg-shell-protocol.c \
 	xdg-shell-server-protocol.h
 
 page_compositor_LDADD = \
 	@LTO@ \
-	@CAIRO_LIBS@ \
-	@PANGO_LIBS@ \
+	@PIXMAN_LIBS@ \
 	@WAYLAND_LIBS@ \
 	@WESTON_LIBS@ \
+	@CAIRO_LIBS@ \
+	@PANGO_LIBS@ \
 	@RT_LIBS@ 
 
 %-protocol.c : $(top_srcdir)/protocol/%.xml
