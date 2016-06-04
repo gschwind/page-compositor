@@ -88,6 +88,9 @@ int main(int argc, char** argv) {
 	weston_compositor_set_xkb_rule_names(ec, &names);
 	load_x11_backend(ec);
 
+	weston_compositor_wake(ec);
+    wl_display_run(dpy);
+
 	return EXIT_SUCCESS;
 }
 
