@@ -18,33 +18,28 @@
  *
  */
 
-#ifndef EXCEPTION_HXX_
-#define EXCEPTION_HXX_
+#ifndef PIXMAP_HXX_
+#define PIXMAP_HXX_
 
-#include <cstdarg>
-#include <exception>
-#include <cstdio>
+#include <cairo/cairo.h>
 
-class exception_t : public std::exception {
-	char * str;
+using namespace std;
+
+class pixmap_t {
+	cairo_surface_t * _surf;
+	unsigned _w, _h;
+
+	pixmap_t(pixmap_t const & x);
+	pixmap_t & operator=(pixmap_t const & x);
 public:
-	exception_t(char const * fmt, ...) : str(nullptr) {
-		va_list l;
-		va_start(l, fmt);
-		int n = vsnprintf(nullptr, 0, fmt, l);
-		va_end(l);
-		str = new char[n+1];
-		va_start(l, fmt);
-		vsnprintf(str, n+1, fmt, l);
-		va_end(l);
-	}
 
-	~exception_t() noexcept { delete[] str; }
+	pixmap_t(unsigned width, unsigned height);
+	~pixmap_t();
 
-	char const * what() const noexcept {
-		return str;
-	}
+	cairo_surface_t * get_cairo_surface() const;
+	unsigned witdh() const;
+	unsigned height() const;
 
 };
 
-#endif /* EXCEPTION_HXX_ */
+#endif /* SHARED_PIXMAP_HXX_ */

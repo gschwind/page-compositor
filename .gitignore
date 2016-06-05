@@ -36,3 +36,7 @@ src/xdg-popup.o
 src/xdg-shell.o
 src/xdg-surface.o
 src/config-handler.o
+src/pixmap.o
+src/simple2-theme.o
+src/tiny-theme.o
+src/utils.o

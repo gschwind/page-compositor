@@ -30,8 +30,6 @@
 #include "config-handler.hxx"
 #include "exception.hxx"
 
-namespace page {
-
 config_handler_t::config_handler_t() {
 
 }
@@ -115,6 +113,5 @@ std::string const & config_handler_t::find(char const * group, char const * key)
 	return x->second;
 }
 
-}
 
 

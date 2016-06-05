@@ -18,33 +18,35 @@
  *
  */
 
-#ifndef EXCEPTION_HXX_
-#define EXCEPTION_HXX_
+#ifndef THEME_TAB_HXX_
+#define THEME_TAB_HXX_
 
-#include <cstdarg>
-#include <exception>
-#include <cstdio>
+#include "color.hxx"
 
-class exception_t : public std::exception {
-	char * str;
-public:
-	exception_t(char const * fmt, ...) : str(nullptr) {
-		va_list l;
-		va_start(l, fmt);
-		int n = vsnprintf(nullptr, 0, fmt, l);
-		va_end(l);
-		str = new char[n+1];
-		va_start(l, fmt);
-		vsnprintf(str, n+1, fmt, l);
-		va_end(l);
-	}
+struct theme_tab_t {
+	rect position;
+	std::string title;
+	//std::shared_ptr<icon16> icon;
+	color_t tab_color;
+	bool is_iconic;
 
-	~exception_t() noexcept { delete[] str; }
+	theme_tab_t() :
+		position{},
+		title{},
+		//icon{},
+		is_iconic{},
+		tab_color{}
+	{ }
 
-	char const * what() const noexcept {
-		return str;
-	}
+	theme_tab_t(theme_tab_t const & x) :
+		position{x.position},
+		title{x.title},
+		//icon{x.icon},
+		is_iconic{x.is_iconic},
+		tab_color{x.tab_color}
+	{ }
 
 };
 
-#endif /* EXCEPTION_HXX_ */
+
+#endif /* THEME_TAB_HXX_ */

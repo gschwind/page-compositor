@@ -1,5 +1,5 @@
 /*
- * Copyright (2014-2016) Benoit Gschwind
+ * Copyright (2010-2016) Benoit Gschwind
  *
  * This file is part of page-compositor.
  *
@@ -18,33 +18,37 @@
  *
  */
 
-#ifndef EXCEPTION_HXX_
-#define EXCEPTION_HXX_
+#include "pixmap.hxx"
+#include "exception.hxx"
 
-#include <cstdarg>
-#include <exception>
-#include <cstdio>
+pixmap_t::pixmap_t(unsigned width, unsigned height) :
+	_w{width}, _h{height}
+{
 
-class exception_t : public std::exception {
-	char * str;
-public:
-	exception_t(char const * fmt, ...) : str(nullptr) {
-		va_list l;
-		va_start(l, fmt);
-		int n = vsnprintf(nullptr, 0, fmt, l);
-		va_end(l);
-		str = new char[n+1];
-		va_start(l, fmt);
-		vsnprintf(str, n+1, fmt, l);
-		va_end(l);
+	_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+
+	if(cairo_surface_status(_surf) != CAIRO_STATUS_SUCCESS) {
+		throw exception_t{"Unable to create cairo_surface in %s (format=%s,width=%u,height=%u)",
+			__PRETTY_FUNCTION__, "ARGB", width, height};
 	}
 
-	~exception_t() noexcept { delete[] str; }
+}
 
-	char const * what() const noexcept {
-		return str;
-	}
+pixmap_t::~pixmap_t() {
+	cairo_surface_destroy(_surf);
+}
 
-};
+cairo_surface_t * pixmap_t::get_cairo_surface() const {
+	return _surf;
+}
 
-#endif /* EXCEPTION_HXX_ */
+unsigned pixmap_t::witdh() const {
+	return _w;
+}
+
+unsigned pixmap_t::height() const {
+	return _h;
+}
+
+
+

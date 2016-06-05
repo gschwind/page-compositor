@@ -25,8 +25,6 @@
 #include <map>
 #include <string>
 
-namespace page {
-
 class config_handler_t {
 
 	typedef std::pair<std::string, std::string> _key_t;
@@ -48,10 +46,5 @@ public:
 	std::string get_value(char const * group, char const * key) const;
 
 };
-
-
-}
-
-
 
 #endif /* CONFIG_HANDLER_HXX_ */

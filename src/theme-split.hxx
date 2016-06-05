@@ -1,5 +1,5 @@
 /*
- * Copyright (2014-2016) Benoit Gschwind
+ * Copyright (2010-2016) Benoit Gschwind
  *
  * This file is part of page-compositor.
  *
@@ -18,33 +18,19 @@
  *
  */
 
-#ifndef EXCEPTION_HXX_
-#define EXCEPTION_HXX_
+#ifndef THEME_SPLIT_HXX_
+#define THEME_SPLIT_HXX_
 
-#include <cstdarg>
-#include <exception>
-#include <cstdio>
-
-class exception_t : public std::exception {
-	char * str;
-public:
-	exception_t(char const * fmt, ...) : str(nullptr) {
-		va_list l;
-		va_start(l, fmt);
-		int n = vsnprintf(nullptr, 0, fmt, l);
-		va_end(l);
-		str = new char[n+1];
-		va_start(l, fmt);
-		vsnprintf(str, n+1, fmt, l);
-		va_end(l);
-	}
-
-	~exception_t() noexcept { delete[] str; }
-
-	char const * what() const noexcept {
-		return str;
-	}
-
+enum split_type_e {
+	HORIZONTAL_SPLIT, VERTICAL_SPLIT,
 };
 
-#endif /* EXCEPTION_HXX_ */
+struct theme_split_t {
+	int root_x, root_y;
+	rect allocation;
+	split_type_e type;
+	double split;
+	bool has_mouse_over;
+};
+
+#endif /* SPLIT_BASE_HXX_ */

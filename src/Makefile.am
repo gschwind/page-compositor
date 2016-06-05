@@ -18,11 +18,15 @@ BUILT_SOURCES = \
 page_compositor_SOURCES = \
 	page-compositor.cxx \
 	compositor.cxx \
+	pixmap.cxx \
+	utils.cxx \
 	config-handler.cxx \
 	config-handler.hxx \
 	xdg-shell.cxx \
 	xdg-surface.cxx \
 	xdg-popup.cxx \
+	simple2-theme.cxx \
+	tiny-theme.cxx \
 	xdg-shell-protocol.c \
 	xdg-shell-server-protocol.h
 
