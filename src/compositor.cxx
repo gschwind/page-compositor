@@ -124,27 +124,6 @@ compositor_t::compositor_t() {
 	background->timeline.force_refresh = 1;
 	//weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
-	auto stest = weston_surface_create(ec);
-	weston_surface_set_size(stest, 800, 600);
-    pixman_region32_fini(&stest->opaque);
-    pixman_region32_init_rect(&stest->opaque, 0, 0, 800, 600);
-    weston_surface_damage(stest);
-
-    unsigned * data = (unsigned*)malloc(4*800*600);
-    for(int i = 0; i < 800*600; ++i)
-    	data[i] = 0x88ffff88;
-    auto sbuffer = weston_buffer_from_memory(800, 600, 4*800, WL_SHM_FORMAT_ARGB8888, data);
-    weston_surface_attach(stest, sbuffer);
-    weston_surface_damage(stest);
-
-    auto sview = weston_view_create(stest);
-	weston_view_set_position(sview, 0, 0);
-	stest->timeline.force_refresh = 1;
-	weston_layer_entry_insert(&default_layer.view_list, &sview->layer_link);
-    weston_surface_commit(stest);
-    weston_surface_attach(stest, sbuffer);
-    weston_surface_damage(stest);
-    weston_surface_commit(stest);
 
 }
 
@@ -161,7 +140,9 @@ void compositor_t::connect_all() {
     hide_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::hide_input_panel\n"); };
     update_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::update_input_panel\n"); };
     seat_created.notify = [](wl_listener *l, void *data) { weston_log("compositor::seat_created\n"); };
-    output_created.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_created\n"); };
+
+    output_created.connect(&ec->output_created_signal, [this](weston_output * o) { this->on_output_created(o);});
+
     output_destroyed.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_destroyed\n"); };
     output_moved.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_moved\n"); };
     session.notify = [](wl_listener *l, void *data) { weston_log("compositor::session\n"); };
@@ -178,10 +159,42 @@ void compositor_t::connect_all() {
     wl_signal_add(&ec->hide_input_panel_signal, &hide_input_panel);
     wl_signal_add(&ec->update_input_panel_signal, &update_input_panel);
     wl_signal_add(&ec->seat_created_signal, &seat_created);
-    wl_signal_add(&ec->output_created_signal, &output_created);
+
     wl_signal_add(&ec->output_destroyed_signal, &output_destroyed);
     wl_signal_add(&ec->output_moved_signal, &output_moved);
     wl_signal_add(&ec->session_signal, &session);
+}
+
+void compositor_t::on_output_created(weston_output * output) {
+	weston_log("compositor::output_created\n");
+
+	auto stest = weston_surface_create(ec);
+	weston_surface_set_size(stest, output->width, output->height);
+    pixman_region32_fini(&stest->opaque);
+    pixman_region32_init_rect(&stest->opaque, 0, 0, output->width,
+    		output->height);
+    weston_surface_damage(stest);
+
+    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, output->width,
+    		output->height);
+
+    auto cr = cairo_create(surf);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
+    cairo_paint(cr);
+    cairo_destroy(cr);
+
+    auto sbuffer = weston_buffer_from_memory(output->width, output->height,
+    		cairo_image_surface_get_stride(surf), WL_SHM_FORMAT_ARGB8888, cairo_image_surface_get_data(surf));
+    weston_surface_attach(stest, sbuffer);
+    weston_surface_damage(stest);
+
+    auto sview = weston_view_create(stest);
+	weston_view_set_position(sview, output->x, output->y);
+	stest->timeline.force_refresh = 1;
+	weston_layer_entry_insert(&default_layer.view_list, &sview->layer_link);
+    weston_surface_commit(stest);
+
 }
 
 void compositor_t::run() {

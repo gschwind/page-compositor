@@ -27,12 +27,16 @@
 #include <libweston-0/compositor.h>
 #include <libweston-0/compositor-x11.h>
 
+#include "listener.hxx"
 #include "xdg-shell-server-protocol.h"
 #include "xdg-shell.hxx"
+#include "page-root.hxx"
 
 #include <list>
 
 using namespace std;
+
+class page_root_t;
 
 struct compositor_t {
 	wl_display* dpy;
@@ -55,14 +59,20 @@ struct compositor_t {
 	wl_listener update_input_panel;
 
 	wl_listener seat_created;
-	wl_listener output_created;
+	listener_t<weston_output> output_created;
 	wl_listener output_destroyed;
 	wl_listener output_moved;
 
 	wl_listener session;
 
+	shared_ptr<page_root_t> _root;
+
+
 	compositor_t();
 	void connect_all();
+
+
+	void on_output_created(weston_output * output);
 
 	void run();
 

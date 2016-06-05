@@ -27,6 +27,8 @@ page_compositor_SOURCES = \
 	xdg-popup.cxx \
 	simple2-theme.cxx \
 	tiny-theme.cxx \
+	tree.cxx \
+	page-root.cxx \
 	xdg-shell-protocol.c \
 	xdg-shell-server-protocol.h
 
