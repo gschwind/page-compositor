@@ -9,6 +9,7 @@ AM_CXXFLAGS =  \
 	@PANGO_CFLAGS@ \
 	@WAYLAND_CFLAGS@ \
 	@WESTON_CFLAGS@ \
+	@GLIB_CFLAGS@ \
 	-fno-strict-aliasing
 
 BUILT_SOURCES = \
@@ -17,6 +18,8 @@ BUILT_SOURCES = \
 page_compositor_SOURCES = \
 	page-compositor.cxx \
 	compositor.cxx \
+	config-handler.cxx \
+	config-handler.hxx \
 	xdg-shell.cxx \
 	xdg-surface.cxx \
 	xdg-popup.cxx \
@@ -30,6 +33,7 @@ page_compositor_LDADD = \
 	@WESTON_LIBS@ \
 	@CAIRO_LIBS@ \
 	@PANGO_LIBS@ \
+	@GLIB_LIBS@ \
 	@RT_LIBS@ 
 
 %-protocol.c : $(top_srcdir)/protocol/%.xml

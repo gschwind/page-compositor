@@ -35,3 +35,4 @@ src/compositor.o
 src/xdg-popup.o
 src/xdg-shell.o
 src/xdg-surface.o
+src/config-handler.o
