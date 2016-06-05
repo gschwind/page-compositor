@@ -31,3 +31,7 @@ src/stamp-h1
 src/xdg-shell-protocol.c
 src/xdg-shell-protocol.o
 src/xdg-shell-server-protocol.h
+src/compositor.o
+src/xdg-popup.o
+src/xdg-shell.o
+src/xdg-surface.o
