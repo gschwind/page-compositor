@@ -19,14 +19,18 @@ page_compositor_SOURCES = \
 	xdg-shell.cxx \
 	xdg-surface.cxx \
 	xdg-popup.cxx \
-	simple2-theme.cxx \
-	tiny-theme.cxx \
+	client_base.cxx \
+	client_base.hxx \
+	client_managed.cxx \
+	client_managed.hxx \
+	client_not_managed.cxx \
+	client_not_managed.hxx \
+	display-compositor.cxx \
+	display-compositor.hxx \
 	tree.cxx \
-	page-root.cxx \
 	utils.cxx \
 	pixmap.cxx \
 	tree.cxx \
-	client_base.cxx \
 	client_not_managed.cxx \
 	client_managed.cxx \
 	grab_handlers.cxx \
@@ -56,9 +60,6 @@ page_compositor_SOURCES = \
 	split.hxx \
 	viewport.hxx \
 	grab_handlers.hxx \
-	client_managed.hxx \
-	client_not_managed.hxx \
-	client_base.hxx \
 	display.hxx \
 	mainloop.hxx \
 	page.hxx \

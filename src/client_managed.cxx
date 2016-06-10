@@ -23,7 +23,7 @@ namespace page {
 
 using namespace std;
 
-client_managed_t::client_managed_t(page_context_t * ctx, xcb_window_t w, xcb_atom_t net_wm_type) :
+client_managed_t::client_managed_t(page_context_t * ctx, uint32_t w, uint32_t net_wm_type) :
 				client_base_t{ctx, w},
 				_managed_type{MANAGED_FLOATING},
 				_net_wm_type{net_wm_type},
@@ -680,7 +680,7 @@ void client_managed_t::create_back_buffer() {
 		int h = _ctx->theme()->floating.margin.top
 				+ _ctx->theme()->floating.title_height;
 		if(w > 0 and h > 0) {
-			_top_buffer = make_shared<pixmap_t>(_ctx->dpy(), PIXMAP_RGBA, w, h);
+			_top_buffer = make_shared<pixmap_t>(PIXMAP_RGBA, w, h);
 		}
 	}
 
@@ -689,7 +689,7 @@ void client_managed_t::create_back_buffer() {
 		int h = _ctx->theme()->floating.margin.bottom;
 		if(w > 0 and h > 0) {
 			_bottom_buffer =
-					make_shared<pixmap_t>(_ctx->dpy(), PIXMAP_RGBA, w, h);
+					make_shared<pixmap_t>(PIXMAP_RGBA, w, h);
 		}
 	}
 
@@ -699,7 +699,7 @@ void client_managed_t::create_back_buffer() {
 				- _ctx->theme()->floating.margin.bottom;
 		if(w > 0 and h > 0) {
 			_left_buffer =
-					make_shared<pixmap_t>(_ctx->dpy(), PIXMAP_RGBA, w, h);
+					make_shared<pixmap_t>(PIXMAP_RGBA, w, h);
 		}
 	}
 
@@ -709,7 +709,7 @@ void client_managed_t::create_back_buffer() {
 				- _ctx->theme()->floating.margin.bottom;
 		if(w > 0 and h > 0) {
 			_right_buffer =
-					make_shared<pixmap_t>(_ctx->dpy(), PIXMAP_RGBA, w, h);
+					make_shared<pixmap_t>(PIXMAP_RGBA, w, h);
 		}
 	}
 }

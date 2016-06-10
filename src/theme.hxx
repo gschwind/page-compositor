@@ -15,6 +15,7 @@
 #include <cairo/cairo.h>
 
 #include "color.hxx"
+#include "pixmap.hxx"
 
 #include "leak_checker.hxx"
 #include "icon_handler.hxx"

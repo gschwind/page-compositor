@@ -42,3 +42,4 @@ src/tiny-theme.o
 src/utils.o
 src/page-root.o
 src/tree.o
+src/*.o

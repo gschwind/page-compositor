@@ -51,7 +51,7 @@ protected:
 public:
 
 	client_base_t(client_base_t const & c);
-	client_base_t(page_context_t * ctx, xcb_window_t w);
+	client_base_t(page_context_t * ctx, uint32_t window);
 
 	virtual ~client_base_t();
 

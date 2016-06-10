@@ -191,7 +191,7 @@ void workspace_t::start_switch(workspace_switch_direction_e direction) {
 
 	_switch_direction = direction;
 	_switch_start_time.update_to_current_time();
-	_switch_screenshot = _ctx->cmp()->create_screenshot();
+	_switch_screenshot = nullptr; //TODO _ctx->cmp()->create_screenshot();
 	_switch_renderable = make_shared<renderable_pixmap_t>(_ctx, _switch_screenshot, _ctx->left_most_border(), _ctx->top_most_border());
 	push_back(_switch_renderable);
 	_switch_renderable->show();

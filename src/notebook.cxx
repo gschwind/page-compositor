@@ -685,7 +685,7 @@ void notebook_t::_start_fading() {
 	/**
 	 * Create image of notebook as it was just before fading start
 	 **/
-	auto pix = make_shared<pixmap_t>(_ctx->dpy(), PIXMAP_RGB, _allocation.w, _allocation.h);
+	auto pix = make_shared<pixmap_t>(PIXMAP_RGB, _allocation.w, _allocation.h);
 	cairo_surface_t * surf = pix->get_cairo_surface();
 	cairo_t * cr = cairo_create(surf);
 	cairo_save(cr);
@@ -693,7 +693,7 @@ void notebook_t::_start_fading() {
 	_ctx->theme()->render_notebook(cr, &_theme_notebook);
 
 	if(_theme_client_tabs.size() > 0) {
-		pixmap_t * pix = new pixmap_t(_ctx->dpy(), PIXMAP_RGBA, _theme_client_tabs.back().position.x + 100, _ctx->theme()->notebook.tab_height);
+		pixmap_t * pix = new pixmap_t(PIXMAP_RGBA, _theme_client_tabs.back().position.x + 100, _ctx->theme()->notebook.tab_height);
 		cairo_t * xcr = cairo_create(pix->get_cairo_surface());
 
 		cairo_set_operator(xcr, CAIRO_OPERATOR_SOURCE);

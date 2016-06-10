@@ -31,7 +31,10 @@
 #include "xdg-shell-server-protocol.h"
 #include "xdg-shell.hxx"
 
+#include "region.hxx"
+
 #include <list>
+#include <deque>
 
 namespace page {
 
@@ -73,6 +76,21 @@ struct compositor_t {
 	void on_output_created(weston_output * output);
 
 	void run();
+
+	double get_fps();
+	deque<double> const & get_direct_area_history();
+	deque<double> const & get_damaged_area_history();
+
+	bool show_damaged();
+	bool show_opac();
+	void set_show_damaged(bool b);
+	void set_show_opac(bool b);
+	void add_damaged(region const & r);
+
+	uint32_t get_composite_overlay();
+
+	void update_layout();
+
 
 };
 

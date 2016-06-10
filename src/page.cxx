@@ -1324,7 +1324,8 @@ void page_t::render() {
 	_root->broadcast_trigger_redraw();
 	// render on screen if we need too.
 	if (_compositor != nullptr) {
-		_compositor->render(_root.get());
+		// TODO or remove.
+		//_compositor->render(_root.get());
 	}
 	xcb_flush(_dpy->xcb());
 	_root->broadcast_render_finished();
@@ -3402,7 +3403,9 @@ void page_t::start_compositor() {
 			std::cout << e.what() << std::endl;
 			return;
 		}
-		_compositor = new compositor_t{_dpy};
+
+		/** TODO: replace it by weston compositor */
+		//_compositor = new compositor_t{_dpy};
 		_dpy->enable();
 	}
 }

@@ -157,7 +157,7 @@ public:
 	}
 
 	void update_title() {
-		_tt.title = make_shared<pixmap_t>(_ctx->dpy(), PIXMAP_RGB, _thumbnail_position.w, 20);
+		_tt.title = make_shared<pixmap_t>(PIXMAP_RGB, _thumbnail_position.w, 20);
 		cairo_t * cr = cairo_create(_tt.title->get_cairo_surface());
 		_ctx->theme()->render_thumbnail_title(cr, rect{0 + 3, 0, _thumbnail_position.w - 6, 20}, _c.lock()->title());
 		cairo_destroy(cr);

@@ -19,6 +19,7 @@
  */
 
 #include "compositor.hxx"
+#include "xdg-shell.hxx"
 
 using namespace std;
 
