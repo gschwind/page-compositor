@@ -42,30 +42,30 @@ public:
 	}
 
 	void _create_window() {
-		/** if visual is 32 bits, this values are mandatory **/
-		xcb_colormap_t cmap = xcb_generate_id(_ctx->dpy()->xcb());
-		xcb_create_colormap(_ctx->dpy()->xcb(), XCB_COLORMAP_ALLOC_NONE, cmap, _ctx->dpy()->root(), _ctx->dpy()->root_visual()->visual_id);
-
-		uint32_t value_mask = 0;
-		uint32_t value[5];
-
-		value_mask |= XCB_CW_BACK_PIXEL;
-		value[0] = _ctx->dpy()->xcb_screen()->black_pixel;
-
-		value_mask |= XCB_CW_BORDER_PIXEL;
-		value[1] = _ctx->dpy()->xcb_screen()->black_pixel;
-
-		value_mask |= XCB_CW_OVERRIDE_REDIRECT;
-		value[2] = True;
-
-		value_mask |= XCB_CW_EVENT_MASK;
-		value[3] = XCB_EVENT_MASK_EXPOSURE;
-
-		value_mask |= XCB_CW_COLORMAP;
-		value[4] = cmap;
-
-		_wid = xcb_generate_id(_ctx->dpy()->xcb());
-		xcb_create_window(_ctx->dpy()->xcb(), _ctx->dpy()->root_depth(), _wid, _ctx->dpy()->root(), _position.x, _position.y, _position.w, _position.h, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, _ctx->dpy()->root_visual()->visual_id, value_mask, value);
+//		/** if visual is 32 bits, this values are mandatory **/
+//		xcb_colormap_t cmap = xcb_generate_id(_ctx->dpy()->xcb());
+//		xcb_create_colormap(_ctx->dpy()->xcb(), XCB_COLORMAP_ALLOC_NONE, cmap, _ctx->dpy()->root(), _ctx->dpy()->root_visual()->visual_id);
+//
+//		uint32_t value_mask = 0;
+//		uint32_t value[5];
+//
+//		value_mask |= XCB_CW_BACK_PIXEL;
+//		value[0] = _ctx->dpy()->xcb_screen()->black_pixel;
+//
+//		value_mask |= XCB_CW_BORDER_PIXEL;
+//		value[1] = _ctx->dpy()->xcb_screen()->black_pixel;
+//
+//		value_mask |= XCB_CW_OVERRIDE_REDIRECT;
+//		value[2] = True;
+//
+//		value_mask |= XCB_CW_EVENT_MASK;
+//		value[3] = XCB_EVENT_MASK_EXPOSURE;
+//
+//		value_mask |= XCB_CW_COLORMAP;
+//		value[4] = cmap;
+//
+//		_wid = xcb_generate_id(_ctx->dpy()->xcb());
+//		xcb_create_window(_ctx->dpy()->xcb(), _ctx->dpy()->root_depth(), _wid, _ctx->dpy()->root(), _position.x, _position.y, _position.w, _position.h, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, _ctx->dpy()->root_visual()->visual_id, value_mask, value);
 
 	}
 
@@ -96,10 +96,10 @@ public:
 		rects[3].height = _position.h;
 
 		/** making clip and bounding region matching make window without border **/
-		xcb_shape_rectangles(_ctx->dpy()->xcb(), XCB_SHAPE_SO_SET, XCB_SHAPE_SK_BOUNDING, 0, _wid, 0, 0, 4, rects);
-		xcb_shape_rectangles(_ctx->dpy()->xcb(), XCB_SHAPE_SO_SET, XCB_SHAPE_SK_CLIP, 0, _wid, 0, 0, 4, rects);
+		//xcb_shape_rectangles(_ctx->dpy()->xcb(), XCB_SHAPE_SO_SET, XCB_SHAPE_SK_BOUNDING, 0, _wid, 0, 0, 4, rects);
+		//xcb_shape_rectangles(_ctx->dpy()->xcb(), XCB_SHAPE_SO_SET, XCB_SHAPE_SK_CLIP, 0, _wid, 0, 0, 4, rects);
 
-		_ctx->dpy()->move_resize(_wid, area);
+		//_ctx->dpy()->move_resize(_wid, area);
 		_damaged += _position;
 	}
 
@@ -138,18 +138,18 @@ public:
 	}
 
 	~popup_notebook0_t() {
-		xcb_destroy_window(_ctx->dpy()->xcb(), _wid);
+		//xcb_destroy_window(_ctx->dpy()->xcb(), _wid);
 	}
 
 	void show() {
 		_is_visible = true;
 		_damaged = _position;
-		_ctx->dpy()->map(_wid);
+		//_ctx->dpy()->map(_wid);
 	}
 
 	void hide() {
 		_is_visible = false;
-		_ctx->dpy()->unmap(_wid);
+		//_ctx->dpy()->unmap(_wid);
 	}
 
 	virtual void render(cairo_t * cr, region const & area) {
@@ -164,7 +164,7 @@ public:
 
 	void _paint_exposed() {
 
-		cairo_surface_t * surf = cairo_xcb_surface_create(_ctx->dpy()->xcb(), _wid, _ctx->dpy()->root_visual(), _position.w, _position.h);
+		cairo_surface_t * surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, _position.w, _position.h);
 		cairo_t * cr = cairo_create(surf);
 
 		cairo_set_source_rgb(cr, 0.0, 0.4, 0.0);

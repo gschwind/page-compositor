@@ -63,16 +63,32 @@ namespace page {
 
 time64_t const page_t::default_wait{1000000000L / 120L};
 
-static void bind_xdg_shell(struct wl_client *client, void *data,
+void page_t::bind_xdg_shell(struct wl_client * client, void * data,
 				      uint32_t version, uint32_t id) {
+	page_t * ths = reinterpret_cast<page_t *>(data);
+
 	/* TODO */
 	//new xdg_shell_t{client, id};
+
+	auto c = make_shared<client_t>(client, id);
+
+	/**
+	 * Define the implementation of the resource and the user_data,
+	 * i.e. callbacks that must be used for this resource.
+	 **/
+	wl_resource_set_implementation(c->xdg_shell_resource,
+			&display_compositor_t::xdg_shell_implementation, ths,
+			&client_t::xdg_shell_delete);
+
+	ths->clients.push_back(c);
+
 }
 
 
 page_t::page_t(int argc, char ** argv)
 {
 
+	ec = nullptr;
 	_grab_handler = nullptr;
 
 	identity_window = XCB_NONE;
@@ -100,7 +116,6 @@ page_t::page_t(int argc, char ** argv)
 	}
 
 	_keymap = nullptr;
-	_dpy = nullptr;
 
 	/* load configurations, from lower priority to high one */
 
@@ -207,8 +222,6 @@ page_t::~page_t() {
 
 void page_t::run() {
 
-	_dpy = new display_compositor_t;
-
 	/** initialize the empty desktop **/
 	_root = make_shared<page_root_t>(this);
 
@@ -265,9 +278,9 @@ void page_t::run() {
     weston_log_set_handler(vprintf, vprintf);
 
 	/* first create the wayland serveur */
-	_dpy->dpy = wl_display_create();
+	_dpy = wl_display_create();
 
-	auto sock_name = wl_display_add_socket_auto(_dpy->dpy);
+	auto sock_name = wl_display_add_socket_auto(_dpy);
 	weston_log("socket name = %s\n", sock_name);
 
 	/* set the environment for children */
@@ -286,10 +299,10 @@ void page_t::run() {
 	 *  but not the xdg_shell one.
 	 *
 	 */
-	ec = weston_compositor_create(_dpy->dpy, nullptr);
+	ec = weston_compositor_create(_dpy, nullptr);
 	weston_layer_init(&default_layer, &ec->cursor_layer.link);
 
-	wl_global_create(_dpy->dpy, &xdg_shell_interface, 1, NULL, bind_xdg_shell);
+	wl_global_create(_dpy, &xdg_shell_interface, 1, this, &page_t::bind_xdg_shell);
 
 	connect_all();
 
@@ -321,7 +334,7 @@ void page_t::run() {
 	//weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
 	weston_compositor_wake(ec);
-    wl_display_run(dpy);
+    wl_display_run(_dpy);
 
 
 	cout << "Page END" << endl;
@@ -336,11 +349,10 @@ void page_t::run() {
 
 	delete _keymap; _keymap = nullptr;
 	delete _theme; _theme = nullptr;
-	delete _dpy; _dpy = nullptr;
 
 }
 
-void page_t::unmanage(shared_ptr<client_managed_t> mw) {
+void page_t::unmanage(shared_ptr<xdg_surface_toplevel_t> mw) {
 	if(mw == nullptr)
 		return;
 
@@ -363,7 +375,7 @@ void page_t::unmanage(shared_ptr<client_managed_t> mw) {
 
 	/* if managed window have active clients */
 	for(auto i: mw->children()) {
-		auto c = dynamic_pointer_cast<client_base_t>(i);
+		auto c = dynamic_pointer_cast<xdg_surface_base_t>(i);
 		if(c != nullptr) {
 			insert_in_tree_using_transient_for(c);
 		}
@@ -382,7 +394,7 @@ void page_t::unmanage(shared_ptr<client_managed_t> mw) {
 
 	global_focus_history_remove(mw);
 
-	shared_ptr<client_managed_t> new_focus;
+	shared_ptr<xdg_surface_toplevel_t> new_focus;
 	set_focus(nullptr, XCB_CURRENT_TIME);
 
 }
@@ -1193,7 +1205,7 @@ void page_t::render() {
 //	_root->broadcast_render_finished();
 }
 
-void page_t::fullscreen(shared_ptr<client_managed_t> mw) {
+void page_t::fullscreen(shared_ptr<xdg_surface_toplevel_t> mw) {
 
 	if(mw->is(MANAGED_FULLSCREEN))
 		return;
@@ -1211,7 +1223,7 @@ void page_t::fullscreen(shared_ptr<client_managed_t> mw) {
 	fullscreen(mw, v);
 }
 
-void page_t::fullscreen(shared_ptr<client_managed_t> mw, shared_ptr<viewport_t> v) {
+void page_t::fullscreen(shared_ptr<xdg_surface_toplevel_t> mw, shared_ptr<viewport_t> v) {
 	assert(v != nullptr);
 
 	if(mw->is(MANAGED_FULLSCREEN))
@@ -1272,7 +1284,7 @@ void page_t::fullscreen(shared_ptr<client_managed_t> mw, shared_ptr<viewport_t> 
 	_need_restack = true;
 }
 
-void page_t::unfullscreen(shared_ptr<client_managed_t> mw) {
+void page_t::unfullscreen(shared_ptr<xdg_surface_toplevel_t> mw) {
 	/* WARNING: Call order is important, change it with caution */
 
 	/** just in case **/
@@ -1328,7 +1340,7 @@ void page_t::unfullscreen(shared_ptr<client_managed_t> mw) {
 
 }
 
-void page_t::toggle_fullscreen(shared_ptr<client_managed_t> c) {
+void page_t::toggle_fullscreen(shared_ptr<xdg_surface_toplevel_t> c) {
 	if(c->is(MANAGED_FULLSCREEN))
 		unfullscreen(c);
 	else
@@ -1382,7 +1394,7 @@ void page_t::update_workarea() {
 
 }
 
-void page_t::set_focus(shared_ptr<client_managed_t> new_focus, xcb_timestamp_t tfocus) {
+void page_t::set_focus(shared_ptr<xdg_surface_toplevel_t> new_focus, xcb_timestamp_t tfocus) {
 //	/* if we want to defocus something */
 //	if(new_focus == nullptr) {
 //		if(conf()._auto_refocus) {
@@ -1428,7 +1440,7 @@ void page_t::set_focus(shared_ptr<client_managed_t> new_focus, xcb_timestamp_t t
 
 }
 
-void page_t::split_left(shared_ptr<notebook_t> nbk, shared_ptr<client_managed_t> c) {
+void page_t::split_left(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, VERTICAL_SPLIT);
@@ -1442,7 +1454,7 @@ void page_t::split_left(shared_ptr<notebook_t> nbk, shared_ptr<client_managed_t>
 	split->show();
 }
 
-void page_t::split_right(shared_ptr<notebook_t> nbk, shared_ptr<client_managed_t> c) {
+void page_t::split_right(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, VERTICAL_SPLIT);
@@ -1456,7 +1468,7 @@ void page_t::split_right(shared_ptr<notebook_t> nbk, shared_ptr<client_managed_t
 	split->show();
 }
 
-void page_t::split_top(shared_ptr<notebook_t> nbk, shared_ptr<client_managed_t> c) {
+void page_t::split_top(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, HORIZONTAL_SPLIT);
@@ -1470,7 +1482,7 @@ void page_t::split_top(shared_ptr<notebook_t> nbk, shared_ptr<client_managed_t> 
 	split->show();
 }
 
-void page_t::split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<client_managed_t> c) {
+void page_t::split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, HORIZONTAL_SPLIT);
@@ -1519,7 +1531,7 @@ void page_t::notebook_close(shared_ptr<notebook_t> nbk) {
 	}
 
 	/* move all client from destroyed notebook to new default pop */
-	auto clients = filter_class<client_managed_t>(nbk->children());
+	auto clients = filter_class<xdg_surface_toplevel_t>(nbk->children());
 	bool notebook_has_focus = false;
 	for(auto i : clients) {
 		if(i->has_focus())
@@ -1549,128 +1561,128 @@ void page_t::notebook_close(shared_ptr<notebook_t> nbk) {
  */
 void page_t::compute_viewport_allocation(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v) {
 
-	/* Partial struct content definition */
-	enum : uint32_t {
-		PS_LEFT = 0,
-		PS_RIGHT = 1,
-		PS_TOP = 2,
-		PS_BOTTOM = 3,
-		PS_LEFT_START_Y = 4,
-		PS_LEFT_END_Y = 5,
-		PS_RIGHT_START_Y = 6,
-		PS_RIGHT_END_Y = 7,
-		PS_TOP_START_X = 8,
-		PS_TOP_END_X = 9,
-		PS_BOTTOM_START_X = 10,
-		PS_BOTTOM_END_X = 11,
-		PS_LAST = 12
-	};
-
-	rect const raw_area = v->raw_area();
-
-	int margin_left = _root->_root_position.x + raw_area.x;
-	int margin_top = _root->_root_position.y + raw_area.y;
-	int margin_right = _root->_root_position.w - raw_area.x - raw_area.w;
-	int margin_bottom = _root->_root_position.h - raw_area.y - raw_area.h;
-
-	auto children = filter_class<client_base_t>(d->get_all_children());
-	for(auto j: children) {
-		int32_t ps[PS_LAST];
-		bool has_strut{false};
-
-		if(j->net_wm_strut_partial() != nullptr) {
-			if(j->net_wm_strut_partial()->size() == 12) {
-				std::copy(j->net_wm_strut_partial()->begin(), j->net_wm_strut_partial()->end(), &ps[0]);
-				has_strut = true;
-			}
-		}
-
-		if (j->net_wm_strut() != nullptr and not has_strut) {
-			if(j->net_wm_strut()->size() == 4) {
-
-				/** if strut is found, fake strut_partial **/
-
-				std::copy(j->net_wm_strut()->begin(), j->net_wm_strut()->end(), &ps[0]);
-
-				if(ps[PS_TOP] > 0) {
-					ps[PS_TOP_START_X] = _root->_root_position.x;
-					ps[PS_TOP_END_X] = _root->_root_position.x + _root->_root_position.w;
-				}
-
-				if(ps[PS_BOTTOM] > 0) {
-					ps[PS_BOTTOM_START_X] = _root->_root_position.x;
-					ps[PS_BOTTOM_END_X] = _root->_root_position.x + _root->_root_position.w;
-				}
-
-				if(ps[PS_LEFT] > 0) {
-					ps[PS_LEFT_START_Y] = _root->_root_position.y;
-					ps[PS_LEFT_END_Y] = _root->_root_position.y + _root->_root_position.h;
-				}
-
-				if(ps[PS_RIGHT] > 0) {
-					ps[PS_RIGHT_START_Y] = _root->_root_position.y;
-					ps[PS_RIGHT_END_Y] = _root->_root_position.y + _root->_root_position.h;
-				}
-
-				has_strut = true;
-			}
-		}
-
-		if (has_strut) {
-
-			if (ps[PS_LEFT] > 0) {
-				/* check if raw area intersect current viewport */
-				rect b(0, ps[PS_LEFT_START_Y], ps[PS_LEFT],
-						ps[PS_LEFT_END_Y] - ps[PS_LEFT_START_Y] + 1);
-				rect x = raw_area & b;
-				if (!x.is_null()) {
-					margin_left = std::max(margin_left, ps[PS_LEFT]);
-				}
-			}
-
-			if (ps[PS_RIGHT] > 0) {
-				/* check if raw area intersect current viewport */
-				rect b(_root->_root_position.w - ps[PS_RIGHT],
-						ps[PS_RIGHT_START_Y], ps[PS_RIGHT],
-						ps[PS_RIGHT_END_Y] - ps[PS_RIGHT_START_Y] + 1);
-				rect x = raw_area & b;
-				if (!x.is_null()) {
-					margin_right = std::max(margin_right, ps[PS_RIGHT]);
-				}
-			}
-
-			if (ps[PS_TOP] > 0) {
-				/* check if raw area intersect current viewport */
-				rect b(ps[PS_TOP_START_X], 0,
-						ps[PS_TOP_END_X] - ps[PS_TOP_START_X] + 1, ps[PS_TOP]);
-				rect x = raw_area & b;
-				if (!x.is_null()) {
-					margin_top = std::max(margin_top, ps[PS_TOP]);
-				}
-			}
-
-			if (ps[PS_BOTTOM] > 0) {
-				/* check if raw area intersect current viewport */
-				rect b(ps[PS_BOTTOM_START_X],
-						_root->_root_position.h - ps[PS_BOTTOM],
-						ps[PS_BOTTOM_END_X] - ps[PS_BOTTOM_START_X] + 1,
-						ps[PS_BOTTOM]);
-				rect x = raw_area & b;
-				if (!x.is_null()) {
-					margin_bottom = std::max(margin_bottom, ps[PS_BOTTOM]);
-				}
-			}
-		}
-	}
-
-	rect final_size;
-
-	final_size.x = margin_left;
-	final_size.w = _root->_root_position.w - margin_right - margin_left;
-	final_size.y = margin_top;
-	final_size.h = _root->_root_position.h - margin_bottom - margin_top;
-
-	v->set_allocation(final_size);
+//	/* Partial struct content definition */
+//	enum : uint32_t {
+//		PS_LEFT = 0,
+//		PS_RIGHT = 1,
+//		PS_TOP = 2,
+//		PS_BOTTOM = 3,
+//		PS_LEFT_START_Y = 4,
+//		PS_LEFT_END_Y = 5,
+//		PS_RIGHT_START_Y = 6,
+//		PS_RIGHT_END_Y = 7,
+//		PS_TOP_START_X = 8,
+//		PS_TOP_END_X = 9,
+//		PS_BOTTOM_START_X = 10,
+//		PS_BOTTOM_END_X = 11,
+//		PS_LAST = 12
+//	};
+//
+//	rect const raw_area = v->raw_area();
+//
+//	int margin_left = _root->_root_position.x + raw_area.x;
+//	int margin_top = _root->_root_position.y + raw_area.y;
+//	int margin_right = _root->_root_position.w - raw_area.x - raw_area.w;
+//	int margin_bottom = _root->_root_position.h - raw_area.y - raw_area.h;
+//
+//	auto children = filter_class<xdg_surface_base_t>(d->get_all_children());
+//	for(auto j: children) {
+//		int32_t ps[PS_LAST];
+//		bool has_strut{false};
+//
+//		if(j->net_wm_strut_partial() != nullptr) {
+//			if(j->net_wm_strut_partial()->size() == 12) {
+//				std::copy(j->net_wm_strut_partial()->begin(), j->net_wm_strut_partial()->end(), &ps[0]);
+//				has_strut = true;
+//			}
+//		}
+//
+//		if (j->net_wm_strut() != nullptr and not has_strut) {
+//			if(j->net_wm_strut()->size() == 4) {
+//
+//				/** if strut is found, fake strut_partial **/
+//
+//				std::copy(j->net_wm_strut()->begin(), j->net_wm_strut()->end(), &ps[0]);
+//
+//				if(ps[PS_TOP] > 0) {
+//					ps[PS_TOP_START_X] = _root->_root_position.x;
+//					ps[PS_TOP_END_X] = _root->_root_position.x + _root->_root_position.w;
+//				}
+//
+//				if(ps[PS_BOTTOM] > 0) {
+//					ps[PS_BOTTOM_START_X] = _root->_root_position.x;
+//					ps[PS_BOTTOM_END_X] = _root->_root_position.x + _root->_root_position.w;
+//				}
+//
+//				if(ps[PS_LEFT] > 0) {
+//					ps[PS_LEFT_START_Y] = _root->_root_position.y;
+//					ps[PS_LEFT_END_Y] = _root->_root_position.y + _root->_root_position.h;
+//				}
+//
+//				if(ps[PS_RIGHT] > 0) {
+//					ps[PS_RIGHT_START_Y] = _root->_root_position.y;
+//					ps[PS_RIGHT_END_Y] = _root->_root_position.y + _root->_root_position.h;
+//				}
+//
+//				has_strut = true;
+//			}
+//		}
+//
+//		if (has_strut) {
+//
+//			if (ps[PS_LEFT] > 0) {
+//				/* check if raw area intersect current viewport */
+//				rect b(0, ps[PS_LEFT_START_Y], ps[PS_LEFT],
+//						ps[PS_LEFT_END_Y] - ps[PS_LEFT_START_Y] + 1);
+//				rect x = raw_area & b;
+//				if (!x.is_null()) {
+//					margin_left = std::max(margin_left, ps[PS_LEFT]);
+//				}
+//			}
+//
+//			if (ps[PS_RIGHT] > 0) {
+//				/* check if raw area intersect current viewport */
+//				rect b(_root->_root_position.w - ps[PS_RIGHT],
+//						ps[PS_RIGHT_START_Y], ps[PS_RIGHT],
+//						ps[PS_RIGHT_END_Y] - ps[PS_RIGHT_START_Y] + 1);
+//				rect x = raw_area & b;
+//				if (!x.is_null()) {
+//					margin_right = std::max(margin_right, ps[PS_RIGHT]);
+//				}
+//			}
+//
+//			if (ps[PS_TOP] > 0) {
+//				/* check if raw area intersect current viewport */
+//				rect b(ps[PS_TOP_START_X], 0,
+//						ps[PS_TOP_END_X] - ps[PS_TOP_START_X] + 1, ps[PS_TOP]);
+//				rect x = raw_area & b;
+//				if (!x.is_null()) {
+//					margin_top = std::max(margin_top, ps[PS_TOP]);
+//				}
+//			}
+//
+//			if (ps[PS_BOTTOM] > 0) {
+//				/* check if raw area intersect current viewport */
+//				rect b(ps[PS_BOTTOM_START_X],
+//						_root->_root_position.h - ps[PS_BOTTOM],
+//						ps[PS_BOTTOM_END_X] - ps[PS_BOTTOM_START_X] + 1,
+//						ps[PS_BOTTOM]);
+//				rect x = raw_area & b;
+//				if (!x.is_null()) {
+//					margin_bottom = std::max(margin_bottom, ps[PS_BOTTOM]);
+//				}
+//			}
+//		}
+//	}
+//
+//	rect final_size;
+//
+//	final_size.x = margin_left;
+//	final_size.w = _root->_root_position.w - margin_right - margin_left;
+//	final_size.y = margin_top;
+//	final_size.h = _root->_root_position.h - margin_bottom - margin_top;
+//
+//	v->set_allocation(final_size);
 
 }
 
@@ -1679,120 +1691,120 @@ void page_t::compute_viewport_allocation(shared_ptr<workspace_t> d, shared_ptr<v
  */
 void page_t::reconfigure_docks(shared_ptr<workspace_t> const & d) {
 
-	/* Partial struct content definition */
-	enum {
-		PS_LEFT = 0,
-		PS_RIGHT = 1,
-		PS_TOP = 2,
-		PS_BOTTOM = 3,
-		PS_LEFT_START_Y = 4,
-		PS_LEFT_END_Y = 5,
-		PS_RIGHT_START_Y = 6,
-		PS_RIGHT_END_Y = 7,
-		PS_TOP_START_X = 8,
-		PS_TOP_END_X = 9,
-		PS_BOTTOM_START_X = 10,
-		PS_BOTTOM_END_X = 11,
-	};
-
-	auto children = filter_class<client_managed_t>(d->get_all_children());
-	for(auto j: children) {
-
-		if(not j->is(MANAGED_DOCK))
-			continue;
-
-		int32_t ps[12] = { 0 };
-		bool has_strut{false};
-
-		if(j->net_wm_strut_partial() != nullptr) {
-			if(j->net_wm_strut_partial()->size() == 12) {
-				std::copy(j->net_wm_strut_partial()->begin(), j->net_wm_strut_partial()->end(), &ps[0]);
-				has_strut = true;
-			}
-		}
-
-		if (j->net_wm_strut() != nullptr and not has_strut) {
-			if(j->net_wm_strut()->size() == 4) {
-
-				/** if strut is found, fake strut_partial **/
-
-				std::copy(j->net_wm_strut()->begin(), j->net_wm_strut()->end(), &ps[0]);
-
-				if(ps[PS_TOP] > 0) {
-					ps[PS_TOP_START_X] = _root->_root_position.x;
-					ps[PS_TOP_END_X] = _root->_root_position.x + _root->_root_position.w;
-				}
-
-				if(ps[PS_BOTTOM] > 0) {
-					ps[PS_BOTTOM_START_X] = _root->_root_position.x;
-					ps[PS_BOTTOM_END_X] = _root->_root_position.x + _root->_root_position.w;
-				}
-
-				if(ps[PS_LEFT] > 0) {
-					ps[PS_LEFT_START_Y] = _root->_root_position.y;
-					ps[PS_LEFT_END_Y] = _root->_root_position.y + _root->_root_position.h;
-				}
-
-				if(ps[PS_RIGHT] > 0) {
-					ps[PS_RIGHT_START_Y] = _root->_root_position.y;
-					ps[PS_RIGHT_END_Y] = _root->_root_position.y + _root->_root_position.h;
-				}
-
-				has_strut = true;
-			}
-		}
-
-		if (has_strut) {
-
-			if (ps[PS_LEFT] > 0) {
-				rect pos;
-				pos.x = 0;
-				pos.y = ps[PS_LEFT_START_Y];
-				pos.w = ps[PS_LEFT];
-				pos.h = ps[PS_LEFT_END_Y] - ps[PS_LEFT_START_Y] + 1;
-				j->set_floating_wished_position(pos);
-				j->normalize();
-				j->show();
-				continue;
-			}
-
-			if (ps[PS_RIGHT] > 0) {
-				rect pos;
-				pos.x = _root->_root_position.w - ps[PS_RIGHT];
-				pos.y = ps[PS_RIGHT_START_Y];
-				pos.w = ps[PS_RIGHT];
-				pos.h = ps[PS_RIGHT_END_Y] - ps[PS_RIGHT_START_Y] + 1;
-				j->set_floating_wished_position(pos);
-				j->normalize();
-				j->show();
-				continue;
-			}
-
-			if (ps[PS_TOP] > 0) {
-				rect pos;
-				pos.x = ps[PS_TOP_START_X];
-				pos.y = 0;
-				pos.w = ps[PS_TOP_END_X] - ps[PS_TOP_START_X] + 1;
-				pos.h = ps[PS_TOP];
-				j->set_floating_wished_position(pos);
-				j->normalize();
-				j->show();
-				continue;
-			}
-
-			if (ps[PS_BOTTOM] > 0) {
-				rect pos;
-				pos.x = ps[PS_BOTTOM_START_X];
-				pos.y = _root->_root_position.h - ps[PS_BOTTOM];
-				pos.w = ps[PS_BOTTOM_END_X] - ps[PS_BOTTOM_START_X] + 1;
-				pos.h = ps[PS_BOTTOM];
-				j->set_floating_wished_position(pos);
-				j->normalize();
-				j->show();
-				continue;
-			}
-		}
-	}
+//	/* Partial struct content definition */
+//	enum {
+//		PS_LEFT = 0,
+//		PS_RIGHT = 1,
+//		PS_TOP = 2,
+//		PS_BOTTOM = 3,
+//		PS_LEFT_START_Y = 4,
+//		PS_LEFT_END_Y = 5,
+//		PS_RIGHT_START_Y = 6,
+//		PS_RIGHT_END_Y = 7,
+//		PS_TOP_START_X = 8,
+//		PS_TOP_END_X = 9,
+//		PS_BOTTOM_START_X = 10,
+//		PS_BOTTOM_END_X = 11,
+//	};
+//
+//	auto children = filter_class<xdg_surface_toplevel_t>(d->get_all_children());
+//	for(auto j: children) {
+//
+//		if(not j->is(MANAGED_DOCK))
+//			continue;
+//
+//		int32_t ps[12] = { 0 };
+//		bool has_strut{false};
+//
+//		if(j->net_wm_strut_partial() != nullptr) {
+//			if(j->net_wm_strut_partial()->size() == 12) {
+//				std::copy(j->net_wm_strut_partial()->begin(), j->net_wm_strut_partial()->end(), &ps[0]);
+//				has_strut = true;
+//			}
+//		}
+//
+//		if (j->net_wm_strut() != nullptr and not has_strut) {
+//			if(j->net_wm_strut()->size() == 4) {
+//
+//				/** if strut is found, fake strut_partial **/
+//
+//				std::copy(j->net_wm_strut()->begin(), j->net_wm_strut()->end(), &ps[0]);
+//
+//				if(ps[PS_TOP] > 0) {
+//					ps[PS_TOP_START_X] = _root->_root_position.x;
+//					ps[PS_TOP_END_X] = _root->_root_position.x + _root->_root_position.w;
+//				}
+//
+//				if(ps[PS_BOTTOM] > 0) {
+//					ps[PS_BOTTOM_START_X] = _root->_root_position.x;
+//					ps[PS_BOTTOM_END_X] = _root->_root_position.x + _root->_root_position.w;
+//				}
+//
+//				if(ps[PS_LEFT] > 0) {
+//					ps[PS_LEFT_START_Y] = _root->_root_position.y;
+//					ps[PS_LEFT_END_Y] = _root->_root_position.y + _root->_root_position.h;
+//				}
+//
+//				if(ps[PS_RIGHT] > 0) {
+//					ps[PS_RIGHT_START_Y] = _root->_root_position.y;
+//					ps[PS_RIGHT_END_Y] = _root->_root_position.y + _root->_root_position.h;
+//				}
+//
+//				has_strut = true;
+//			}
+//		}
+//
+//		if (has_strut) {
+//
+//			if (ps[PS_LEFT] > 0) {
+//				rect pos;
+//				pos.x = 0;
+//				pos.y = ps[PS_LEFT_START_Y];
+//				pos.w = ps[PS_LEFT];
+//				pos.h = ps[PS_LEFT_END_Y] - ps[PS_LEFT_START_Y] + 1;
+//				j->set_floating_wished_position(pos);
+//				j->normalize();
+//				j->show();
+//				continue;
+//			}
+//
+//			if (ps[PS_RIGHT] > 0) {
+//				rect pos;
+//				pos.x = _root->_root_position.w - ps[PS_RIGHT];
+//				pos.y = ps[PS_RIGHT_START_Y];
+//				pos.w = ps[PS_RIGHT];
+//				pos.h = ps[PS_RIGHT_END_Y] - ps[PS_RIGHT_START_Y] + 1;
+//				j->set_floating_wished_position(pos);
+//				j->normalize();
+//				j->show();
+//				continue;
+//			}
+//
+//			if (ps[PS_TOP] > 0) {
+//				rect pos;
+//				pos.x = ps[PS_TOP_START_X];
+//				pos.y = 0;
+//				pos.w = ps[PS_TOP_END_X] - ps[PS_TOP_START_X] + 1;
+//				pos.h = ps[PS_TOP];
+//				j->set_floating_wished_position(pos);
+//				j->normalize();
+//				j->show();
+//				continue;
+//			}
+//
+//			if (ps[PS_BOTTOM] > 0) {
+//				rect pos;
+//				pos.x = ps[PS_BOTTOM_START_X];
+//				pos.y = _root->_root_position.h - ps[PS_BOTTOM];
+//				pos.w = ps[PS_BOTTOM_END_X] - ps[PS_BOTTOM_START_X] + 1;
+//				pos.h = ps[PS_BOTTOM];
+//				j->set_floating_wished_position(pos);
+//				j->normalize();
+//				j->show();
+//				continue;
+//			}
+//		}
+//	}
 }
 
 void page_t::process_net_vm_state_client_message(xcb_window_t c, long type, xcb_atom_t state_properties) {
@@ -2015,7 +2027,7 @@ void page_t::process_net_vm_state_client_message(xcb_window_t c, long type, xcb_
 	}
 }
 
-void page_t::insert_in_tree_using_transient_for(shared_ptr<client_base_t> c) {
+void page_t::insert_in_tree_using_transient_for(shared_ptr<xdg_surface_base_t> c) {
 	/* ensure the removal */
 	detach(c);
 
@@ -2023,7 +2035,7 @@ void page_t::insert_in_tree_using_transient_for(shared_ptr<client_base_t> c) {
 	if(transient_for != nullptr) {
 		transient_for->add_subclient(c);
 	} else {
-		auto mw = dynamic_pointer_cast<client_managed_t>(c);
+		auto mw = dynamic_pointer_cast<xdg_surface_toplevel_t>(c);
 
 		if (mw != nullptr) {
 			int workspace = find_current_desktop(c);
@@ -2038,16 +2050,16 @@ void page_t::insert_in_tree_using_transient_for(shared_ptr<client_base_t> c) {
 	}
 }
 
-shared_ptr<client_base_t> page_t::get_transient_for(
-		shared_ptr<client_base_t> c) {
-	assert(c != nullptr);
-	shared_ptr<client_base_t> transient_for = nullptr;
-	if (c->wm_transient_for() != nullptr) {
-		transient_for = find_client_with(*(c->wm_transient_for()));
-		if (transient_for == nullptr)
-			printf("Warning transient for an unknown client\n");
-	}
-	return transient_for;
+shared_ptr<xdg_surface_base_t> page_t::get_transient_for(
+		shared_ptr<xdg_surface_base_t> c) {
+//	assert(c != nullptr);
+//	shared_ptr<xdg_surface_base_t> transient_for = nullptr;
+//	if (c->wm_transient_for() != nullptr) {
+//		transient_for = find_client_with(*(c->wm_transient_for()));
+//		if (transient_for == nullptr)
+//			printf("Warning transient for an unknown client\n");
+//	}
+//	return transient_for;
 }
 
 void page_t::detach(shared_ptr<tree_t> t) {
@@ -2064,8 +2076,8 @@ void page_t::detach(shared_ptr<tree_t> t) {
 		 * proper client to re-focus and may re-focus that is not belong the
 		 * new workspace.
 		 **/
-		if(typeid(*t.get()) == typeid(client_managed_t)) {
-			auto x = dynamic_pointer_cast<client_managed_t>(t);
+		if(typeid(*t.get()) == typeid(xdg_surface_toplevel_t)) {
+			auto x = dynamic_pointer_cast<xdg_surface_toplevel_t>(t);
 			for(auto w: _root->_desktop_list)
 				w->client_focus_history_remove(x);
 		}
@@ -2078,7 +2090,7 @@ void page_t::detach(shared_ptr<tree_t> t) {
 	}
 }
 
-void page_t::fullscreen_client_to_viewport(shared_ptr<client_managed_t> c, shared_ptr<viewport_t> v) {
+void page_t::fullscreen_client_to_viewport(shared_ptr<xdg_surface_toplevel_t> c, shared_ptr<viewport_t> v) {
 	if (has_key(_fullscreen_client_to_viewport, c.get())) {
 		fullscreen_data_t & data = _fullscreen_client_to_viewport[c.get()];
 		if (v != data.viewport.lock()) {
@@ -2098,7 +2110,7 @@ void page_t::fullscreen_client_to_viewport(shared_ptr<client_managed_t> c, share
 	}
 }
 
-void page_t::bind_window(shared_ptr<client_managed_t> mw, bool activate) {
+void page_t::bind_window(shared_ptr<xdg_surface_toplevel_t> mw, bool activate) {
 	detach(mw);
 	insert_window_in_notebook(mw, nullptr, activate);
 	if(activate) {
@@ -2110,7 +2122,7 @@ void page_t::bind_window(shared_ptr<client_managed_t> mw, bool activate) {
 	_need_restack = true;
 }
 
-void page_t::unbind_window(shared_ptr<client_managed_t> mw) {
+void page_t::unbind_window(shared_ptr<xdg_surface_toplevel_t> mw) {
 	detach(mw);
 	/* update database */
 	if(mw->is(MANAGED_DOCK))
@@ -2153,7 +2165,7 @@ shared_ptr<notebook_t> page_t::get_another_notebook(shared_ptr<tree_t> base, sha
 
 }
 
-shared_ptr<notebook_t> page_t::find_parent_notebook_for(shared_ptr<client_managed_t> mw) {
+shared_ptr<notebook_t> page_t::find_parent_notebook_for(shared_ptr<xdg_surface_toplevel_t> mw) {
 	return dynamic_pointer_cast<notebook_t>(mw->parent()->shared_from_this());
 }
 
@@ -2419,127 +2431,20 @@ void page_t::remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v
 
 }
 
-/**
- * this function will check if a window must be managed or not.
- * If a window have to be managed, this function manage this window, if not
- * The function create unmanaged window.
- **/
-void page_t::onmap(xcb_window_t w) {
 
-	/* check if this window is a page window */
-	for(auto const & x: _root->get_all_children()) {
-		if(x->get_xid() == w)
-			return;
-	}
 
-	/* check if the window is already managed */
-	{
-		auto mw = find_client_with(w);
-		if(mw != nullptr) {
-			return;
-		}
-	}
-
-	try {
-
-		/* TODO: thinks are eassyer, but need changes */
-
-//		auto props = _dpy->create_client_proxy(w);
+//void page_t::create_managed_window(xcb_window_t w, xcb_atom_t type) {
+//	auto mw = make_shared<xdg_surface_toplevel_t>(this, w, type);
+//	_net_client_list.push_back(mw);
+//	manage_client(mw, type);
 //
-//		/* abuse try - catch */
-//		if(props->wa()._class == XCB_WINDOW_CLASS_INPUT_ONLY) {
-//			throw invalid_client_t{};
-//		}
-//
-//		//props->print_window_attributes();
-//		//props->print_properties();
-//
-//		xcb_atom_t type = props->wm_type();
-//
-//		if (not props->wa().override_redirect) {
-//			if (type == A(_NET_WM_WINDOW_TYPE_DESKTOP)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DOCK)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLBAR)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_MENU)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_UTILITY)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_SPLASH)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DIALOG)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_POPUP_MENU)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_COMBO)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DND)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
-//				create_managed_window(w, type);
-//			}
-//		} else {
-//			if (type == A(_NET_WM_WINDOW_TYPE_DESKTOP)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DOCK)) {
-//				create_managed_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLBAR)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_MENU)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_UTILITY)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_SPLASH)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DIALOG)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_POPUP_MENU)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_COMBO)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_DND)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-//				create_unmanaged_window(w, type);
-//			} else if (type == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
-//				create_unmanaged_window(w, type);
-//			}
-//		}
+////	if (mw->net_wm_strut() != nullptr
+////			or mw->net_wm_strut_partial() != nullptr) {
+////		update_workarea();
+////	}
+//}
 
-	} catch (invalid_client_t const & e) {
-		/* ignore invalid client */
-	}
-}
-
-
-void page_t::create_managed_window(xcb_window_t w, xcb_atom_t type) {
-	auto mw = make_shared<client_managed_t>(this, w, type);
-	_net_client_list.push_back(mw);
-	manage_client(mw, type);
-
-	if (mw->net_wm_strut() != nullptr
-			or mw->net_wm_strut_partial() != nullptr) {
-		update_workarea();
-	}
-}
-
-void page_t::manage_client(shared_ptr<client_managed_t> mw, xcb_atom_t type) {
+void page_t::manage_client(shared_ptr<xdg_surface_toplevel_t> mw) {
 	safe_update_transient_for(mw);
 	mw->activate();
 	mw->show();
@@ -2549,56 +2454,61 @@ void page_t::manage_client(shared_ptr<client_managed_t> mw, xcb_atom_t type) {
 		_need_restack = true;
 	}
 
-	/* find the desktop for this window */
-	{
-		unsigned int const * desktop = mw->net_wm_desktop();
-		if(desktop != nullptr) {
-			if(*desktop >= _root->_desktop_list.size()) {
-				mw->set_current_desktop(ALL_DESKTOP);
-				mw->net_wm_state_add(_NET_WM_STATE_STICKY);
-			}
-		} else {
-			if(mw->wm_transient_for() != nullptr) {
-				auto parent = dynamic_pointer_cast<client_managed_t>(find_client_with(*(mw->wm_transient_for())));
-				if(parent != nullptr) {
-					mw->set_current_desktop(find_current_desktop(parent));
-				} else {
-					if(mw->is_stiky()) {
-						mw->set_current_desktop(ALL_DESKTOP);
-					} else {
-						mw->set_current_desktop(_root->_current_desktop);
-					}
-				}
-			}
-		}
-	}
+	/* TODO: for the moment use the current desktop
+	 * later find the right desktop. */
 
-	if(find_current_desktop(mw) == ALL_DESKTOP) {
-		mw->show();
-	} else if(not _root->_desktop_list[find_current_desktop(mw)]->is_visible()) {
-		mw->show();
-	} else {
-		mw->hide();
-	}
+//	/* find the desktop for this window */
+//	{
+//		unsigned int const * desktop = mw->net_wm_desktop();
+//		if(desktop != nullptr) {
+//			if(*desktop >= _root->_desktop_list.size()) {
+//				mw->set_current_desktop(ALL_DESKTOP);
+//				mw->net_wm_state_add(_NET_WM_STATE_STICKY);
+//			}
+//		} else {
+//			if(mw->wm_transient_for() != nullptr) {
+//				auto parent = dynamic_pointer_cast<xdg_surface_toplevel_t>(find_client_with(*(mw->wm_transient_for())));
+//				if(parent != nullptr) {
+//					mw->set_current_desktop(find_current_desktop(parent));
+//				} else {
+//					if(mw->is_stiky()) {
+//						mw->set_current_desktop(ALL_DESKTOP);
+//					} else {
+//						mw->set_current_desktop(_root->_current_desktop);
+//					}
+//				}
+//			}
+//		}
+//	}
+//
+//	if(find_current_desktop(mw) == ALL_DESKTOP) {
+//		mw->show();
+//	} else if(not _root->_desktop_list[find_current_desktop(mw)]->is_visible()) {
+//		mw->show();
+//	} else {
+//		mw->hide();
+//	}
+//
+//	/* HACK OLD FASHION FULLSCREEN */
+//	if (mw->wm_normal_hints() != nullptr and mw->wm_type() == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
+//		XSizeHints const * size_hints = mw->wm_normal_hints();
+//		if ((size_hints->flags & PMaxSize)
+//				and (size_hints->flags & PMinSize)) {
+//			if (size_hints->min_width == _root->_root_position.w
+//					and size_hints->min_height == _root->_root_position.h
+//					and size_hints->max_width == _root->_root_position.w
+//					and size_hints->max_height == _root->_root_position.h) {
+//				mw->net_wm_state_add(_NET_WM_STATE_FULLSCREEN);
+//			}
+//		}
+//	}
 
-	/* HACK OLD FASHION FULLSCREEN */
-	if (mw->wm_normal_hints() != nullptr and mw->wm_type() == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
-		XSizeHints const * size_hints = mw->wm_normal_hints();
-		if ((size_hints->flags & PMaxSize)
-				and (size_hints->flags & PMinSize)) {
-			if (size_hints->min_width == _root->_root_position.w
-					and size_hints->min_height == _root->_root_position.h
-					and size_hints->max_width == _root->_root_position.w
-					and size_hints->max_height == _root->_root_position.h) {
-				mw->net_wm_state_add(_NET_WM_STATE_FULLSCREEN);
-			}
-		}
-	}
 
-	/**
-	 * Here client that default to fullscreen
-	 **/
-	if (mw->is_fullscreen()) {
+	if (mw->_pending.fullscreen) {
+		/**
+		 * Here client that default to fullscreen
+		 **/
+
 		mw->normalize();
 		fullscreen(mw);
 		update_desktop_visibility();
@@ -2606,53 +2516,19 @@ void page_t::manage_client(shared_ptr<client_managed_t> mw, xcb_atom_t type) {
 		mw->activate();
 		set_focus(mw, XCB_CURRENT_TIME);
 
+	} else if (mw->_pending.transient_for == nullptr) {
 		/**
-		 * Here client that default to notebook
+		 * Here client that is NOTEBOOK
 		 **/
-	} else if (((type == A(_NET_WM_WINDOW_TYPE_NORMAL))
-			//or type == A(_NET_WM_WINDOW_TYPE_DOCK))
-			and get_transient_for(mw) == nullptr
-			//and mw->has_motif_border()
-			and not mw->is_modal())
-			or type == A(_NET_WM_WINDOW_TYPE_DESKTOP)) {
 
-		/** select if the client want to appear mapped or iconic **/
-		bool activate = true;
-
-		/**
-		 * first try if previous vm has put this window in IconicState, then
-		 * Check if the client have a preferred initial state.
-		 **/
-		if (mw->wm_state() != nullptr) {
-			if (mw->wm_state()->state == IconicState) {
-				activate = false;
-			}
-		} else {
-			if (mw->wm_hints() != nullptr) {
-				if ((mw->wm_hints()->flags & StateHint)
-						and (mw->wm_hints()->initial_state == IconicState)) {
-					activate = false;
-				}
-			}
-		}
-
-//		if(mw->net_wm_state() != nullptr) {
-//			if(has_key(*mw->net_wm_state(), A(_NET_WM_STATE_HIDDEN))) {
-//				activate = false;
-//			}
-//		}
-
-		if(not mw->is(MANAGED_DOCK)) {
-			bind_window(mw, activate);
-		} else {
-			mw->net_wm_state_add(_NET_WM_STATE_STICKY);
-		}
+		bind_window(mw, true);
 		mw->reconfigure();
 
+	} else {
 		/**
 		 * Here client that default to floating
 		 **/
-	} else {
+
 		mw->normalize();
 		mw->show();
 		mw->activate();
@@ -2664,6 +2540,21 @@ void page_t::manage_client(shared_ptr<client_managed_t> mw, xcb_atom_t type) {
 		mw->reconfigure();
 		_need_restack = true;
 	}
+
+//	auto view = xdg_surface->create_view();
+//	weston_view_set_position(view, 0, 0);
+//	surface->timeline.force_refresh = 1;
+//
+//	wl_array array;
+//	wl_array_init(&array);
+//	wl_array_add(&array, sizeof(uint32_t)*2);
+//	((uint32_t*)array.data)[0] = XDG_SURFACE_STATE_MAXIMIZED;
+//	((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
+//	xdg_surface_send_configure(resource, 800, 800, &array, 10);
+//	wl_array_release(&array);
+//
+//	weston_view_geometry_dirty(view);
+
 }
 
 void page_t::create_unmanaged_window(xcb_window_t w, xcb_atom_t type) {
@@ -2688,15 +2579,15 @@ shared_ptr<viewport_t> page_t::find_mouse_viewport(int x, int y) const {
  * @output time: if time is found time is set to the found value.
  * @input c: a window client handler.
  **/
-bool page_t::get_safe_net_wm_user_time(shared_ptr<client_base_t> c, xcb_timestamp_t & time) {
+bool page_t::get_safe_net_wm_user_time(shared_ptr<xdg_surface_base_t> c, xcb_timestamp_t & time) {
 
 	/* TODO: Serial if apply */
 }
 
-shared_ptr<client_managed_t> page_t::find_managed_window_with(xcb_window_t w) {
+shared_ptr<xdg_surface_toplevel_t> page_t::find_managed_window_with(xcb_window_t w) {
 	auto c = find_client_with(w);
 	if (c != nullptr) {
-		return dynamic_pointer_cast<client_managed_t>(c);
+		return dynamic_pointer_cast<xdg_surface_toplevel_t>(c);
 	} else {
 		return nullptr;
 	}
@@ -2706,43 +2597,46 @@ shared_ptr<client_managed_t> page_t::find_managed_window_with(xcb_window_t w) {
  * This will remove a client from tree and destroy related data. This
  * function do not send any X11 request.
  **/
-void page_t::cleanup_not_managed_client(shared_ptr<client_not_managed_t> c) {
+void page_t::cleanup_not_managed_client(shared_ptr<xdg_surface_popup_t> c) {
 	remove_client(c);
 }
 
-void page_t::safe_update_transient_for(shared_ptr<client_base_t> c) {
-	if (typeid(*c.get()) == typeid(client_managed_t)) {
-		auto mw = dynamic_pointer_cast<client_managed_t>(c);
-		if (mw->is(MANAGED_FLOATING)) {
-			detach(mw);
-			insert_in_tree_using_transient_for(mw);
-		} else if (mw->is(MANAGED_NOTEBOOK)) {
-			/* DO NOTHING */
-		} else if (mw->is(MANAGED_FULLSCREEN)) {
-			/* DO NOTHING */
-		} else if (mw->is(MANAGED_DOCK)) {
-			detach(mw);
-			insert_in_tree_using_transient_for(mw);
-		}
-	} else if (typeid(*c.get()) == typeid(client_not_managed_t)) {
-		auto uw = dynamic_pointer_cast<client_not_managed_t>(c);
-		detach(uw);
-		if (uw->wm_type() == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
-			_root->tooltips->push_back(uw);
-		} else if (uw->wm_type() == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-			_root->notifications->push_back(uw);
-		} else if (uw->wm_type() == A(_NET_WM_WINDOW_TYPE_DOCK)) {
-			insert_in_tree_using_transient_for(uw);
-		} else if (uw->net_wm_state() != nullptr
-				and has_key<xcb_atom_t>(*(uw->net_wm_state()), A(_NET_WM_STATE_ABOVE))) {
-			_root->above->push_back(uw);
-		} else if (uw->net_wm_state() != nullptr
-				and has_key(*(uw->net_wm_state()), static_cast<xcb_atom_t>(A(_NET_WM_STATE_BELOW)))) {
-			_root->below->push_back(uw);
-		} else {
-			insert_in_tree_using_transient_for(uw);
-		}
-	}
+void page_t::safe_update_transient_for(shared_ptr<xdg_surface_base_t> c) {
+
+	/* TODO ? */
+
+//	if (typeid(*c.get()) == typeid(xdg_surface_toplevel_t)) {
+//		auto mw = dynamic_pointer_cast<xdg_surface_toplevel_t>(c);
+//		if (mw->is(MANAGED_FLOATING)) {
+//			detach(mw);
+//			insert_in_tree_using_transient_for(mw);
+//		} else if (mw->is(MANAGED_NOTEBOOK)) {
+//			/* DO NOTHING */
+//		} else if (mw->is(MANAGED_FULLSCREEN)) {
+//			/* DO NOTHING */
+//		} else if (mw->is(MANAGED_DOCK)) {
+//			detach(mw);
+//			insert_in_tree_using_transient_for(mw);
+//		}
+//	} else if (typeid(*c.get()) == typeid(xdg_surface_popup_t)) {
+//		auto uw = dynamic_pointer_cast<xdg_surface_popup_t>(c);
+//		detach(uw);
+//		if (uw->wm_type() == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
+//			_root->tooltips->push_back(uw);
+//		} else if (uw->wm_type() == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
+//			_root->notifications->push_back(uw);
+//		} else if (uw->wm_type() == A(_NET_WM_WINDOW_TYPE_DOCK)) {
+//			insert_in_tree_using_transient_for(uw);
+//		} else if (uw->net_wm_state() != nullptr
+//				and has_key<xcb_atom_t>(*(uw->net_wm_state()), A(_NET_WM_STATE_ABOVE))) {
+//			_root->above->push_back(uw);
+//		} else if (uw->net_wm_state() != nullptr
+//				and has_key(*(uw->net_wm_state()), static_cast<xcb_atom_t>(A(_NET_WM_STATE_BELOW)))) {
+//			_root->below->push_back(uw);
+//		} else {
+//			insert_in_tree_using_transient_for(uw);
+//		}
+//	}
 }
 
 void page_t::set_desktop_geometry(long width, long height) {
@@ -2756,7 +2650,7 @@ void page_t::set_desktop_geometry(long width, long height) {
 //			CARDINAL, 32, desktop_geometry, 2);
 }
 
-shared_ptr<client_managed_t> page_t::find_client_managed_with(xcb_window_t w) {
+shared_ptr<xdg_surface_toplevel_t> page_t::find_client_managed_with(xcb_window_t w) {
 	_net_client_list.remove_if([](weak_ptr<tree_t> const & w) { return w.expired(); });
 	for(auto & i: _net_client_list) {
 		if(i.lock()->has_window(w)) {
@@ -2766,8 +2660,8 @@ shared_ptr<client_managed_t> page_t::find_client_managed_with(xcb_window_t w) {
 	return nullptr;
 }
 
-shared_ptr<client_base_t> page_t::find_client_with(xcb_window_t w) {
-	for(auto & i: filter_class<client_base_t>(_root->get_all_children())) {
+shared_ptr<xdg_surface_base_t> page_t::find_client_with(xcb_window_t w) {
+	for(auto & i: filter_class<xdg_surface_base_t>(_root->get_all_children())) {
 		if(i->has_window(w)) {
 			return i;
 		}
@@ -2775,8 +2669,8 @@ shared_ptr<client_base_t> page_t::find_client_with(xcb_window_t w) {
 	return nullptr;
 }
 
-shared_ptr<client_base_t> page_t::find_client(xcb_window_t w) {
-	for(auto i: filter_class<client_base_t>(_root->get_all_children())) {
+shared_ptr<xdg_surface_base_t> page_t::find_client(xcb_window_t w) {
+	for(auto i: filter_class<xdg_surface_base_t>(_root->get_all_children())) {
 		if(i->orig() == w) {
 			return i;
 		}
@@ -2784,11 +2678,11 @@ shared_ptr<client_base_t> page_t::find_client(xcb_window_t w) {
 	return nullptr;
 }
 
-void page_t::remove_client(shared_ptr<client_base_t> c) {
+void page_t::remove_client(shared_ptr<xdg_surface_base_t> c) {
 	auto parent = c->parent()->shared_from_this();
 	detach(c);
 	for(auto i: c->children()) {
-		auto c = dynamic_pointer_cast<client_base_t>(i);
+		auto c = dynamic_pointer_cast<xdg_surface_base_t>(i);
 		if(c != nullptr) {
 			insert_in_tree_using_transient_for(c);
 		}
@@ -2894,7 +2788,7 @@ void page_t::print_state() const {
 	cout << "_current_desktop = " << _root->_current_desktop << endl;
 
 	cout << "clients list:" << endl;
-	for(auto c: filter_class<client_base_t>(_root->get_all_children())) {
+	for(auto c: filter_class<xdg_surface_base_t>(_root->get_all_children())) {
 		cout << "client " << c->get_node_name() << " id = " << c->orig() << " ptr = " << c << " parent = " << c->parent() << endl;
 	}
 	cout << "end" << endl;;
@@ -3159,7 +3053,7 @@ void page_t::process_leave_window_event(xcb_generic_event_t const * _e) {
 }
 
 void page_t::process_randr_notify_event(xcb_generic_event_t const * e) {
-	auto ev = reinterpret_cast<xcb_randr_notify_event_t const *>(e);
+	//auto ev = reinterpret_cast<xcb_randr_notify_event_t const *>(e);
 
 	//		char const * s_subtype = "Unknown";
 	//
@@ -3186,31 +3080,31 @@ void page_t::process_randr_notify_event(xcb_generic_event_t const * e) {
 	//			break;
 	//		}
 
-	if (ev->subCode == XCB_RANDR_NOTIFY_CRTC_CHANGE) {
-		update_viewport_layout();
-		_dpy->update_layout();
-		_theme->update();
-	}
+//	if (ev->subCode == XCB_RANDR_NOTIFY_CRTC_CHANGE) {
+//		update_viewport_layout();
+//		_dpy->update_layout();
+//		_theme->update();
+//	}
 
 	_need_restack = true;
 
 }
 
 void page_t::process_shape_notify_event(xcb_generic_event_t const * e) {
-	auto se = reinterpret_cast<xcb_shape_notify_event_t const *>(e);
-	if (se->shape_kind == XCB_SHAPE_SK_BOUNDING) {
-		xcb_window_t w = se->affected_window;
-		shared_ptr<client_base_t> c = find_client(w);
-		if (c != nullptr) {
-			c->update_shape();
-		}
-
-		auto mw = dynamic_pointer_cast<client_managed_t>(c);
-		if(mw != nullptr) {
-			mw->reconfigure();
-		}
-
-	}
+//	auto se = reinterpret_cast<xcb_shape_notify_event_t const *>(e);
+//	if (se->shape_kind == XCB_SHAPE_SK_BOUNDING) {
+//		xcb_window_t w = se->affected_window;
+//		shared_ptr<xdg_surface_base_t> c = find_client(w);
+//		if (c != nullptr) {
+//			c->update_shape();
+//		}
+//
+//		auto mw = dynamic_pointer_cast<xdg_surface_toplevel_t>(c);
+//		if(mw != nullptr) {
+//			mw->reconfigure();
+//		}
+//
+//	}
 }
 
 void page_t::process_motion_notify(xcb_generic_event_t const * _e) {
@@ -3296,10 +3190,10 @@ void page_t::run_cmd(std::string const & cmd_with_args)
     return;
 }
 
-vector<shared_ptr<client_managed_t>> page_t::get_sticky_client_managed(shared_ptr<tree_t> base) {
-	vector<shared_ptr<client_managed_t>> ret;
+vector<shared_ptr<xdg_surface_toplevel_t>> page_t::get_sticky_client_managed(shared_ptr<tree_t> base) {
+	vector<shared_ptr<xdg_surface_toplevel_t>> ret;
 	for(auto c: base->get_all_children()) {
-		auto mw = dynamic_pointer_cast<client_managed_t>(c);
+		auto mw = dynamic_pointer_cast<xdg_surface_toplevel_t>(c);
 		if(mw != nullptr) {
 			if(mw->is_stiky() and (not mw->is(MANAGED_NOTEBOOK)) and (not mw->is(MANAGED_FULLSCREEN)))
 				ret.push_back(mw);
@@ -3320,12 +3214,12 @@ shared_ptr<viewport_t> page_t::find_viewport_of(shared_ptr<tree_t> t) {
 	return nullptr;
 }
 
-unsigned int page_t::find_current_desktop(shared_ptr<client_base_t> c) {
-	if(c->net_wm_desktop() != nullptr)
-		return *(c->net_wm_desktop());
-	auto d = find_desktop_of(c);
-	if(d != nullptr)
-		return d->id();
+unsigned int page_t::find_current_desktop(shared_ptr<xdg_surface_base_t> c) {
+//	if(c->net_wm_desktop() != nullptr)
+//		return *(c->net_wm_desktop());
+//	auto d = find_desktop_of(c);
+//	if(d != nullptr)
+//		return d->id();
 	return _root->_current_desktop;
 }
 
@@ -3348,11 +3242,11 @@ theme_t const * page_t::theme() const {
 }
 
 display_compositor_t * page_t::dpy() const {
-	return _dpy;
+	return const_cast<page_t*>(this);
 }
 
 display_compositor_t * page_t::cmp() const {
-	return _dpy;
+	return const_cast<page_t*>(this);
 }
 
 void page_t::grab_start(grab_handler_t * handler) {
@@ -3413,11 +3307,11 @@ xcb_atom_t page_t::A(atom_e atom) {
 	/* OBSOLETE */
 }
 
-list<weak_ptr<client_managed_t>> page_t::global_client_focus_history() {
+list<weak_ptr<xdg_surface_toplevel_t>> page_t::global_client_focus_history() {
 	return _global_focus_history;
 }
 
-bool page_t::global_focus_history_front(shared_ptr<client_managed_t> & out) {
+bool page_t::global_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out) {
 	if(not global_focus_history_is_empty()) {
 		out = _global_focus_history.front().lock();
 		return true;
@@ -3425,11 +3319,11 @@ bool page_t::global_focus_history_front(shared_ptr<client_managed_t> & out) {
 	return false;
 }
 
-void page_t::global_focus_history_remove(shared_ptr<client_managed_t> in) {
+void page_t::global_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in) {
 	_global_focus_history.remove_if([in](weak_ptr<tree_t> const & w) { return w.expired() or w.lock() == in; });
 }
 
-void page_t::global_focus_history_move_front(shared_ptr<client_managed_t> in) {
+void page_t::global_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in) {
 	move_front(_global_focus_history, in);
 }
 
@@ -3544,7 +3438,6 @@ auto page_t::mainloop() -> mainloop_t * {
 }
 
 
-
 using backend_init_func =
 		int (*)(struct weston_compositor *c,
 	    int *argc, char *argv[],
@@ -3651,7 +3544,248 @@ void page_t::on_output_created(weston_output * output) {
 
 }
 
+void page_t::xdg_shell_destroy(wl_client * client,
+		  wl_resource * resource) {
+	/* TODO */
+}
 
+void page_t::xdg_shell_use_unstable_version(wl_client * client, wl_resource * resource, int32_t version) {
+	/* TODO */
+}
+
+void page_t::xdg_shell_get_xdg_surface(wl_client * client,
+		    wl_resource * resource,
+		    uint32_t id,
+		    wl_resource * surface_resource) {
+
+	auto surface =
+		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
+	auto c = client_t::get(resource);
+
+	auto xdg_surface = make_shared<xdg_surface_toplevel_t>(this, client, surface, id);
+	c->xdg_shell_surfaces.push_back(xdg_surface);
+
+	resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
+	wl_resource_set_implementation(resource,
+			&display_compositor_t::xdg_surface_implementation,
+			this, &xdg_surface_toplevel_t::xdg_surface_delete);
+
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(surface, "xdg_surface",
+				    resource, XDG_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
+
+
+
+	auto s = xdg_surface->on_configure.connect(this, &page_t::configure_surface);
+
+
+	/* the first output */
+	weston_output* output = wl_container_of(ec->output_list.next,
+		    output, link);
+	surface->output = output;
+
+
+	weston_log("exit %s\n", __PRETTY_FUNCTION__);
+
+}
+
+void
+page_t::xdg_shell_get_xdg_popup(wl_client * client,
+		  wl_resource * resource,
+		  uint32_t id,
+		  wl_resource * surface_resource,
+		  wl_resource * parent_resource,
+		  wl_resource * seat_resource,
+		  uint32_t serial,
+		  int32_t x, int32_t y) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+//	/* In our case nullptr */
+//	auto surface =
+//		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
+//	auto shell = xdg_shell_t::get(resource);
+//
+//	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
+//
+//	auto xdg_popup = new xdg_popup_t(client, id, surface, x, y);
+
+}
+
+void
+page_t::xdg_shell_pong(struct wl_client *client,
+	 struct wl_resource *resource, uint32_t serial)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+
+void page_t::configure_surface(shared_ptr<xdg_surface_toplevel_t> xdg_surface,
+			int32_t sx, int32_t sy) {
+
+	if(xdg_surface->is(MANAGED_UNDEFINED)) {
+		manage_client(xdg_surface);
+	} else {
+		/* TODO: update the state if necessary */
+	}
+
+}
+
+
+/**
+ * the xdg-surface
+ **/
+
+void page_t::xdg_surface_destroy(struct wl_client *client,
+		struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	wl_resource_destroy(resource);
+}
+
+void page_t::xdg_surface_set_parent(wl_client * client,
+		wl_resource * resource, wl_resource * parent_resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+
+	if(parent_resource) {
+		auto parent = reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(resource));
+		xdg_surface->set_transient_for(parent);
+	} else {
+		xdg_surface->set_transient_for(nullptr);
+	}
+
+}
+
+void
+page_t::xdg_surface_set_app_id(struct wl_client *client,
+		       struct wl_resource *resource,
+		       const char *app_id)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+
+}
+
+void
+page_t::xdg_surface_show_window_menu(wl_client *client,
+			     wl_resource *surface_resource,
+			     wl_resource *seat_resource,
+			     uint32_t serial,
+			     int32_t x,
+			     int32_t y)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(surface_resource);
+
+}
+
+void
+page_t::xdg_surface_set_title(wl_client *client,
+			wl_resource *resource, const char *title)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_title(title);
+}
+
+void
+page_t::xdg_surface_move(struct wl_client *client, struct wl_resource *resource,
+		 struct wl_resource *seat_resource, uint32_t serial)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//
+//	auto seat = reinterpret_cast<weston_seat*>(wl_resource_get_user_data(seat_resource));
+//	auto xdg_surface = xdg_surface_t::get(resource);
+//	auto pointer = weston_seat_get_pointer(seat);
+//
+//	weston_pointer_grab_move_t * grab_data =
+//			reinterpret_cast<weston_pointer_grab_move_t *>(malloc(sizeof *grab_data));
+//	/** TODO: memory error **/
+//
+//	grab_data->base.interface = &move_grab_interface;
+//	grab_data->base.pointer = nullptr;
+//
+//	/* relative client position from the cursor */
+//	grab_data->origin_x = xdg_surface->view->geometry.x - wl_fixed_to_double(pointer->grab_x);
+//	grab_data->origin_y = xdg_surface->view->geometry.y - wl_fixed_to_double(pointer->grab_y);
+//
+//	wl_list_remove(&(xdg_surface->view->layer_link.link));
+//	wl_list_insert(&(cmp->default_layer.view_list.link),
+//			&(xdg_surface->view->layer_link.link));
+//
+//	weston_pointer_start_grab(seat->pointer_state, &grab_data->base);
+
+}
+
+void
+page_t::xdg_surface_resize(struct wl_client *client, struct wl_resource *resource,
+		   struct wl_resource *seat_resource, uint32_t serial,
+		   uint32_t edges)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+void page_t::xdg_surface_ack_configure(wl_client *client,
+		wl_resource * resource,
+		uint32_t serial)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+
+	//weston_layer_entry_insert(&cmp->default_layer.view_list, &xdg_surface->view->layer_link);
+
+}
+
+void
+page_t::xdg_surface_set_window_geometry(struct wl_client *client,
+				struct wl_resource *resource,
+				int32_t x,
+				int32_t y,
+				int32_t width,
+				int32_t height)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_window_geometry(x, y, width, height);
+}
+
+void
+page_t::xdg_surface_set_maximized(struct wl_client *client,
+			  struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_maximized();
+}
+
+void
+page_t::xdg_surface_unset_maximized(struct wl_client *client,
+			    struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->unset_maximized();
+}
+
+void
+page_t::xdg_surface_set_fullscreen(struct wl_client *client,
+			   struct wl_resource *resource,
+			   struct wl_resource *output_resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_fullscreen();
+}
+
+void
+page_t::xdg_surface_unset_fullscreen(struct wl_client *client,
+			     struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->unset_fullscreen();
+}
+
+void
+page_t::xdg_surface_set_minimized(struct wl_client *client,
+			    struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_minimized();
+}
 
 }
 

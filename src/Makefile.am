@@ -19,9 +19,6 @@ page_compositor_SOURCES = \
 	page.cxx \
 	page.hxx \
 	page-context.hxx \
-	xdg-shell.cxx \
-	xdg-surface.cxx \
-	xdg-popup.cxx \
 	client_base.cxx \
 	client_base.hxx \
 	client_managed.cxx \

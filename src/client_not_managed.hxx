@@ -25,33 +25,24 @@
 
 namespace page {
 
-class client_not_managed_t : public client_base_t {
+class xdg_surface_popup_t : public xdg_surface_base_t {
 private:
-
-	static unsigned long const UNMANAGED_ORIG_WINDOW_EVENT_MASK =
-	XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE;
-
-	xcb_atom_t _net_wm_type;
 
 	mutable rect _base_position;
 
-	mutable region _opaque_region_cache;
-	mutable region _visible_region_cache;
-	mutable region _damage_cache;
-
-	shared_ptr<client_view_t> _client_view;
+	weston_view * _default_view;
 
 	/* avoid copy */
-	client_not_managed_t(client_not_managed_t const &);
-	client_not_managed_t & operator=(client_not_managed_t const &);
+	xdg_surface_popup_t(xdg_surface_popup_t const &);
+	xdg_surface_popup_t & operator=(xdg_surface_popup_t const &);
 
 	void _update_visible_region();
 	void _update_opaque_region();
 
 public:
 
-	client_not_managed_t(page_context_t * ctx, xcb_window_t w, xcb_atom_t type);
-	~client_not_managed_t();
+	xdg_surface_popup_t(page_context_t * ctx, xcb_window_t w, xcb_atom_t type);
+	~xdg_surface_popup_t();
 
 	auto net_wm_type() -> xcb_atom_t;
 

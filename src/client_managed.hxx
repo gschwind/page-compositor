@@ -24,26 +24,32 @@
 
 namespace page {
 
+class page_t;
+
 using namespace std;
 
 enum managed_window_type_e {
+	MANAGED_UNDEFINED,
 	MANAGED_FLOATING,
 	MANAGED_NOTEBOOK,
 	MANAGED_FULLSCREEN,
 	MANAGED_DOCK
 };
 
-class client_managed_t : public client_base_t {
+class xdg_surface_toplevel_t : public xdg_surface_base_t {
 
-	static long const MANAGED_BASE_WINDOW_EVENT_MASK = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_STRUCTURE_NOTIFY;
-	static long const MANAGED_DECO_WINDOW_EVENT_MASK = XCB_EVENT_MASK_EXPOSURE;
-	static long const MANAGED_ORIG_WINDOW_EVENT_MASK = XCB_EVENT_MASK_STRUCTURE_NOTIFY | XCB_EVENT_MASK_PROPERTY_CHANGE | XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_ENTER_WINDOW;
-	static uint32_t const DEFAULT_BUTTON_EVENT_MASK =  XCB_EVENT_MASK_BUTTON_PRESS|XCB_EVENT_MASK_BUTTON_MOTION|XCB_EVENT_MASK_BUTTON_RELEASE;
+	friend class page::page_t;
 
-	managed_window_type_e _managed_type;
-	xcb_atom_t _net_wm_type;
+	struct {
+		string title;
+		bool fullscreen;
+		bool maximize;
+		bool minimize;
+		xdg_surface_toplevel_t * transient_for;
+		rect geometry;
+	} _pending;
 
-	shared_ptr<client_view_t> _client_view;
+	weston_view * _default_view;
 
 	/** hold floating position **/
 	rect _floating_wished_position;
@@ -60,62 +66,13 @@ class client_managed_t : public client_base_t {
 	// the output surface (i.e. surface where we write things)
 	cairo_surface_t * _surf;
 
-	// border surface of floating window
-	shared_ptr<pixmap_t> _top_buffer;
-	shared_ptr<pixmap_t> _bottom_buffer;
-	shared_ptr<pixmap_t> _left_buffer;
-	shared_ptr<pixmap_t> _right_buffer;
-
-
 	// window title cache
 	string _title;
 
 	// icon cache
 	shared_ptr<icon16> _icon;
 
-	xcb_visualid_t _orig_visual;
-	int _orig_depth;
-
-	xcb_visualid_t _deco_visual;
-	int _deco_depth;
-
-	//xcb_window_t _orig;
-	xcb_window_t _base;
-	xcb_window_t _deco;
-
-	xcb_window_t _input_top;
-	xcb_window_t _input_left;
-	xcb_window_t _input_right;
-	xcb_window_t _input_bottom;
-	xcb_window_t _input_top_left;
-	xcb_window_t _input_top_right;
-	xcb_window_t _input_bottom_left;
-	xcb_window_t _input_bottom_right;
-
-	rect _area_top;
-	rect _area_left;
-	rect _area_right;
-	rect _area_bottom;
-	rect _area_top_left;
-	rect _area_top_right;
-	rect _area_bottom_left;
-	rect _area_bottom_right;
-
-	struct floating_area_t {
-		rect close_button;
-		rect bind_button;
-		rect title_button;
-		rect grip_top;
-		rect grip_bottom;
-		rect grip_left;
-		rect grip_right;
-		rect grip_top_left;
-		rect grip_top_right;
-		rect grip_bottom_left;
-		rect grip_bottom_right;
-	};
-
-	floating_area_t _floating_area;
+	xdg_surface_toplevel_t * _transient_for;
 
 	bool _has_focus;
 	bool _is_iconic;
@@ -124,15 +81,12 @@ class client_managed_t : public client_base_t {
 	bool _is_exposed;
 	bool _has_change;
 
-	mutable region _opaque_region_cache;
-	mutable region _visible_region_cache;
-	mutable region _damage_cache;
+	/* handle the state of management: notebook, floating, fullscreen */
+	managed_window_type_e _managed_type;
 
 	/* private to avoid copy */
-	client_managed_t(client_managed_t const &);
-	client_managed_t & operator=(client_managed_t const &);
-
-	void init_managed_type(managed_window_type_e type);
+	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &);
+	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &);
 
 	void fake_configure_unsafe();
 	void set_wished_position(rect const & position);
@@ -143,11 +97,8 @@ class client_managed_t : public client_base_t {
 	void update_icon();
 	void set_theme(theme_t const * theme);
 
-	xcb_window_t deco() const;
-	xcb_atom_t A(atom_e atom);
+	uint32_t deco() const;
 	void icccm_focus_unsafe(xcb_timestamp_t t);
-
-	void net_wm_allowed_actions_add(atom_e atom);
 
 	void map_unsafe();
 	void unmap_unsafe();
@@ -155,12 +106,11 @@ class client_managed_t : public client_base_t {
 	void select_inputs_unsafe();
 	void unselect_inputs_unsafe();
 
-	void _update_title();
 	void _update_visible_region();
 	void _update_opaque_region();
 	void _apply_floating_hints_constraint();
 
-	auto shared_from_this() -> shared_ptr<client_managed_t>;
+	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
 
 	xcb_atom_t net_wm_type();
 	bool get_wm_normal_hints(XSizeHints * size_hints);
@@ -181,18 +131,28 @@ class client_managed_t : public client_base_t {
 	void _update_backbuffers();
 	void _paint_exposed();
 
+	static void xdg_surface_delete(wl_resource *resource);
+
+	/** called on surface commit */
+	static void _weston_configure(struct weston_surface *es, int32_t sx, int32_t sy);
+
+
 public:
 
-	client_managed_t(page_context_t * ctx, uint32_t w, uint32_t net_wm_type);
-	virtual ~client_managed_t();
+	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
 
-	signal_t<client_managed_t *> on_destroy;
-	signal_t<shared_ptr<client_managed_t>> on_title_change;
-	signal_t<shared_ptr<client_managed_t>> on_focus_change;
+	xdg_surface_toplevel_t(page_context_t * ctx, wl_client * client,
+			weston_surface * surface, uint32_t id);
+	virtual ~xdg_surface_toplevel_t();
+
+	signal_t<xdg_surface_toplevel_t *> on_destroy;
+	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_title_change;
+	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_focus_change;
+	signal_t<shared_ptr<xdg_surface_toplevel_t>, int32_t, int32_t> on_configure;
+
 
 	bool is(managed_window_type_e type);
 	auto title() const -> string const &;
-	auto create_view() -> shared_ptr<client_view_t>;
 	auto get_wished_position() -> rect const &;
 	void set_floating_wished_position(rect const & pos);
 	rect get_base_position() const;
@@ -225,6 +185,19 @@ public:
 	void grab_button_focused_unsafe();
 	void grab_button_unfocused_unsafe();
 
+
+	void set_title(char const *);
+	void set_transient_for(xdg_surface_toplevel_t * s);
+	auto transient_for() const -> xdg_surface_toplevel_t *;
+
+	void set_maximized();
+	void unset_maximized();
+	void set_fullscreen();
+	void unset_fullscreen();
+	void set_minimized();
+
+	void set_window_geometry(int32_t x, int32_t y, int32_t w, int32_t h);
+
 	/**
 	 * tree_t virtual API
 	 **/
@@ -245,12 +218,12 @@ public:
 
 	virtual void activate();
 	//virtual void activate(shared_ptr<tree_t> t);
-	virtual bool button_press(xcb_button_press_event_t const * ev);
+	// virtual bool button_press(xcb_button_press_event_t const * ev);
 	// virtual bool button_release(xcb_button_release_event_t const * ev);
 	// virtual bool button_motion(xcb_motion_notify_event_t const * ev);
 	// virtual bool leave(xcb_leave_notify_event_t const * ev);
 	// virtual bool enter(xcb_enter_notify_event_t const * ev);
-	virtual void expose(xcb_expose_event_t const * ev);
+	// virtual void expose(xcb_expose_event_t const * ev);
 
 	// virtual auto get_xid() const -> xcb_window_t;
 	// virtual auto get_parent_xid() const -> xcb_window_t;
@@ -263,9 +236,9 @@ public:
 	 * client base API
 	 **/
 
-	virtual bool has_window(xcb_window_t w) const;
-	virtual auto base() const -> xcb_window_t;
-	virtual auto orig() const -> xcb_window_t;
+	virtual bool has_window(uint32_t w) const;
+	virtual auto base() const -> uint32_t;
+	virtual auto orig() const -> uint32_t;
 	virtual auto base_position() const -> rect const &;
 	virtual auto orig_position() const -> rect const &;
 	virtual void on_property_notify(xcb_property_notify_event_t const * e);
@@ -273,8 +246,8 @@ public:
 };
 
 
-using client_managed_p = shared_ptr<client_managed_t>;
-using client_managed_w = weak_ptr<client_managed_t>;
+using client_managed_p = shared_ptr<xdg_surface_toplevel_t>;
+using client_managed_w = weak_ptr<xdg_surface_toplevel_t>;
 
 }
 

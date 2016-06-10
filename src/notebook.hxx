@@ -32,7 +32,7 @@ namespace page {
 
 using namespace std;
 
-class client_managed_t;
+class xdg_surface_toplevel_t;
 class grab_bind_client_t;
 
 class notebook_t : public page_component_t {
@@ -67,8 +67,8 @@ class notebook_t : public page_component_t {
 	struct {
 		int event_x;
 		int event_y;
-		tuple<rect, weak_ptr<client_managed_t>, theme_tab_t *> * tab;
-		tuple<rect, weak_ptr<client_managed_t>, int> * exposay;
+		tuple<rect, weak_ptr<xdg_surface_toplevel_t>, theme_tab_t *> * tab;
+		tuple<rect, weak_ptr<xdg_surface_toplevel_t>, int> * exposay;
 	} _mouse_over;
 
 	enum select_e {
@@ -101,7 +101,7 @@ class notebook_t : public page_component_t {
 	// list to maintain the client order
 	list<_client_context_t> _clients_tab_order;
 
-	shared_ptr<client_managed_t> _selected;
+	shared_ptr<xdg_surface_toplevel_t> _selected;
 
 	rect _client_area;
 	rect _client_position;
@@ -134,11 +134,11 @@ class notebook_t : public page_component_t {
 	} _area;
 
 	/* list of tabs and exposay buttons */
-	vector<tuple<rect, weak_ptr<client_managed_t>, theme_tab_t *>> _client_buttons;
-	vector<tuple<rect, weak_ptr<client_managed_t>, int>> _exposay_buttons;
+	vector<tuple<rect, weak_ptr<xdg_surface_toplevel_t>, theme_tab_t *>> _client_buttons;
+	vector<tuple<rect, weak_ptr<xdg_surface_toplevel_t>, int>> _exposay_buttons;
 	shared_ptr<renderable_unmanaged_gaussian_shadow_t<16>> _exposay_mouse_over;
 
-	void _set_selected(shared_ptr<client_managed_t> c);
+	void _set_selected(shared_ptr<xdg_surface_toplevel_t> c);
 
 
 	void _start_fading();
@@ -148,7 +148,7 @@ class notebook_t : public page_component_t {
 	void _update_layout();
 	void _update_mouse_over();
 
-	void _process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<client_managed_t> c, int selected);
+	void _process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<xdg_surface_toplevel_t> c, int selected);
 
 	void _mouse_over_reset();
 	void _mouse_over_set();
@@ -161,33 +161,33 @@ class notebook_t : public page_component_t {
 	rect _compute_notebook_close_position() const;
 	rect _compute_notebook_menu_position() const;
 
-	void _client_title_change(shared_ptr<client_managed_t> c);
-	void _client_destroy(client_managed_t * c);
-	void _client_focus_change(shared_ptr<client_managed_t> c);
+	void _client_title_change(shared_ptr<xdg_surface_toplevel_t> c);
+	void _client_destroy(xdg_surface_toplevel_t * c);
+	void _client_focus_change(shared_ptr<xdg_surface_toplevel_t> c);
 
 	void _update_allocation(rect & allocation);
 
-	void _remove_client(shared_ptr<client_managed_t> c);
+	void _remove_client(shared_ptr<xdg_surface_toplevel_t> c);
 
-	void _activate_client(shared_ptr<client_managed_t> x);
+	void _activate_client(shared_ptr<xdg_surface_toplevel_t> x);
 
 
 	rect _get_new_client_size();
 
 	void _select_next();
 
-	rect _compute_client_size(shared_ptr<client_managed_t> c);
+	rect _compute_client_size(shared_ptr<xdg_surface_toplevel_t> c);
 
-	auto clients() const -> list<shared_ptr<client_managed_t>>;
-	auto selected() const -> shared_ptr<client_managed_t>;
+	auto clients() const -> list<shared_ptr<xdg_surface_toplevel_t>>;
+	auto selected() const -> shared_ptr<xdg_surface_toplevel_t>;
 	bool is_default() const;
 
-	bool _has_client(shared_ptr<client_managed_t> c);
+	bool _has_client(shared_ptr<xdg_surface_toplevel_t> c);
 	list<_client_context_t>::iterator _find_client_context(client_managed_p client);
 
 	void _update_exposay();
 	void _stop_exposay();
-	void _start_client_menu(shared_ptr<client_managed_t> c, xcb_button_t button, uint16_t x, uint16_t y);
+	void _start_client_menu(shared_ptr<xdg_surface_toplevel_t> c, xcb_button_t button, uint16_t x, uint16_t y);
 
 	void _scroll_left(int x);
 	void _scroll_right(int x);
@@ -238,9 +238,9 @@ public:
 	void set_default(bool x);
 	void render_legacy(cairo_t * cr);
 	void start_exposay();
-	void update_client_position(shared_ptr<client_managed_t> c);
-	void iconify_client(shared_ptr<client_managed_t> x);
-	bool add_client(shared_ptr<client_managed_t> c, bool prefer_activate);
+	void update_client_position(shared_ptr<xdg_surface_toplevel_t> c);
+	void iconify_client(shared_ptr<xdg_surface_toplevel_t> x);
+	bool add_client(shared_ptr<xdg_surface_toplevel_t> c, bool prefer_activate);
 
 	/* TODO : remove it */
 	friend grab_bind_client_t;

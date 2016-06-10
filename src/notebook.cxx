@@ -91,19 +91,19 @@ void notebook_t::replace(shared_ptr<page_component_t> src, shared_ptr<page_compo
 }
 
 void notebook_t::remove(shared_ptr<tree_t> src) {
-	auto mw = dynamic_pointer_cast<client_managed_t>(src);
+	auto mw = dynamic_pointer_cast<xdg_surface_toplevel_t>(src);
 	if (_has_client(mw)) {
 		_remove_client(mw);
 	}
 }
 
-void notebook_t::_activate_client(shared_ptr<client_managed_t> x) {
+void notebook_t::_activate_client(shared_ptr<xdg_surface_toplevel_t> x) {
 	if (_has_client(x)) {
 		_set_selected(x);
 	}
 }
 
-void notebook_t::_remove_client(shared_ptr<client_managed_t> x) {
+void notebook_t::_remove_client(shared_ptr<xdg_surface_toplevel_t> x) {
 	auto x_client_context = _find_client_context(x);
 	if(x_client_context == _clients_tab_order.end())
 		return;
@@ -128,7 +128,7 @@ void notebook_t::_remove_client(shared_ptr<client_managed_t> x) {
 			and not _children.empty()
 			and _selected == nullptr
 			and not _exposay) {
-		_selected = dynamic_pointer_cast<client_managed_t>(_children.back());
+		_selected = dynamic_pointer_cast<xdg_surface_toplevel_t>(_children.back());
 
 		if (_selected != nullptr and _is_visible) {
 			_selected->normalize();
@@ -140,7 +140,7 @@ void notebook_t::_remove_client(shared_ptr<client_managed_t> x) {
 
 }
 
-void notebook_t::_set_selected(shared_ptr<client_managed_t> c) {
+void notebook_t::_set_selected(shared_ptr<xdg_surface_toplevel_t> c) {
 	/** already selected **/
 	if(_selected == c and not c->is_iconic())
 		return;
@@ -162,14 +162,14 @@ void notebook_t::_set_selected(shared_ptr<client_managed_t> c) {
 	_layout_is_durty = true;
 }
 
-void notebook_t::update_client_position(shared_ptr<client_managed_t> c) {
+void notebook_t::update_client_position(shared_ptr<xdg_surface_toplevel_t> c) {
 	/* compute the window placement within notebook */
 	_client_position = _compute_client_size(c);
 	c->set_notebook_wished_position(to_root_position(_client_position));
 	c->reconfigure();
 }
 
-void notebook_t::iconify_client(shared_ptr<client_managed_t> x) {
+void notebook_t::iconify_client(shared_ptr<xdg_surface_toplevel_t> x) {
 	if(_selected == x) {
 		_start_fading();
 		_selected->iconify();
@@ -298,7 +298,7 @@ void notebook_t::_update_layout() {
 
 }
 
-rect notebook_t::_compute_client_size(shared_ptr<client_managed_t> c) {
+rect notebook_t::_compute_client_size(shared_ptr<xdg_surface_toplevel_t> c) {
 	dimention_t<unsigned> size =
 			c->compute_size_with_constrain(_client_area.w, _client_area.h);
 
@@ -325,7 +325,7 @@ rect notebook_t::_compute_client_size(shared_ptr<client_managed_t> c) {
 
 }
 
-shared_ptr<client_managed_t> notebook_t::selected() const {
+shared_ptr<xdg_surface_toplevel_t> notebook_t::selected() const {
 	return _selected;
 }
 
@@ -352,7 +352,7 @@ void notebook_t::activate(shared_ptr<tree_t> t) {
 	activate();
 	move_back(_children, t);
 
-	auto mw = dynamic_pointer_cast<client_managed_t>(t);
+	auto mw = dynamic_pointer_cast<xdg_surface_toplevel_t>(t);
 	if (mw != nullptr) {
 		_set_selected(mw);
 	}
@@ -523,7 +523,7 @@ void notebook_t::_update_notebook_areas() {
 
 			}
 
-			_client_buttons.push_back(std::make_tuple(b, weak_ptr<client_managed_t>{_selected}, &_theme_notebook.selected_client));
+			_client_buttons.push_back(std::make_tuple(b, weak_ptr<xdg_surface_toplevel_t>{_selected}, &_theme_notebook.selected_client));
 
 		} else {
 			_area.close_client = rect{};
@@ -948,7 +948,7 @@ bool notebook_t::button_press(xcb_button_press_event_t const * e) {
 
 }
 
-void notebook_t::_start_client_menu(shared_ptr<client_managed_t> c, xcb_button_t button, uint16_t x, uint16_t y) {
+void notebook_t::_start_client_menu(shared_ptr<xdg_surface_toplevel_t> c, xcb_button_t button, uint16_t x, uint16_t y) {
 	auto callback = [this, c] (dropdown_menu_t<int> * ths, int selected) -> void { this->_process_notebook_client_menu(ths, c, selected); };
 	std::vector<std::shared_ptr<dropdown_menu_t<int>::item_t>> v;
 	for(unsigned k = 0; k < _ctx->get_workspace_count(); ++k) {
@@ -961,7 +961,7 @@ void notebook_t::_start_client_menu(shared_ptr<client_managed_t> c, xcb_button_t
 
 }
 
-void notebook_t::_process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<client_managed_t> c, int selected) {
+void notebook_t::_process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<xdg_surface_toplevel_t> c, int selected) {
 	printf("Change desktop %d for %u\n", selected, c->orig());
 
 	if(selected == _ctx->get_workspace_count()) {
@@ -988,8 +988,8 @@ void notebook_t::_update_mouse_over() {
 	if (_allocation.is_inside(x, y)) {
 
 		notebook_button_e new_button_mouse_over = NOTEBOOK_BUTTON_NONE;
-		tuple<rect, weak_ptr<client_managed_t>, theme_tab_t *> * tab = nullptr;
-		tuple<rect, weak_ptr<client_managed_t>, int> * exposay = nullptr;
+		tuple<rect, weak_ptr<xdg_surface_toplevel_t>, theme_tab_t *> * tab = nullptr;
+		tuple<rect, weak_ptr<xdg_surface_toplevel_t>, int> * exposay = nullptr;
 
 		if (_area.button_close.is_inside(x, y)) {
 			new_button_mouse_over = NOTEBOOK_BUTTON_CLOSE;
@@ -1136,7 +1136,7 @@ void notebook_t::_mouse_over_set() {
 	}
 }
 
-void notebook_t::_client_title_change(shared_ptr<client_managed_t> c) {
+void notebook_t::_client_title_change(shared_ptr<xdg_surface_toplevel_t> c) {
 	for(auto & x: _client_buttons) {
 		if(c == std::get<1>(x).lock()) {
 			std::get<2>(x)->title = c->title();
@@ -1155,11 +1155,11 @@ void notebook_t::_client_title_change(shared_ptr<client_managed_t> c) {
 	_layout_is_durty = true;
 }
 
-void notebook_t::_client_destroy(client_managed_t * c) {
+void notebook_t::_client_destroy(xdg_surface_toplevel_t * c) {
 	throw exception_t("not expected call of %d", __PRETTY_FUNCTION__);
 }
 
-void notebook_t::_client_focus_change(shared_ptr<client_managed_t> c) {
+void notebook_t::_client_focus_change(shared_ptr<xdg_surface_toplevel_t> c) {
 	_layout_is_durty = true;
 }
 
@@ -1202,7 +1202,7 @@ void notebook_t::show() {
 	}
 }
 
-bool notebook_t::_has_client(shared_ptr<client_managed_t> c) {
+bool notebook_t::_has_client(shared_ptr<xdg_surface_toplevel_t> c) {
 	return _find_client_context(c) != _clients_tab_order.end();
 }
 

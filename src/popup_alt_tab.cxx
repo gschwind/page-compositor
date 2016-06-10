@@ -262,7 +262,7 @@ void popup_alt_tab_t::render(cairo_t * cr, region const & area) {
 	cairo_restore(cr);
 }
 
-void popup_alt_tab_t::destroy_client(client_managed_t * c) {
+void popup_alt_tab_t::destroy_client(xdg_surface_toplevel_t * c) {
 	if(_selected != _client_list.end()) {
 		if((*_selected).client.expired()) {
 			_selected = _client_list.end();

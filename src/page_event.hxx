@@ -20,7 +20,7 @@ namespace page {
 
 class notebook_t;
 class split_t;
-class client_managed_t;
+class xdg_surface_toplevel_t;
 
 /* page event area */
 enum page_event_type_e {
@@ -47,7 +47,7 @@ struct page_event_t {
 		};
 		struct {
 			notebook_t const * nbk;
-			client_managed_t const * clt;
+			xdg_surface_toplevel_t const * clt;
 		};
 		split_t const * spt;
 	};

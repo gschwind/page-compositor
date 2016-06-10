@@ -84,7 +84,7 @@ void grab_split_t::button_release(xcb_button_release_event_t const * e) {
 	}
 }
 
-grab_bind_client_t::grab_bind_client_t(page_context_t * ctx, shared_ptr<client_managed_t> c, xcb_button_t button, rect const & pos) :
+grab_bind_client_t::grab_bind_client_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> c, xcb_button_t button, rect const & pos) :
 		ctx{ctx},
 		c{c},
 		start_position{pos},
@@ -275,7 +275,7 @@ void grab_bind_client_t::button_release(xcb_button_release_event_t const * e) {
 }
 
 
-grab_floating_move_t::grab_floating_move_t(page_context_t * ctx, shared_ptr<client_managed_t> f, unsigned int button, int x, int y) :
+grab_floating_move_t::grab_floating_move_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> f, unsigned int button, int x, int y) :
 		_ctx{ctx},
 		f{f},
 		original_position{f->get_wished_position()},
@@ -377,7 +377,7 @@ xcb_cursor_t grab_floating_resize_t::_get_cursor() {
 	return XCB_WINDOW_NONE;
 }
 
-grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx, shared_ptr<client_managed_t> f, xcb_button_t button, int x, int y, resize_mode_e mode) :
+grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> f, xcb_button_t button, int x, int y, resize_mode_e mode) :
 		_ctx{ctx},
 		f{f},
 		mode{mode},
@@ -528,7 +528,7 @@ void grab_floating_resize_t::button_release(xcb_button_release_event_t const * e
 	}
 }
 
-grab_fullscreen_client_t::grab_fullscreen_client_t(page_context_t * ctx, shared_ptr<client_managed_t> mw, xcb_button_t button, int x, int y) :
+grab_fullscreen_client_t::grab_fullscreen_client_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> mw, xcb_button_t button, int x, int y) :
  _ctx{ctx},
  mw{mw},
  pn0{nullptr},
@@ -588,7 +588,7 @@ void grab_fullscreen_client_t::button_release(xcb_button_release_event_t const *
 	}
 }
 
-void grab_alt_tab_t::_destroy_client(client_managed_t * c) {
+void grab_alt_tab_t::_destroy_client(xdg_surface_toplevel_t * c) {
 	_destroy_func_map.erase(c);
 
 	_client_list.remove_if([](client_managed_w const & x) -> bool { return x.expired(); });

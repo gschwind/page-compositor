@@ -11,7 +11,6 @@
 #include "tree.hxx"
 #include "pixmap.hxx"
 #include "client_managed.hxx"
-#include "client_proxy.hxx"
 
 namespace page {
 
@@ -48,7 +47,7 @@ class renderable_thumbnail_t : public tree_t {
 	renderable_thumbnail_t & operator=(renderable_thumbnail_t const &);
 public:
 
-	renderable_thumbnail_t(page_context_t * ctx, shared_ptr<client_managed_t> c, rect const & target_position, thumnail_anchor_e target_anchor) :
+	renderable_thumbnail_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> c, rect const & target_position, thumnail_anchor_e target_anchor) :
 		_ctx{ctx},
 		_c{c},
 		_title_width{0},
@@ -178,7 +177,7 @@ public:
 		if(_c.expired() or not _is_visible)
 			return;
 
-		_tt.pix = _client_view->get_pixmap();
+		//_tt.pix = _client_view->get_pixmap();
 
 		if (_tt.pix != nullptr) {
 
@@ -227,10 +226,10 @@ public:
 			}
 		}
 
-		if(_client_view->has_damage()) {
-			_damaged_cache += region{get_real_position()};
-			_client_view->clear_damaged();
-		}
+//		if(_client_view->has_damage()) {
+//			_damaged_cache += region{get_real_position()};
+//			_client_view->clear_damaged();
+//		}
 	}
 
 	void show() {
@@ -238,9 +237,9 @@ public:
 			return;
 
 		_is_visible = true;
-		if (not _c.expired() and _client_view == nullptr) {
-			_client_view = _c.lock()->create_view();
-		}
+//		if (not _c.expired() and _client_view == nullptr) {
+//			_client_view = _c.lock()->create_view();
+//		}
 	}
 
 	void hide() {

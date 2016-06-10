@@ -39,7 +39,7 @@ workspace_t::workspace_t(page_context_t * ctx, unsigned id) :
 }
 
 static bool is_dock(shared_ptr<tree_t> const & x) {
-	auto c = dynamic_pointer_cast<client_managed_t>(x);
+	auto c = dynamic_pointer_cast<xdg_surface_toplevel_t>(x);
 	if(c != nullptr) {
 		return c->is(MANAGED_DOCK);
 	}
@@ -142,7 +142,7 @@ void workspace_t::update_default_pop() {
 	}
 }
 
-void workspace_t::attach(shared_ptr<client_managed_t> c) {
+void workspace_t::attach(shared_ptr<xdg_surface_toplevel_t> c) {
 	assert(c != nullptr);
 
 	if(c->is(MANAGED_FULLSCREEN)) {
@@ -232,7 +232,7 @@ void workspace_t::show() {
 	}
 }
 
-bool workspace_t::client_focus_history_front(shared_ptr<client_managed_t> & out) {
+bool workspace_t::client_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out) {
 	if(not client_focus_history_is_empty()) {
 		out = _client_focus_history.front().lock();
 		return true;
@@ -240,11 +240,11 @@ bool workspace_t::client_focus_history_front(shared_ptr<client_managed_t> & out)
 	return false;
 }
 
-void workspace_t::client_focus_history_remove(shared_ptr<client_managed_t> in) {
+void workspace_t::client_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in) {
 	_client_focus_history.remove_if([in](weak_ptr<tree_t> w) { return w.expired() or w.lock() == in; });
 }
 
-void workspace_t::client_focus_history_move_front(shared_ptr<client_managed_t> in) {
+void workspace_t::client_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in) {
 	move_front(_client_focus_history, in);
 }
 

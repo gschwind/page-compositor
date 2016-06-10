@@ -46,8 +46,8 @@ protected:
 
 public:
 
-	wl_display* dpy;
-	weston_compositor* ec;
+	wl_display * _dpy;
+	weston_compositor * ec;
 	weston_layer default_layer;
 
 	wl_listener destroy;
@@ -176,7 +176,7 @@ public:
 
 };
 
-extern display_compositor_t * dpy;
+extern display_compositor_t * dc;
 
 }
 

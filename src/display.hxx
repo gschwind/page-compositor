@@ -12,19 +12,6 @@
 
 #include "config.hxx"
 
-#include <xcb/xcb.h>
-#include <xcb/damage.h>
-#include <xcb/composite.h>
-#include <xcb/xfixes.h>
-#include <xcb/randr.h>
-#include <xcb/shape.h>
-
-//#include <X11/keysymdef.h>
-#include <X11/cursorfont.h>
-//#include <X11/keysym.h>
-//#include <X11/Xatom.h>
-#include <X11/Xutil.h>
-
 #include <cstring>
 #include <cstdarg>
 #include <map>
@@ -38,7 +25,6 @@
 #include "utils.hxx"
 #include "atoms.hxx"
 #include "motif_hints.hxx"
-#include "properties.hxx"
 
 namespace page {
 
@@ -234,7 +220,7 @@ public:
 		return _screen->root_depth;
 	}
 
-	region read_damaged_region(xcb_damage_damage_t d);
+	//region read_damaged_region(xcb_damage_damage_t d);
 
 	int get_visual_depth(xcb_visualid_t vid) {
 		return _xcb_visual_depth[vid];

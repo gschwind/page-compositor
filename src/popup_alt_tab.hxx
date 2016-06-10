@@ -92,7 +92,7 @@ public:
 	client_managed_w selected(client_managed_w c);
 	client_managed_w selected();
 
-	void destroy_client(client_managed_t * c);
+	void destroy_client(xdg_surface_toplevel_t * c);
 
 	void grab_button_press(xcb_button_press_event_t const * ev);
 	void grab_button_motion(xcb_motion_notify_event_t const * ev);
