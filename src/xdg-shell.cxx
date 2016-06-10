@@ -22,6 +22,8 @@
 #include "xdg-surface.hxx"
 #include "xdg-popup.hxx"
 
+namespace page {
+
 using namespace std;
 
 xdg_shell_t * xdg_shell_t::get(wl_resource * resource) {
@@ -83,6 +85,12 @@ xdg_get_xdg_surface(struct wl_client *client,
 	auto xdg_surface = new xdg_surface_t(client, shell, id, surface);
 	shell->xdg_shell_surfaces.push_back(xdg_surface->resource);
 
+	wl_array xxx;
+	wl_array_init(&xxx);
+	wl_array_add(&xxx, 4);
+	((int*)xxx.data)[0] = XDG_SURFACE_STATE_ACTIVATED;
+	xdg_surface_send_configure(xdg_surface->resource, 800, 800, &xxx, 0);
+
 	weston_log("exit %s\n", __PRETTY_FUNCTION__);
 
 }
@@ -125,5 +133,5 @@ const struct xdg_shell_interface xdg_shell_implementation = {
 	xdg_pong
 };
 
-
+}
 

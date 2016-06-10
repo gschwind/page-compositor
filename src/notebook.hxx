@@ -17,10 +17,16 @@
 
 #include "theme.hxx"
 #include "pixmap.hxx"
+#include "renderable_notebook_fading.hxx"
+#include "renderable_pixmap.hxx"
+#include "renderable_empty.hxx"
 
-#include "page-context.hxx"
-#include "xdg-surface.hxx"
-#include "page-component.hxx"
+#include "page_context.hxx"
+#include "page_component.hxx"
+#include "client_managed.hxx"
+#include "renderable_thumbnail.hxx"
+#include "renderable_unmanaged_gaussian_shadow.hxx"
+#include "dropdown_menu.hxx"
 
 namespace page {
 
@@ -37,6 +43,11 @@ class notebook_t : public page_component_t {
 	rect _allocation;
 
 	time64_t _swap_start;
+
+	shared_ptr<renderable_thumbnail_t> tooltips;
+	shared_ptr<renderable_notebook_fading_t> fading_notebook;
+	vector<renderable_thumbnail_p> _exposay_thumbnail;
+
 
 	theme_notebook_t _theme_notebook;
 
@@ -70,17 +81,17 @@ class notebook_t : public page_component_t {
 	};
 
 	struct _client_context_t {
-		shared_ptr<xdg_surface> client;
+		client_managed_p client;
 		signal_handler_t  title_change_func;
 		signal_handler_t  destoy_func;
 		signal_handler_t  focus_change_func;
 
 		_client_context_t() = delete;
 		_client_context_t(_client_context_t const & x) = default;
-		_client_context_t(notebook_t * nbk, shared_ptr<xdg_surface> client);
+		_client_context_t(notebook_t * nbk, client_managed_p client);
 		~_client_context_t();
 
-		bool operator==(shared_ptr<xdg_surface> client) const;
+		bool operator==(client_managed_p client) const;
 
 	};
 
@@ -125,6 +136,7 @@ class notebook_t : public page_component_t {
 	/* list of tabs and exposay buttons */
 	vector<tuple<rect, weak_ptr<client_managed_t>, theme_tab_t *>> _client_buttons;
 	vector<tuple<rect, weak_ptr<client_managed_t>, int>> _exposay_buttons;
+	shared_ptr<renderable_unmanaged_gaussian_shadow_t<16>> _exposay_mouse_over;
 
 	void _set_selected(shared_ptr<client_managed_t> c);
 
@@ -136,7 +148,7 @@ class notebook_t : public page_component_t {
 	void _update_layout();
 	void _update_mouse_over();
 
-	//void _process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<client_managed_t> c, int selected);
+	void _process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<client_managed_t> c, int selected);
 
 	void _mouse_over_reset();
 	void _mouse_over_set();
@@ -171,7 +183,7 @@ class notebook_t : public page_component_t {
 	bool is_default() const;
 
 	bool _has_client(shared_ptr<client_managed_t> c);
-	list<_client_context_t>::iterator _find_client_context(shared_ptr<xdg_surface> client);
+	list<_client_context_t>::iterator _find_client_context(client_managed_p client);
 
 	void _update_exposay();
 	void _stop_exposay();

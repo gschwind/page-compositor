@@ -16,12 +16,6 @@ BUILT_SOURCES = \
 	xdg-shell-server-protocol.h
 
 page_compositor_SOURCES = \
-	page-compositor.cxx \
-	compositor.cxx \
-	pixmap.cxx \
-	utils.cxx \
-	config-handler.cxx \
-	config-handler.hxx \
 	xdg-shell.cxx \
 	xdg-surface.cxx \
 	xdg-popup.cxx \
@@ -29,6 +23,46 @@ page_compositor_SOURCES = \
 	tiny-theme.cxx \
 	tree.cxx \
 	page-root.cxx \
+	utils.cxx \
+	pixmap.cxx \
+	tree.cxx \
+	client_base.cxx \
+	client_not_managed.cxx \
+	client_managed.cxx \
+	grab_handlers.cxx \
+	notebook.cxx \
+	split.cxx \
+	viewport.cxx \
+	workspace.cxx \
+	page_root.cxx \
+	page.cxx \
+	display.cxx \
+	compositor.cxx \
+	simple2_theme.cxx \
+	tiny_theme.cxx \
+	config_handler.cxx \
+	client_proxy.cxx \
+	popup_alt_tab.cxx \
+	main.cxx \
+	blur_image_surface.cxx \
+	leak_checker.cxx \
+	tree.hxx \
+	blur_image_surface.hxx \
+	notebook.hxx \
+	compositor.hxx \
+	client_proxy.hxx \
+	config_handler.hxx \
+	workspace.hxx \
+	split.hxx \
+	viewport.hxx \
+	grab_handlers.hxx \
+	client_managed.hxx \
+	client_not_managed.hxx \
+	client_base.hxx \
+	display.hxx \
+	mainloop.hxx \
+	page.hxx \
+	utils.hxx \
 	xdg-shell-protocol.c \
 	xdg-shell-server-protocol.h
 

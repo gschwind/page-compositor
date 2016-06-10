@@ -28,6 +28,8 @@
 
 #include "xdg-shell-server-protocol.h"
 
+namespace page {
+
 using namespace std;
 
 struct xdg_popup_t {
@@ -49,5 +51,6 @@ struct xdg_popup_t {
 
 };
 
+}
 
 #endif /* SRC_XDG_POPUP_HXX_ */

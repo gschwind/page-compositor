@@ -27,6 +27,8 @@
 #include "xdg-shell.hxx"
 #include "xdg-surface.hxx"
 
+namespace page {
+
 using namespace std;
 
 extern const struct xdg_surface_interface xdg_surface_implementation;
@@ -176,14 +178,13 @@ xdg_surface_t::xdg_surface_t(wl_client *client, xdg_shell_t * shell, uint32_t id
 	view = weston_view_create(surface);
 	weston_view_set_position(view, 0, 0);
 	surface->timeline.force_refresh = 1;
-	weston_layer_entry_insert(&cmp->default_layer.view_list, &view->layer_link);
 
 	wl_array array;
 	wl_array_init(&array);
 	wl_array_add(&array, sizeof(uint32_t)*2);
 	((uint32_t*)array.data)[0] = XDG_SURFACE_STATE_MAXIMIZED;
 	((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
-	xdg_surface_send_configure(resource, 300, 300, &array, 10);
+	xdg_surface_send_configure(resource, 800, 800, &array, 10);
 	wl_array_release(&array);
 
 	weston_view_geometry_dirty(view);
@@ -274,6 +275,9 @@ xdg_surface_ack_configure(struct wl_client *client,
 			  uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	auto xdg_surface = xdg_surface_t::get(resource);
+	weston_layer_entry_insert(&cmp->default_layer.view_list, &xdg_surface->view->layer_link);
+
 }
 
 static void
@@ -340,5 +344,4 @@ const struct xdg_surface_interface xdg_surface_implementation = {
 	xdg_surface_set_minimized,
 };
 
-
-
+}

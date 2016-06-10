@@ -1,45 +1,42 @@
 /*
  * listener.hxx
  *
- *  Created on: 5 juin 2016
+ *  Created on: 10 juin 2016
  *      Author: gschwind
  */
 
 #ifndef SRC_LISTENER_HXX_
 #define SRC_LISTENER_HXX_
 
-#include <wayland-util.h>
-#include <libweston-0/compositor.h>
 #include <functional>
 
+namespace page {
 
-/* crazy isn't it ? */
 template<typename T>
 struct listener_t {
-	struct _pod_t {
+	struct listener_pod_t {
 		wl_listener _listener;
-		std::function<void(T*)> * _func;
+		std::function<void(T*)>* _func;
 	} _pod;
 	std::function<void(T*)> _func;
 
+	static void _call(wl_listener* _listener, void* data) {
+		listener_pod_t* listener = wl_container_of(_listener, listener, _listener);
+		(*listener->_func)(reinterpret_cast<T*>(data));
+	}
+
 	template<typename F>
-	void connect(wl_signal * sig, F f);
+	void connect(wl_signal* signal, F f) {
+		_func = f;
+		_pod._func = &_func;
+		_pod._listener.notify = &listener_t::_call;
+		wl_signal_add(signal, &_pod._listener);
+	}
 
 };
 
-template<typename T>
-static void _listener_call(wl_listener* l, void* _data) {
-	typename listener_t<T>::_pod_t* ths = wl_container_of(l, ths, _listener);
-	(*ths->_func)(reinterpret_cast<T*>(_data));
+
 }
 
-
-template<typename T> template<typename F>
-void listener_t<T>::connect(wl_signal * sig, F f) {
-	_pod._func = &_func;
-	_pod._listener.notify = &_listener_call<T>;
-	_func = std::function<void(T*)>(f);
-	wl_signal_add(sig, &_pod._listener);
-}
 
 #endif /* SRC_LISTENER_HXX_ */

@@ -28,7 +28,10 @@
 
 #include "color.hxx"
 #include "box.hxx"
+#include "x11_func_name.hxx"
 #include "exception.hxx"
+
+namespace page {
 
 using namespace std;
 
@@ -877,6 +880,8 @@ std::string focus_in_to_string(xcb_focus_in_event_t const * e) {
 	return oss.str();
 }
 
+
+}
 
 
 #endif /* UTILS_HXX_ */

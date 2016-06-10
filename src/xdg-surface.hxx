@@ -25,6 +25,8 @@
 
 #include "xdg-shell-server-protocol.h"
 
+namespace page {
+
 using namespace std;
 
 struct xdg_surface_t {
@@ -43,6 +45,7 @@ struct xdg_surface_t {
 
 };
 
+}
 
 
 #endif /* SRC_XDG_SURFACE_HXX_ */

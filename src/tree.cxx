@@ -1,20 +1,9 @@
 /*
- * Copyright (2010-2016) Benoit Gschwind
+ * tree.cxx
  *
- * This file is part of page-compositor.
+ * copyright (2010-2014) Benoit Gschwind
  *
- * page-compositor is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * page-compositor is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with page-compositor.  If not, see <http://www.gnu.org/licenses/>.
+ * This code is licensed under the GPLv3. see COPYING file for more details.
  *
  */
 
@@ -23,6 +12,8 @@
 #include <cassert>
 
 #include "utils.hxx"
+
+namespace page {
 
 tree_t::tree_t() :
 	_parent{nullptr},
@@ -128,6 +119,16 @@ auto tree_t::append_children(vector<shared_ptr<tree_t>> & out) const -> void
  * return the list of renderable object to draw this tree ordered and recursively
  **/
 auto tree_t::update_layout(time64_t const time) -> void {
+
+	auto x = _transition.begin();
+	while(x != _transition.end()) {
+		x->second->update(time);
+		if(time > x->second->end()) {
+			x = _transition.erase(x);
+		} else {
+			++x;
+		}
+	}
 
 }
 
@@ -330,6 +331,10 @@ void tree_t::broadcast_render_finished() {
 	_broadcast_root_first(&tree_t::render_finished);
 }
 
+void tree_t::add_transition(shared_ptr<transition_t> t) {
+	_transition[t->target()] = t;
+}
+
 rect tree_t::to_root_position(rect const & r) const {
 	return rect { r.x + get_window_position().x, r.y + get_window_position().y,
 			r.w, r.h };
@@ -350,3 +355,4 @@ auto tree_t::get_damaged() -> region
 	return region{};
 }
 
+}

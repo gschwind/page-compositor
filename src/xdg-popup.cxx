@@ -22,6 +22,8 @@
 #include "xdg-popup.hxx"
 #include "xdg-shell.hxx"
 
+namespace page {
+
 using namespace std;
 
 xdg_popup_t * xdg_popup_t::get(wl_resource * resource) {
@@ -93,3 +95,4 @@ xdg_popup_t::xdg_popup_t(wl_client *client, uint32_t id,
 
 }
 
+}

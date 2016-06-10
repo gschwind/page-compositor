@@ -30,9 +30,10 @@
 #include "listener.hxx"
 #include "xdg-shell-server-protocol.h"
 #include "xdg-shell.hxx"
-#include "page-root.hxx"
 
 #include <list>
+
+namespace page {
 
 using namespace std;
 
@@ -65,9 +66,6 @@ struct compositor_t {
 
 	wl_listener session;
 
-	shared_ptr<page_root_t> _root;
-
-
 	compositor_t();
 	void connect_all();
 
@@ -80,6 +78,7 @@ struct compositor_t {
 
 extern compositor_t* cmp;
 
+}
 
 
 #endif /* SRC_COMPOSITOR_HXX_ */

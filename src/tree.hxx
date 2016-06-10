@@ -1,20 +1,9 @@
 /*
- * Copyright (2010-2016) Benoit Gschwind
+ * tree.hxx
  *
- * This file is part of page-compositor.
+ * copyright (2010-2014) Benoit Gschwind
  *
- * page-compositor is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * page-compositor is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with page-compositor.  If not, see <http://www.gnu.org/licenses/>.
+ * This code is licensed under the GPLv3. see COPYING file for more details.
  *
  */
 
@@ -25,9 +14,12 @@
 #include <iostream>
 #include <map>
 
-#include "region.hxx"
 #include "utils.hxx"
+#include "renderable.hxx"
 #include "time.hxx"
+#include "transition.hxx"
+
+namespace page {
 
 using namespace std;
 
@@ -97,6 +89,8 @@ protected:
 
 	bool _is_visible;
 
+	map<void *, shared_ptr<transition_t>> _transition;
+
 private:
 	tree_t(tree_t const &);
 	tree_t & operator=(tree_t const &);
@@ -132,6 +126,8 @@ public:
 	void broadcast_expose(xcb_expose_event_t const * ev);
 	void broadcast_update_layout(time64_t const time);
 	void broadcast_render_finished();
+
+	void add_transition(shared_ptr<transition_t> t);
 
 	rect to_root_position(rect const & r) const;
 
@@ -176,5 +172,7 @@ public:
 
 };
 
+
+}
 
 #endif /* TREE_HXX_ */

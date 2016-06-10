@@ -9,6 +9,9 @@
 
 #include "workspace.hxx"
 #include "notebook.hxx"
+#include "dropdown_menu.hxx"
+#include "grab_handlers.hxx"
+#include "renderable_unmanaged_gaussian_shadow.hxx"
 
 namespace page {
 
@@ -35,7 +38,7 @@ notebook_t::~notebook_t() {
 	_clients_tab_order.clear();
 }
 
-bool notebook_t::add_client(shared_ptr<xdg_surface> x, bool prefer_activate) {
+bool notebook_t::add_client(client_managed_p x, bool prefer_activate) {
 	assert(not _has_client(x));
 	assert(x != nullptr);
 

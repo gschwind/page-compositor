@@ -1,5 +1,5 @@
 /*
- * Copyright (2014-2016) Benoit Gschwind
+ * Copyright (2014) Benoit Gschwind
  *
  * This file is part of page-compositor.
  *
@@ -22,8 +22,8 @@
 #define EXCEPTION_HXX_
 
 #include <cstdarg>
-#include <exception>
-#include <cstdio>
+
+namespace page {
 
 class exception_t : public std::exception {
 	char * str;
@@ -46,5 +46,44 @@ public:
 	}
 
 };
+
+
+
+///** not define **/
+//template <typename T>
+//class exception_t<T>;
+//
+//template <>
+//class exception_t<char const *> : public exception {
+//	char const * data;
+//public:
+//	exception_t(char const * data) : data(data) { }
+//
+//	char const * what() {
+//		static char error_buffer[4096];
+//		snprintf(error_buffer, 4096, fmt, key);
+//		return error_buffer;
+//	}
+//
+//};
+
+//
+//class configuration_error_t : public exception {
+//	char const * fmt;
+//	char const * key;
+//public:
+//	configuration_error_t(char const * fmt, char const * key) : fmt(fmt), key(key) { }
+//
+//	char const * what() {
+//		static char error_buffer[4096];
+//		snprintf(error_buffer, 4096, fmt, key);
+//		return error_buffer;
+//	}
+//
+//};
+
+}
+
+
 
 #endif /* EXCEPTION_HXX_ */

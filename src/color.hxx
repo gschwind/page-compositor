@@ -1,20 +1,9 @@
 /*
- * Copyright (2010-2016) Benoit Gschwind
+ * color.hxx
  *
- * This file is part of page-compositor.
+ * copyright (2010-2014) Benoit Gschwind
  *
- * page-compositor is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * page-compositor is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with page-compositor.  If not, see <http://www.gnu.org/licenses/>.
+ * This code is licensed under the GPLv3. see COPYING file for more details.
  *
  */
 
@@ -23,6 +12,8 @@
 
 #include <stdexcept>
 #include <cairo/cairo.h>
+
+namespace page {
 
 struct color_t {
 	double r, g, b, a;
@@ -78,6 +69,8 @@ inline void cairo_set_source_color_alpha(cairo_t * cr, color_t const & color) {
 
 inline void cairo_set_source_color(cairo_t * cr, color_t const & color) {
 	cairo_set_source_rgba(cr, color.r, color.g, color.b, 1.0);
+}
+
 }
 
 #endif /* COLOR_HXX_ */

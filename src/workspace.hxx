@@ -16,8 +16,11 @@
 #include <vector>
 
 #include "utils.hxx"
+#include "page_context.hxx"
 #include "viewport.hxx"
-#include "pixmap.hxx"
+#include "client_managed.hxx"
+#include "client_not_managed.hxx"
+#include "renderable_pixmap.hxx"
 
 namespace page {
 
@@ -55,7 +58,7 @@ private:
 
 	time64_t _switch_start_time;
 	shared_ptr<pixmap_t> _switch_screenshot;
-	shared_ptr<pixmap_t> _switch_renderable;
+	shared_ptr<renderable_pixmap_t> _switch_renderable;
 
 	workspace_switch_direction_e _switch_direction;
 

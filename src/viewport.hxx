@@ -13,10 +13,12 @@
 #include <memory>
 #include <vector>
 
+#include "renderable.hxx"
+#include "split.hxx"
 #include "theme.hxx"
+#include "page_context.hxx"
+#include "page_component.hxx"
 #include "notebook.hxx"
-#include "page-component.hxx"
-#include "page-context.hxx"
 
 namespace page {
 

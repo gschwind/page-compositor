@@ -27,6 +27,8 @@
 
 #include "xdg-shell-server-protocol.h"
 
+namespace page {
+
 using namespace std;
 
 struct xdg_shell_t {
@@ -45,6 +47,7 @@ struct xdg_shell_t {
 
 extern const struct xdg_shell_interface xdg_shell_implementation;
 
+}
 
 
 #endif /* SRC_XDG_SHELL_HXX_ */

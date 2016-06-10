@@ -1,41 +1,52 @@
 /*
- * Copyright (2010-2016) Benoit Gschwind
+ * pixmap.cxx
  *
- * This file is part of page-compositor.
- *
- * page-compositor is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * page-compositor is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with page-compositor.  If not, see <http://www.gnu.org/licenses/>.
- *
+ *  Created on: 28 août 2015
+ *      Author: gschwind
  */
 
+#include "display.hxx"
+
 #include "pixmap.hxx"
-#include "exception.hxx"
 
-pixmap_t::pixmap_t(unsigned width, unsigned height) :
-	_w{width}, _h{height}
+namespace page {
+
+pixmap_t::
+pixmap_t(display_t * dpy, xcb_visualtype_t * v, xcb_pixmap_t p, unsigned w, unsigned h) {
+	_dpy = dpy;
+	_pixmap_id = p;
+	_surf = cairo_xcb_surface_create(dpy->xcb(), p, v, w, h);
+	if(cairo_surface_status(_surf) != CAIRO_STATUS_SUCCESS) {
+		throw exception_t{"unable to create cairo_surface in %s", __PRETTY_FUNCTION__};
+	}
+	_w = w;
+	_h = h;
+}
+
+pixmap_t::
+pixmap_t(display_t * dpy, pixmap_format_e format, unsigned width, unsigned height) :
+	_dpy{dpy}, _w{width}, _h{height}
 {
-
-	_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+	if (format == PIXMAP_RGB) {
+		_pixmap_id = xcb_generate_id(_dpy->xcb());
+		xcb_create_pixmap(_dpy->xcb(), _dpy->root_depth(), _pixmap_id, _dpy->root(), width, height);
+		_surf = cairo_xcb_surface_create(_dpy->xcb(), _pixmap_id, _dpy->root_visual(), _w, _h);
+	} else {
+		_pixmap_id = xcb_generate_id(_dpy->xcb());
+		xcb_create_pixmap(_dpy->xcb(), 32, _pixmap_id, _dpy->root(), width, height);
+		_surf = cairo_xcb_surface_create(_dpy->xcb(), _pixmap_id, _dpy->default_visual_rgba(), _w, _h);
+	}
 
 	if(cairo_surface_status(_surf) != CAIRO_STATUS_SUCCESS) {
 		throw exception_t{"Unable to create cairo_surface in %s (format=%s,width=%u,height=%u)",
-			__PRETTY_FUNCTION__, "ARGB", width, height};
+			__PRETTY_FUNCTION__, format==PIXMAP_RGB?"RGB":"RGBA", width, height};
 	}
 
 }
 
 pixmap_t::~pixmap_t() {
 	cairo_surface_destroy(_surf);
+	xcb_free_pixmap(_dpy->xcb(), _pixmap_id);
 }
 
 cairo_surface_t * pixmap_t::get_cairo_surface() const {
@@ -50,5 +61,6 @@ unsigned pixmap_t::height() const {
 	return _h;
 }
 
+}
 
 

@@ -7,6 +7,8 @@
 
 #include "utils.hxx"
 
+namespace page {
+
 /**
  * Draw rectangle with all corner rounded
  **/
@@ -56,5 +58,7 @@ void cairo_rectangle_arc_corner(cairo_t * cr, double x, double y, double w, doub
 
 void cairo_rectangle_arc_corner(cairo_t * cr, rect const & position, double radius, uint8_t corner_mask) {
 	cairo_rectangle_arc_corner(cr, position.x, position.y, position.w, position.h, radius, corner_mask);
+}
+
 }
 
