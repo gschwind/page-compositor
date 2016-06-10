@@ -31,9 +31,9 @@ split_t::split_t(page_context_t * ctx, split_type_e type) :
 }
 
 split_t::~split_t() {
-	if(_wid != XCB_WINDOW_NONE) {
-		xcb_destroy_window(_ctx->dpy()->xcb(), _wid);
-	}
+//	if(_wid != XCB_WINDOW_NONE) {
+//		xcb_destroy_window(_ctx->dpy()->xcb(), _wid);
+//	}
 }
 
 void split_t::set_allocation(rect const & allocation) {
@@ -164,18 +164,18 @@ void split_t::update_allocation() {
 	if(_pack1 != nullptr)
 		_pack1->set_allocation(_bpack1);
 
-	if(_wid == XCB_WINDOW_NONE and get_parent_xid() != XCB_WINDOW_NONE) {
-		uint32_t cursor;
-		if(_type == VERTICAL_SPLIT) {
-			cursor = _ctx->dpy()->xc_sb_h_double_arrow;
-		} else {
-			cursor = _ctx->dpy()->xc_sb_v_double_arrow;
-		}
-		_wid = _ctx->dpy()->create_input_only_window(get_parent_xid(), _split_bar_area, XCB_CW_CURSOR, &cursor);
-		_ctx->dpy()->map(_wid);
-	}
-
-	_ctx->dpy()->move_resize(_wid, _split_bar_area);
+//	if(_wid == XCB_WINDOW_NONE and get_parent_xid() != XCB_WINDOW_NONE) {
+//		uint32_t cursor;
+//		if(_type == VERTICAL_SPLIT) {
+//			cursor = _ctx->dpy()->xc_sb_h_double_arrow;
+//		} else {
+//			cursor = _ctx->dpy()->xc_sb_v_double_arrow;
+//		}
+//		_wid = _ctx->dpy()->create_input_only_window(get_parent_xid(), _split_bar_area, XCB_CW_CURSOR, &cursor);
+//		_ctx->dpy()->map(_wid);
+//	}
+//
+//	_ctx->dpy()->move_resize(_wid, _split_bar_area);
 
 }
 

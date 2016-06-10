@@ -32,7 +32,7 @@ popup_alt_tab_t::popup_alt_tab_t(page_context_t * ctx, list<client_managed_p> cl
 	}
 
 	_create_composite_window();
-	_ctx->dpy()->map(_wid);
+	//_ctx->dpy()->map(_wid);
 
 
 	for(auto const & c: client_list) {
@@ -117,7 +117,7 @@ void popup_alt_tab_t::_reconfigure() {
 }
 
 popup_alt_tab_t::~popup_alt_tab_t() {
-	xcb_destroy_window(_ctx->dpy()->xcb(), _wid);
+	//xcb_destroy_window(_ctx->dpy()->xcb(), _wid);
 	_client_list.clear();
 	_selected = _client_list.end();
 }
@@ -129,11 +129,11 @@ void popup_alt_tab_t::_create_composite_window() {
 		value[0] = True;
 		value_mask |= XCB_CW_EVENT_MASK;
 		value[1] = XCB_EVENT_MASK_BUTTON_MOTION | XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE;
-		_wid = xcb_generate_id(_ctx->dpy()->xcb());
-		xcb_create_window(_ctx->dpy()->xcb(), 0, _wid, _ctx->dpy()->root(),
-				_position_intern.x, _position_intern.y, _position_intern.w, _position_intern.h, 0,
-				XCB_WINDOW_CLASS_INPUT_ONLY, _ctx->dpy()->root_visual()->visual_id,
-				value_mask, value);
+		//_wid = xcb_generate_id(_ctx->dpy()->xcb());
+		//xcb_create_window(_ctx->dpy()->xcb(), 0, _wid, _ctx->dpy()->root(),
+		//		_position_intern.x, _position_intern.y, _position_intern.w, _position_intern.h, 0,
+		//		XCB_WINDOW_CLASS_INPUT_ONLY, _ctx->dpy()->root_visual()->visual_id,
+		//		value_mask, value);
 }
 
 void popup_alt_tab_t::move(int x, int y) {
@@ -146,7 +146,7 @@ void popup_alt_tab_t::move(int x, int y) {
 
 void popup_alt_tab_t::show() {
 	_is_visible = true;
-	_ctx->dpy()->map(_wid);
+	//_ctx->dpy()->map(_wid);
 }
 
 void popup_alt_tab_t::_init() {
@@ -159,7 +159,7 @@ void popup_alt_tab_t::_init() {
 
 void popup_alt_tab_t::hide() {
 	_is_visible = false;
-	_ctx->dpy()->unmap(_wid);
+	//_ctx->dpy()->unmap(_wid);
 }
 
 rect const & popup_alt_tab_t::position() {

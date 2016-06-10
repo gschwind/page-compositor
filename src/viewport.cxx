@@ -37,7 +37,7 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area) :
 
 viewport_t::~viewport_t() {
 	destroy_renderable();
-	xcb_destroy_window(_ctx->dpy()->xcb(), _win);
+	//xcb_destroy_window(_ctx->dpy()->xcb(), _win);
 	_win = XCB_NONE;
 }
 
@@ -124,13 +124,13 @@ void viewport_t::hide() {
 	}
 
 	_is_visible = false;
-	_ctx->dpy()->unmap(_win);
+	//_ctx->dpy()->unmap(_win);
 	destroy_renderable();
 }
 
 void viewport_t::show() {
 	_is_visible = true;
-	_ctx->dpy()->map(_win);
+	//_ctx->dpy()->map(_win);
 	update_renderable();
 	if(_subtree != nullptr) {
 		_subtree->show();
@@ -145,55 +145,55 @@ void viewport_t::update_renderable() {
 	if(_ctx->cmp() != nullptr) {
 		_back_surf = make_shared<pixmap_t>(PIXMAP_RGB, _page_area.w, _page_area.h);
 	}
-	_ctx->dpy()->move_resize(_win, _effective_area);
+	//_ctx->dpy()->move_resize(_win, _effective_area);
 }
 
 void viewport_t::create_window() {
-	_win = xcb_generate_id(_ctx->dpy()->xcb());
-
-	xcb_visualid_t visual = _ctx->dpy()->root_visual()->visual_id;
-	int depth = _ctx->dpy()->root_depth();
-
-	/** if visual is 32 bits, this values are mandatory **/
-	xcb_colormap_t cmap = xcb_generate_id(_ctx->dpy()->xcb());
-	xcb_create_colormap(_ctx->dpy()->xcb(), XCB_COLORMAP_ALLOC_NONE, cmap, _ctx->dpy()->root(), visual);
-
-	uint32_t value_mask = 0;
-	uint32_t value[5];
-
-	value_mask |= XCB_CW_BACK_PIXEL;
-	value[0] = _ctx->dpy()->xcb_screen()->black_pixel;
-
-	value_mask |= XCB_CW_BORDER_PIXEL;
-	value[1] = _ctx->dpy()->xcb_screen()->black_pixel;
-
-	value_mask |= XCB_CW_OVERRIDE_REDIRECT;
-	value[2] = True;
-
-	value_mask |= XCB_CW_EVENT_MASK;
-	value[3] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_LEAVE_WINDOW;
-
-	value_mask |= XCB_CW_COLORMAP;
-	value[4] = cmap;
-
-	_win = xcb_generate_id(_ctx->dpy()->xcb());
-	xcb_create_window(_ctx->dpy()->xcb(), depth, _win, _ctx->dpy()->root(), _effective_area.x, _effective_area.y, _effective_area.w, _effective_area.h, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, visual, value_mask, value);
-
-	_ctx->dpy()->set_window_cursor(_win, _ctx->dpy()->xc_left_ptr);
-
-	/**
-	 * This grab will freeze input for all client, all mouse button, until
-	 * we choose what to do with them with XAllowEvents. we can choose to keep
-	 * grabbing events or release event and allow further processing by other clients.
-	 **/
-	xcb_grab_button(_ctx->dpy()->xcb(), false, _win,
-			DEFAULT_BUTTON_EVENT_MASK,
-			XCB_GRAB_MODE_SYNC,
-			XCB_GRAB_MODE_ASYNC,
-			XCB_NONE,
-			XCB_NONE,
-			XCB_BUTTON_INDEX_ANY,
-			XCB_MOD_MASK_ANY);
+//	_win = xcb_generate_id(_ctx->dpy()->xcb());
+//
+//	xcb_visualid_t visual = _ctx->dpy()->root_visual()->visual_id;
+//	int depth = _ctx->dpy()->root_depth();
+//
+//	/** if visual is 32 bits, this values are mandatory **/
+//	xcb_colormap_t cmap = xcb_generate_id(_ctx->dpy()->xcb());
+//	xcb_create_colormap(_ctx->dpy()->xcb(), XCB_COLORMAP_ALLOC_NONE, cmap, _ctx->dpy()->root(), visual);
+//
+//	uint32_t value_mask = 0;
+//	uint32_t value[5];
+//
+//	value_mask |= XCB_CW_BACK_PIXEL;
+//	value[0] = _ctx->dpy()->xcb_screen()->black_pixel;
+//
+//	value_mask |= XCB_CW_BORDER_PIXEL;
+//	value[1] = _ctx->dpy()->xcb_screen()->black_pixel;
+//
+//	value_mask |= XCB_CW_OVERRIDE_REDIRECT;
+//	value[2] = True;
+//
+//	value_mask |= XCB_CW_EVENT_MASK;
+//	value[3] = XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_POINTER_MOTION | XCB_EVENT_MASK_LEAVE_WINDOW;
+//
+//	value_mask |= XCB_CW_COLORMAP;
+//	value[4] = cmap;
+//
+//	_win = xcb_generate_id(_ctx->dpy()->xcb());
+//	xcb_create_window(_ctx->dpy()->xcb(), depth, _win, _ctx->dpy()->root(), _effective_area.x, _effective_area.y, _effective_area.w, _effective_area.h, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, visual, value_mask, value);
+//
+//	_ctx->dpy()->set_window_cursor(_win, _ctx->dpy()->xc_left_ptr);
+//
+//	/**
+//	 * This grab will freeze input for all client, all mouse button, until
+//	 * we choose what to do with them with XAllowEvents. we can choose to keep
+//	 * grabbing events or release event and allow further processing by other clients.
+//	 **/
+//	xcb_grab_button(_ctx->dpy()->xcb(), false, _win,
+//			DEFAULT_BUTTON_EVENT_MASK,
+//			XCB_GRAB_MODE_SYNC,
+//			XCB_GRAB_MODE_ASYNC,
+//			XCB_NONE,
+//			XCB_NONE,
+//			XCB_BUTTON_INDEX_ANY,
+//			XCB_MOD_MASK_ANY);
 
 }
 
@@ -259,16 +259,16 @@ xcb_window_t viewport_t::get_xid() const {
 void viewport_t::paint_expose() {
 	if(not _is_visible)
 		return;
-
-	cairo_surface_t * surf = cairo_xcb_surface_create(_ctx->dpy()->xcb(), _win, _ctx->dpy()->root_visual(), _effective_area.w, _effective_area.h);
-	cairo_t * cr = cairo_create(surf);
-	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, _back_surf->get_cairo_surface(), 0.0, 0.0);
-	cairo_rectangle(cr, 0.0, 0.0, _effective_area.w, _effective_area.h);
-	cairo_fill(cr);
-
-	cairo_destroy(cr);
-	cairo_surface_destroy(surf);
+//
+//	cairo_surface_t * surf = cairo_xcb_surface_create(_ctx->dpy()->xcb(), _win, _ctx->dpy()->root_visual(), _effective_area.w, _effective_area.h);
+//	cairo_t * cr = cairo_create(surf);
+//	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+//	cairo_set_source_surface(cr, _back_surf->get_cairo_surface(), 0.0, 0.0);
+//	cairo_rectangle(cr, 0.0, 0.0, _effective_area.w, _effective_area.h);
+//	cairo_fill(cr);
+//
+//	cairo_destroy(cr);
+//	cairo_surface_destroy(surf);
 }
 
 rect viewport_t::get_window_position() const {

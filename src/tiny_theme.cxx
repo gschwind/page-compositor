@@ -23,8 +23,8 @@ namespace page {
 
 using namespace std;
 
-tiny_theme_t::tiny_theme_t(display_t * cnx, config_handler_t & conf) :
-	simple2_theme_t(cnx, conf)
+tiny_theme_t::tiny_theme_t(config_handler_t & conf) :
+	simple2_theme_t{conf}
 {
 	notebook.tab_height = 15;
 	notebook.margin.top = 0;

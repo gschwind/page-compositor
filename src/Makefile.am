@@ -40,11 +40,9 @@ page_compositor_SOURCES = \
 	workspace.cxx \
 	page_root.cxx \
 	display.cxx \
-	compositor.cxx \
 	simple2_theme.cxx \
 	tiny_theme.cxx \
 	config_handler.cxx \
-	client_proxy.cxx \
 	popup_alt_tab.cxx \
 	main.cxx \
 	blur_image_surface.cxx \
@@ -52,7 +50,6 @@ page_compositor_SOURCES = \
 	tree.hxx \
 	blur_image_surface.hxx \
 	notebook.hxx \
-	compositor.hxx \
 	client_proxy.hxx \
 	config_handler.hxx \
 	workspace.hxx \

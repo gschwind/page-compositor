@@ -80,7 +80,7 @@ rect simple2_theme_t::compute_notebook_menu_position(
 }
 
 
-simple2_theme_t::simple2_theme_t(display_t * cnx, config_handler_t & conf) {
+simple2_theme_t::simple2_theme_t(config_handler_t & conf) {
 
 	notebook.margin.top = 4;
 	notebook.margin.bottom = 4;
@@ -119,8 +119,6 @@ simple2_theme_t::simple2_theme_t(display_t * cnx, config_handler_t & conf) {
 	split.margin.left = 0;
 	split.margin.right = 0;
 	split.width = 10;
-
-	_cnx = cnx;
 
 	std::string conf_img_dir = conf.get_string("default", "theme_dir");
 
@@ -1564,15 +1562,15 @@ void simple2_theme_t::update() {
 
 void simple2_theme_t::create_background_img() {
 
-	if (has_background) {
+	if (has_background and false) {
 
 		cairo_surface_t * tmp = cairo_image_surface_create_from_png(
 				background_file.c_str());
 
-		xcb_get_geometry_cookie_t ck = xcb_get_geometry(_cnx->xcb(), _cnx->root());
-		xcb_get_geometry_reply_t * geometry = xcb_get_geometry_reply(_cnx->xcb(), ck, 0);
+		//xcb_get_geometry_cookie_t ck = xcb_get_geometry(_cnx->xcb(), _cnx->root());
+		xcb_get_geometry_reply_t * geometry = nullptr; //xcb_get_geometry_reply(_cnx->xcb(), ck, 0);
 
-		cairo_surface_t * image_background_s = cairo_image_surface_create(CAIRO_FORMAT_RGB24, geometry->width, geometry->height);
+		cairo_surface_t * image_background_s = nullptr; //cairo_image_surface_create(CAIRO_FORMAT_RGB24, geometry->width, geometry->height);
 
 		/**
 		 * WARNING: transform order and set_source_surface have huge
@@ -1733,7 +1731,7 @@ void simple2_theme_t::create_background_img() {
 		cairo_surface_destroy(tmp);
 
 		/* copy background to pixmap */
-		backgroun_px = make_shared<pixmap_t>(_cnx, PIXMAP_RGB, geometry->width, geometry->height);
+		backgroun_px = nullptr; //make_shared<pixmap_t>(_cnx, PIXMAP_RGB, geometry->width, geometry->height);
 
 		cairo_t * cr = cairo_create(backgroun_px->get_cairo_surface());
 		cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);

@@ -292,8 +292,8 @@ grab_floating_move_t::grab_floating_move_t(page_context_t * ctx, shared_ptr<xdg_
 	pfm->move_resize(popup_original_position);
 	_ctx->overlay_add(pfm);
 	pfm->show();
-	_ctx->dpy()->set_window_cursor(f->base(), _ctx->dpy()->xc_fleur);
-	_ctx->dpy()->set_window_cursor(f->orig(), _ctx->dpy()->xc_fleur);
+	//_ctx->dpy()->set_window_cursor(f->base(), _ctx->dpy()->xc_fleur);
+	//_ctx->dpy()->set_window_cursor(f->orig(), _ctx->dpy()->xc_fleur);
 }
 
 grab_floating_move_t::~grab_floating_move_t() {
@@ -334,9 +334,8 @@ void grab_floating_move_t::button_release(xcb_button_release_event_t const * e) 
 
 	if (e->detail == XCB_BUTTON_INDEX_1 or e->detail == XCB_BUTTON_INDEX_3 or e->detail == button) {
 
-		_ctx->dpy()->set_window_cursor(f->base(), XCB_NONE);
-
-		_ctx->dpy()->set_window_cursor(f->orig(), XCB_NONE);
+		//_ctx->dpy()->set_window_cursor(f->base(), XCB_NONE);
+		//_ctx->dpy()->set_window_cursor(f->orig(), XCB_NONE);
 
 		f->set_floating_wished_position(final_position);
 		f->reconfigure();
@@ -347,32 +346,32 @@ void grab_floating_move_t::button_release(xcb_button_release_event_t const * e) 
 }
 
 xcb_cursor_t grab_floating_resize_t::_get_cursor() {
-	switch(mode) {
-	case RESIZE_TOP:
-		return _ctx->dpy()->xc_top_side;
-		break;
-	case RESIZE_BOTTOM:
-		return _ctx->dpy()->xc_bottom_side;
-		break;
-	case RESIZE_LEFT:
-		return _ctx->dpy()->xc_left_side;
-		break;
-	case RESIZE_RIGHT:
-		return _ctx->dpy()->xc_right_side;
-		break;
-	case RESIZE_TOP_LEFT:
-		return _ctx->dpy()->xc_top_left_corner;
-		break;
-	case RESIZE_TOP_RIGHT:
-		return _ctx->dpy()->xc_top_right_corner;
-		break;
-	case RESIZE_BOTTOM_LEFT:
-		return _ctx->dpy()->xc_bottom_left_corner;
-		break;
-	case RESIZE_BOTTOM_RIGHT:
-		return _ctx->dpy()->xc_bottom_righ_corner;
-		break;
-	}
+//	switch(mode) {
+//	case RESIZE_TOP:
+//		return _ctx->dpy()->xc_top_side;
+//		break;
+//	case RESIZE_BOTTOM:
+//		return _ctx->dpy()->xc_bottom_side;
+//		break;
+//	case RESIZE_LEFT:
+//		return _ctx->dpy()->xc_left_side;
+//		break;
+//	case RESIZE_RIGHT:
+//		return _ctx->dpy()->xc_right_side;
+//		break;
+//	case RESIZE_TOP_LEFT:
+//		return _ctx->dpy()->xc_top_left_corner;
+//		break;
+//	case RESIZE_TOP_RIGHT:
+//		return _ctx->dpy()->xc_top_right_corner;
+//		break;
+//	case RESIZE_BOTTOM_LEFT:
+//		return _ctx->dpy()->xc_bottom_left_corner;
+//		break;
+//	case RESIZE_BOTTOM_RIGHT:
+//		return _ctx->dpy()->xc_bottom_righ_corner;
+//		break;
+//	}
 
 	return XCB_WINDOW_NONE;
 }
@@ -395,7 +394,7 @@ grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx, shared_ptr<
 	_ctx->overlay_add(pfm);
 	pfm->show();
 
-	_ctx->dpy()->set_window_cursor(f->base(), _get_cursor());
+	//_ctx->dpy()->set_window_cursor(f->base(), _get_cursor());
 
 }
 
@@ -519,8 +518,8 @@ void grab_floating_resize_t::button_release(xcb_button_release_event_t const * e
 	auto f = this->f.lock();
 
 	if (e->detail == button) {
-		_ctx->dpy()->set_window_cursor(f->base(), XCB_NONE);
-		_ctx->dpy()->set_window_cursor(f->orig(), XCB_NONE);
+		//_ctx->dpy()->set_window_cursor(f->base(), XCB_NONE);
+		//_ctx->dpy()->set_window_cursor(f->orig(), XCB_NONE);
 		f->set_floating_wished_position(final_position);
 		f->reconfigure();
 		_ctx->set_focus(f, e->time);
@@ -615,30 +614,30 @@ grab_alt_tab_t::grab_alt_tab_t(page_context_t * ctx, list<client_managed_p> mana
 	if(_client_list.size() > 0) {
 		_selected = _client_list.front();
 	}
-
-	auto ck = xcb_grab_pointer(
-		_ctx->dpy()->xcb(),
-		false,
-		_ctx->dpy()->root(),
-		XCB_EVENT_MASK_BUTTON_PRESS|XCB_EVENT_MASK_BUTTON_RELEASE|XCB_EVENT_MASK_BUTTON_MOTION|XCB_EVENT_MASK_POINTER_MOTION,
-		XCB_GRAB_MODE_ASYNC,
-		XCB_GRAB_MODE_ASYNC,
-		XCB_NONE,
-		XCB_NONE,
-		time);
-
-	xcb_generic_error_t * err;
-	auto reply = xcb_grab_pointer_reply(_ctx->dpy()->xcb(), ck, &err);
-
-	if(err != nullptr) {
-		cout << "grab_alt_tab_t::grab_alt_tab_t error while trying to grab : " << xcb_event_get_error_label(err->error_code) << endl;
-		xcb_discard_reply(_ctx->dpy()->xcb(), ck.sequence);
-	} else {
-		if(reply->status != XCB_GRAB_STATUS_SUCCESS) {
-			cout << "grab_alt_tab_t::grab_alt_tab_t: grab fail" << endl;
-		}
-		free(reply);
-	}
+//
+//	auto ck = xcb_grab_pointer(
+//		_ctx->dpy()->xcb(),
+//		false,
+//		_ctx->dpy()->root(),
+//		XCB_EVENT_MASK_BUTTON_PRESS|XCB_EVENT_MASK_BUTTON_RELEASE|XCB_EVENT_MASK_BUTTON_MOTION|XCB_EVENT_MASK_POINTER_MOTION,
+//		XCB_GRAB_MODE_ASYNC,
+//		XCB_GRAB_MODE_ASYNC,
+//		XCB_NONE,
+//		XCB_NONE,
+//		time);
+//
+//	xcb_generic_error_t * err;
+//	auto reply = xcb_grab_pointer_reply(_ctx->dpy()->xcb(), ck, &err);
+//
+//	if(err != nullptr) {
+//		cout << "grab_alt_tab_t::grab_alt_tab_t error while trying to grab : " << xcb_event_get_error_label(err->error_code) << endl;
+//		xcb_discard_reply(_ctx->dpy()->xcb(), ck.sequence);
+//	} else {
+//		if(reply->status != XCB_GRAB_STATUS_SUCCESS) {
+//			cout << "grab_alt_tab_t::grab_alt_tab_t: grab fail" << endl;
+//		}
+//		free(reply);
+//	}
 
 }
 
@@ -648,7 +647,7 @@ grab_alt_tab_t::~grab_alt_tab_t() {
 		_ctx->detach(x);
 	}
 
-	xcb_ungrab_pointer(_ctx->dpy()->xcb(), XCB_CURRENT_TIME);
+	//xcb_ungrab_pointer(_ctx->dpy()->xcb(), XCB_CURRENT_TIME);
 }
 
 void grab_alt_tab_t::button_press(xcb_button_press_event_t const * e) {
@@ -665,7 +664,7 @@ void grab_alt_tab_t::button_press(xcb_button_press_event_t const * e) {
 			}
 		}
 
-		xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
+		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
 		_ctx->grab_stop();
 
 	}
@@ -735,13 +734,13 @@ void grab_alt_tab_t::key_release(xcb_key_release_event_t const * e) {
 	}
 
 	if (XK_Escape == k) {
-		xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
+		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
 		_ctx->grab_stop();
 	}
 
 	/** here we guess Mod1 is bound to Alt **/
 	if (XK_Alt_L == k or XK_Alt_R == k) {
-		xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
+		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
 		if(not _selected.expired()) {
 			auto mw = _selected.lock();
 			mw->activate();
