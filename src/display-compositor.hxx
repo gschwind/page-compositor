@@ -26,6 +26,7 @@
 #include <libweston-0/compositor.h>
 #include "xdg-shell-server-protocol.h"
 
+#include "region.hxx"
 #include "listener.hxx"
 
 namespace page {

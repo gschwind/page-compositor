@@ -23,7 +23,7 @@
 #include <wayland-server-core.h>
 #include <wayland-server.h>
 #include "xdg-shell-server-protocol.h"
-#include "compositor.hxx"
+#include "display-compositor.hxx"
 #include "xdg-shell.hxx"
 #include "xdg-surface.hxx"
 

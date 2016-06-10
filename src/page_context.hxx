@@ -11,8 +11,7 @@
 #include <typeinfo>
 
 #include "tree.hxx"
-#include "display.hxx"
-#include "compositor.hxx"
+#include "display-compositor.hxx"
 #include "theme_split.hxx"
 #include "keymap.hxx"
 
@@ -66,8 +65,8 @@ public:
 
 	virtual auto conf() const -> page_configuration_t const & = 0;
 	virtual auto theme() const -> theme_t const * = 0;
-	virtual auto dpy() const -> display_t * = 0;
-	virtual auto cmp() const -> compositor_t * = 0;
+	virtual auto dpy() const -> display_compositor_t * = 0;
+	virtual auto cmp() const -> display_compositor_t * = 0;
 	virtual void overlay_add(shared_ptr<tree_t> x) = 0;
 	virtual void add_global_damage(region const & r) = 0;
 	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t> = 0;

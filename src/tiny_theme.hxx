@@ -59,7 +59,7 @@ class tiny_theme_t : public simple2_theme_t {
 	) const;
 
 public:
-	tiny_theme_t(display_t * cnx, config_handler_t & conf);
+	tiny_theme_t(config_handler_t & conf);
 	virtual ~tiny_theme_t();
 
 	virtual void render_notebook(cairo_t * cr, theme_notebook_t const * n) const;

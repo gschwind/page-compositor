@@ -12,7 +12,6 @@
 #define DROPDOWN_MENU_HXX_
 
 #include <cairo/cairo.h>
-#include <cairo/cairo-xcb.h>
 
 #include <string>
 #include <memory>
@@ -74,54 +73,22 @@ public:
 
 struct dropdown_menu_overlay_t : public tree_t {
 	page_context_t * _ctx;
-	xcb_pixmap_t _pix;
+	uint32_t _pix;
 	cairo_surface_t * _surf;
 	rect _position;
-	xcb_window_t _wid;
+	uint32_t _wid;
 	bool _is_durty;
 
 	dropdown_menu_overlay_t(page_context_t * ctx, rect position) : _ctx{ctx}, _position{position} {
-		_is_durty = true;
-
-		xcb_colormap_t cmap = xcb_generate_id(_ctx->dpy()->xcb());
-		xcb_create_colormap(_ctx->dpy()->xcb(), XCB_COLORMAP_ALLOC_NONE, cmap, _ctx->dpy()->root(), _ctx->dpy()->root_visual()->visual_id);
-
-		uint32_t value_mask = 0;
-		uint32_t value[5];
-
-		value_mask |= XCB_CW_BACK_PIXEL;
-		value[0] = _ctx->dpy()->xcb_screen()->black_pixel;
-
-		value_mask |= XCB_CW_BORDER_PIXEL;
-		value[1] = _ctx->dpy()->xcb_screen()->black_pixel;
-
-		value_mask |= XCB_CW_OVERRIDE_REDIRECT;
-		value[2] = True;
-
-		value_mask |= XCB_CW_EVENT_MASK;
-		value[3] = XCB_EVENT_MASK_EXPOSURE;
-
-		value_mask |= XCB_CW_COLORMAP;
-		value[4] = cmap;
-
-		_wid = xcb_generate_id(_ctx->dpy()->xcb());
-		xcb_create_window(_ctx->dpy()->xcb(), _ctx->dpy()->root_depth(), _wid, _ctx->dpy()->root(), _position.x, _position.y, _position.w, _position.h, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, _ctx->dpy()->root_visual()->visual_id, value_mask, value);
-
-
-		_pix = xcb_generate_id(_ctx->dpy()->xcb());
-		xcb_create_pixmap(_ctx->dpy()->xcb(), _ctx->dpy()->root_depth(), _pix, _wid, _position.w, _position.h);
-		_surf = cairo_xcb_surface_create(_ctx->dpy()->xcb(), _pix, _ctx->dpy()->root_visual(), _position.w, _position.h);
-
+		/* TODO */
 	}
 
 	~dropdown_menu_overlay_t() {
-		cairo_surface_destroy(_surf);
-		xcb_free_pixmap(_ctx->dpy()->xcb(), _pix);
-		xcb_destroy_window(_ctx->dpy()->xcb(), _wid);
+		/* TODO */
 	}
 
 	void map() {
-		_ctx->dpy()->map(_wid);
+		/* TODO */
 	}
 
 	rect const & position() {
@@ -133,8 +100,8 @@ struct dropdown_menu_overlay_t : public tree_t {
 	}
 
 	void expose() {
-		cairo_surface_t * surf = cairo_xcb_surface_create(_ctx->dpy()->xcb(),
-				_wid, _ctx->dpy()->root_visual(), _position.w, _position.h);
+		cairo_surface_t * surf =
+				cairo_image_surface_create(CAIRO_FORMAT_ARGB32, _position.w, _position.h);
 		cairo_t * cr = cairo_create(surf);
 		cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
 		cairo_set_source_surface(cr, _surf, 0.0, 0.0);
@@ -145,7 +112,8 @@ struct dropdown_menu_overlay_t : public tree_t {
 	}
 
 	void expose(region const & r) {
-		cairo_surface_t * surf = cairo_xcb_surface_create(_ctx->dpy()->xcb(), _wid, _ctx->dpy()->root_visual(), _position.w, _position.h);
+		cairo_surface_t * surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32,
+				_position.w, _position.h);
 		cairo_t * cr = cairo_create(surf);
 		for(auto a: r.rects()) {
 			cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
@@ -316,16 +284,10 @@ public:
 				or e->detail == XCB_BUTTON_INDEX_1) {
 			if (_start_position.is_inside(e->event_x, e->event_y) and not active_grab) {
 				active_grab = true;
-				xcb_grab_pointer(_ctx->dpy()->xcb(),
-				false, _ctx->dpy()->root(),
-						DEFAULT_BUTTON_EVENT_MASK
-								| XCB_EVENT_MASK_POINTER_MOTION,
-						XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC,
-						XCB_NONE,
-						XCB_NONE, e->time);
+				/* TODO */
 			} else {
 				if (active_grab) {
-					xcb_ungrab_pointer(_ctx->dpy()->xcb(), e->time);
+					/* TODO */
 					active_grab = false;
 				}
 

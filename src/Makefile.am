@@ -16,6 +16,9 @@ BUILT_SOURCES = \
 	xdg-shell-server-protocol.h
 
 page_compositor_SOURCES = \
+	page.cxx \
+	page.hxx \
+	page-context.hxx \
 	xdg-shell.cxx \
 	xdg-surface.cxx \
 	xdg-popup.cxx \
@@ -39,7 +42,6 @@ page_compositor_SOURCES = \
 	viewport.cxx \
 	workspace.cxx \
 	page_root.cxx \
-	page.cxx \
 	display.cxx \
 	compositor.cxx \
 	simple2_theme.cxx \

@@ -29,6 +29,10 @@
 #include <typeinfo>
 #include <memory>
 
+#include <libweston-0/compositor.h>
+#include <libweston-0/compositor-x11.h>
+#include "xdg-shell-server-protocol.h"
+
 #include "utils.hxx"
 
 #include "renderable.hxx"
@@ -58,6 +62,13 @@
 namespace page {
 
 time64_t const page_t::default_wait{1000000000L / 120L};
+
+static void bind_xdg_shell(struct wl_client *client, void *data,
+				      uint32_t version, uint32_t id) {
+	/* TODO */
+	//new xdg_shell_t{client, id};
+}
+
 
 page_t::page_t(int argc, char ** argv)
 {
@@ -90,7 +101,6 @@ page_t::page_t(int argc, char ** argv)
 
 	_keymap = nullptr;
 	_dpy = nullptr;
-	_compositor = nullptr;
 
 	/* load configurations, from lower priority to high one */
 
@@ -197,16 +207,9 @@ page_t::~page_t() {
 
 void page_t::run() {
 
-	_dpy = new display_t;
-
-	/* check for required page extension */
-	_dpy->check_x11_extension();
-	/* Before doing anything, trying to register wm and cm */
-	create_identity_window();
-	register_wm();
+	_dpy = new display_compositor_t;
 
 	/** initialize the empty desktop **/
-
 	_root = make_shared<page_root_t>(this);
 
 	{
@@ -217,139 +220,123 @@ void page_t::run() {
 		d->hide();
 	}
 
-	/* start the compositor once the window manager is fully started */
-	start_compositor();
-
-	_dpy->grab();
-	_dpy->change_property(_dpy->root(), _NET_SUPPORTING_WM_CHECK,
-			WINDOW, 32, &identity_window, 1);
-
 	_bind_all_default_event();
 
 	/** Initialize theme **/
 
 	if(_theme_engine == "tiny") {
 		cout << "using tiny theme engine" << endl;
-		_theme = new tiny_theme_t{_dpy, _conf};
+		_theme = new tiny_theme_t{_conf};
 	} else {
 		/* The default theme engine */
 		cout << "using simple theme engine" << endl;
-		_theme = new simple2_theme_t{_dpy, _conf};
+		_theme = new simple2_theme_t{_conf};
 	}
 
 	/* start listen root event before anything, each event will be stored to be processed later */
-	_dpy->select_input(_dpy->root(), ROOT_EVENT_MASK);
+	/** TODO: set default grab **/
 
 	/**
 	 * listen RRCrtcChangeNotifyMask for possible change in screen layout.
 	 **/
-	xcb_randr_select_input(_dpy->xcb(), _dpy->root(), XCB_RANDR_NOTIFY_MASK_CRTC_CHANGE);
-
+	/** TODO: define a handler for input/output creation **/
 	update_viewport_layout();
 
-	_dpy->load_cursors();
-	_dpy->set_window_cursor(_dpy->root(), _dpy->xc_left_ptr);
-
-	update_net_supported();
-
-	/* update number of desktop */
-	uint32_t number_of_desktop = _root->_desktop_list.size();
-	_dpy->change_property(_dpy->root(), _NET_NUMBER_OF_DESKTOPS,
-			CARDINAL, 32, &number_of_desktop, 1);
-
-
-	update_current_desktop();
-
-	{
-		/* page does not have showing desktop mode */
-		uint32_t showing_desktop = 0;
-		_dpy->change_property(_dpy->root(), _NET_SHOWING_DESKTOP, CARDINAL, 32,
-				&showing_desktop, 1);
-	}
-
-	{
-		std::vector<char> names_list;
-		for (unsigned k = 0; k < _root->_desktop_list.size(); ++k) {
-			std::ostringstream os;
-			os << "Desktop #" << k;
-			std::string s { os.str() };
-			names_list.insert(names_list.end(), s.begin(), s.end());
-			/* end of string */
-			names_list.push_back(0);
-		}
-		_dpy->change_property(_dpy->root(), _NET_DESKTOP_NAMES, UTF8_STRING, 8,
-				&names_list[0], names_list.size());
-
-	}
-
-	{
-		wm_icon_size_t icon_size{16,16,16,16,16,16};
-		_dpy->change_property(_dpy->root(), WM_ICON_SIZE, CARDINAL, 32,
-				&icon_size, 6);
-
-	}
-
-	scan();
-
-	/* setup _NET_ACTIVE_WINDOW */
-	_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, XCB_CURRENT_TIME);
-	_dpy->set_net_active_window(XCB_WINDOW_NONE);
 
 	update_keymap();
 	update_grabkey();
 
-	update_windows_stack();
-	xcb_flush(_dpy->xcb());
-
-	_dpy->ungrab();
+	// no window at the moment remove : update_windows_stack();
 
 	get_current_workspace()->show();
 
 	/* process messages as soon as we get messages, or every 1/60 of seconds */
-	_mainloop.add_poll(_dpy->fd(), POLLIN|POLLPRI|POLLERR, [this](struct pollfd const & x) -> void { this->process_pending_events(); });
-	auto on_visibility_change_func = _dpy->on_visibility_change.connect(this, &page_t::on_visibility_change_handler);
+	// TODO: use the wayland mainloop
+	//_mainloop.add_poll(_dpy->fd(), POLLIN|POLLPRI|POLLERR, [this](struct pollfd const & x) -> void { this->process_pending_events(); });
+	//auto on_visibility_change_func = _dpy->on_visibility_change.connect(this, &page_t::on_visibility_change_handler);
 
 	/* dummy on block function */
-	auto mainloop_on_block_slot = _mainloop.on_block.connect(this, &page_t::on_block_mainloop_handler);
+	//auto mainloop_on_block_slot = _mainloop.on_block.connect(this, &page_t::on_block_mainloop_handler);
 
-	_mainloop.run();
+	/* TODO: wl_run */
+	//_mainloop.run();
+
+
+    weston_log_set_handler(vprintf, vprintf);
+
+	/* first create the wayland serveur */
+	_dpy->dpy = wl_display_create();
+
+	auto sock_name = wl_display_add_socket_auto(_dpy->dpy);
+	weston_log("socket name = %s\n", sock_name);
+
+	/* set the environment for children */
+	setenv("WAYLAND_DISPLAY", sock_name, 1);
+
+	/*
+	 * Weston compositor will create all core globals:
+	 *  - wl_compositor
+	 *  - wl_output
+	 *  - wl_subcompositor
+	 *  - wl_presentation
+	 *  - wl_data_device_manager
+	 *  - wl_seat
+	 *  - zwp_linux_dmabuf_v1
+	 *  - [...]
+	 *  but not the xdg_shell one.
+	 *
+	 */
+	ec = weston_compositor_create(_dpy->dpy, nullptr);
+	weston_layer_init(&default_layer, &ec->cursor_layer.link);
+
+	wl_global_create(_dpy->dpy, &xdg_shell_interface, 1, NULL, bind_xdg_shell);
+
+	connect_all();
+
+	/* setup the keyboard layout (MANDATORY) */
+	xkb_rule_names names = {
+			"",					/*rules*/
+			"pc104",			/*model*/
+			"us",				/*layout*/
+			"",					/*variant*/
+			""					/*option*/
+	};
+	weston_compositor_set_xkb_rule_names(ec, &names);
+	load_x11_backend(ec);
+
+
+	/** create the solid color background **/
+	auto background = weston_surface_create(ec);
+	weston_surface_set_color(background, 0.5, 0.5, 0.5, 1.0);
+    weston_surface_set_size(background, 800, 600);
+    pixman_region32_fini(&background->opaque);
+    pixman_region32_init_rect(&background->opaque, 0, 0, 800, 600);
+    weston_surface_damage(background);
+    //pixman_region32_fini(&s->input);
+    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
+
+    auto bview = weston_view_create(background);
+	weston_view_set_position(bview, 0, 0);
+	background->timeline.force_refresh = 1;
+	//weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
+
+	weston_compositor_wake(ec);
+    wl_display_run(dpy);
+
 
 	cout << "Page END" << endl;
 
-	_dpy->on_visibility_change.remove(on_visibility_change_func);
-	_mainloop.remove_poll(_dpy->fd());
+	//_dpy->on_visibility_change.remove(on_visibility_change_func);
+	//_mainloop.remove_poll(_dpy->fd());
 
-	_dpy->unload_cursors();
 
-	for (auto & i : net_client_list()) {
-		_dpy->reparentwindow(i->orig(), _dpy->root(), 0, 0);
-		detach(i);
-	}
 
 	/** destroy the tree **/
 	_root = nullptr;
 
 	delete _keymap; _keymap = nullptr;
 	delete _theme; _theme = nullptr;
-	delete _compositor; _compositor = nullptr;
-
-	if(_dpy != nullptr) {
-		/** clean up properties defined by Window Manager **/
-		_dpy->delete_property(_dpy->root(), _NET_SUPPORTED);
-		_dpy->delete_property(_dpy->root(), _NET_CLIENT_LIST);
-		_dpy->delete_property(_dpy->root(), _NET_CLIENT_LIST_STACKING);
-		_dpy->delete_property(_dpy->root(), _NET_ACTIVE_WINDOW);
-		_dpy->delete_property(_dpy->root(), _NET_NUMBER_OF_DESKTOPS);
-		_dpy->delete_property(_dpy->root(), _NET_DESKTOP_GEOMETRY);
-		_dpy->delete_property(_dpy->root(), _NET_DESKTOP_VIEWPORT);
-		_dpy->delete_property(_dpy->root(), _NET_CURRENT_DESKTOP);
-		_dpy->delete_property(_dpy->root(), _NET_DESKTOP_NAMES);
-		_dpy->delete_property(_dpy->root(), _NET_WORKAREA);
-		_dpy->delete_property(_dpy->root(), _NET_SUPPORTING_WM_CHECK);
-		_dpy->delete_property(_dpy->root(), _NET_SHOWING_DESKTOP);
-
-		delete _dpy; _dpy = nullptr;
-	}
+	delete _dpy; _dpy = nullptr;
 
 }
 
@@ -401,386 +388,255 @@ void page_t::unmanage(shared_ptr<client_managed_t> mw) {
 }
 
 void page_t::scan() {
-
-	_dpy->grab();
-	_dpy->fetch_pending_events();
-
-	xcb_query_tree_cookie_t ck = xcb_query_tree(_dpy->xcb(), _dpy->root());
-	xcb_query_tree_reply_t * r = xcb_query_tree_reply(_dpy->xcb(), ck, 0);
-
-	if(r == nullptr)
-		throw exception_t("Cannot query tree");
-
-	xcb_window_t * children = xcb_query_tree_children(r);
-	unsigned n_children = xcb_query_tree_children_length(r);
-
-	for (unsigned i = 0; i < n_children; ++i) {
-		xcb_window_t w = children[i];
-
-		try {
-			auto c = _dpy->create_client_proxy(w);
-
-			if(c->wa()._class == XCB_WINDOW_CLASS_INPUT_ONLY) {
-				continue;
-			}
-
-			c->read_all_properties();
-
-			if (c->wa().map_state != XCB_MAP_STATE_UNMAPPED) {
-				onmap(w);
-			} else {
-				/**
-				 * if the window is not mapped, check if previous windows manager has set WM_STATE to iconic
-				 * if this is the case, that mean that is a managed window, otherwise it is a WithDrwn window
-				 **/
-				if (c->wm_state() != nullptr) {
-					if (c->wm_state()->state == IconicState) {
-						onmap(w);
-					}
-				}
-			}
-		} catch (invalid_client_t & e) {
-			/* ignore */
-		}
-	}
-
-	free(r);
-
-
-	update_workarea();
-	for(auto x: _root->_desktop_list) {
-		reconfigure_docks(x);
-	}
-
-	_need_update_client_list = true;
-	_need_restack = true;
-
-	_dpy->ungrab();
-
-	print_state();
-
+		/* TODO: remove */
 }
 
 void page_t::update_net_supported() {
-	vector<xcb_atom_t> supported_list;
-
-	supported_list.push_back(A(_NET_WM_NAME));
-	supported_list.push_back(A(_NET_WM_USER_TIME));
-	supported_list.push_back(A(_NET_WM_USER_TIME_WINDOW));
-	supported_list.push_back(A(_NET_CLIENT_LIST));
-	supported_list.push_back(A(_NET_CLIENT_LIST_STACKING));
-	supported_list.push_back(A(_NET_WM_STRUT_PARTIAL));
-	supported_list.push_back(A(_NET_NUMBER_OF_DESKTOPS));
-	supported_list.push_back(A(_NET_DESKTOP_GEOMETRY));
-	supported_list.push_back(A(_NET_DESKTOP_VIEWPORT));
-	supported_list.push_back(A(_NET_CURRENT_DESKTOP));
-	supported_list.push_back(A(_NET_ACTIVE_WINDOW));
-	supported_list.push_back(A(_NET_WM_STATE_FULLSCREEN));
-	supported_list.push_back(A(_NET_WM_STATE_FOCUSED));
-	supported_list.push_back(A(_NET_WM_STATE_DEMANDS_ATTENTION));
-	supported_list.push_back(A(_NET_WM_STATE_HIDDEN));
-	supported_list.push_back(A(_NET_REQUEST_FRAME_EXTENTS));
-	supported_list.push_back(A(_NET_FRAME_EXTENTS));
-	supported_list.push_back(A(_NET_WM_OPAQUE_REGION));
-
-	supported_list.push_back(A(_NET_WM_ALLOWED_ACTIONS));
-	supported_list.push_back(A(_NET_WM_ACTION_FULLSCREEN));
-	supported_list.push_back(A(_NET_WM_ACTION_ABOVE));
-	supported_list.push_back(A(_NET_WM_ACTION_BELOW));
-	supported_list.push_back(A(_NET_WM_ACTION_CHANGE_DESKTOP));
-	supported_list.push_back(A(_NET_WM_ACTION_CLOSE));
-	supported_list.push_back(A(_NET_WM_ACTION_FULLSCREEN));
-	supported_list.push_back(A(_NET_WM_ACTION_MAXIMIZE_HORZ));
-	supported_list.push_back(A(_NET_WM_ACTION_MAXIMIZE_VERT));
-	supported_list.push_back(A(_NET_WM_ACTION_MINIMIZE));
-	supported_list.push_back(A(_NET_WM_ACTION_MOVE));
-	supported_list.push_back(A(_NET_WM_ACTION_RESIZE));
-	supported_list.push_back(A(_NET_WM_ACTION_SHADE));
-	supported_list.push_back(A(_NET_WM_ACTION_STICK));
-
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_COMBO));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_DESKTOP));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_DIALOG));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_DND));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_DOCK));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_MENU));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_NORMAL));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_NOTIFICATION));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_POPUP_MENU));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_SPLASH));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_TOOLBAR));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_TOOLTIP));
-	supported_list.push_back(A(_NET_WM_WINDOW_TYPE_UTILITY));
-
-	supported_list.push_back(A(_NET_SUPPORTING_WM_CHECK));
-
-	_dpy->change_property(_dpy->root(), _NET_SUPPORTED, ATOM, 32, &supported_list[0],
-			supported_list.size());
-
+	/* TODO: remove */
 }
 
 void page_t::update_client_list() {
-	_net_client_list.remove_if([](weak_ptr<tree_t> const & w) { return w.expired(); });
-
-	/** set _NET_CLIENT_LIST : client list from oldest to newer client **/
-	vector<xcb_window_t> xid_client_list;
-	for(auto i : _net_client_list) {
-		xid_client_list.push_back(i.lock()->orig());
-	}
-
-	_dpy->change_property(_dpy->root(), _NET_CLIENT_LIST, WINDOW, 32,
-			&xid_client_list[0], xid_client_list.size());
-
+	/* TODO: remove */
 }
 
 void page_t::update_client_list_stacking() {
-
-	/** set _NET_CLIENT_LIST_STACKING : bottom to top staking **/
-	auto managed = net_client_list();
-	vector<xcb_window_t> client_list_stack;
-	for(auto c: managed) {
-		client_list_stack.push_back(c->orig());
-	}
-
-	_dpy->change_property(_dpy->root(), _NET_CLIENT_LIST_STACKING,
-			WINDOW, 32, &client_list_stack[0], client_list_stack.size());
-
+	/* TODO: remove */
 }
 
 void page_t::process_key_press_event(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_key_press_event_t const *>(_e);
 
-//	printf("%s key = %d, mod4 = %s, mod1 = %s\n",
-//			e->response_type == XCB_KEY_PRESS ? "KeyPress" : "KeyRelease",
-//			e->detail,
-//			e->state & XCB_MOD_MASK_4 ? "true" : "false",
-//			e->state & XCB_MOD_MASK_1 ? "true" : "false");
+	/* TODO: global key bindings */
 
-	/* get KeyCode for Unmodified Key */
-
-	key_desc_t key;
-
-	key.ks = _keymap->get(e->detail);
-	key.mod = e->state;
-
-	if (key.ks == 0)
-		return;
-
-
-	/** XCB_MOD_MASK_2 is num_lock, thus ignore his state **/
-	if(_keymap->numlock_mod_mask() != 0) {
-		key.mod &= ~_keymap->numlock_mod_mask();
-	}
-
-	if (key == bind_page_quit) {
-		_mainloop.stop();
-	}
-
-	if(_grab_handler != nullptr) {
-		_grab_handler->key_press(e);
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_close) {
-		shared_ptr<client_managed_t> mw;
-		if (get_current_workspace()->client_focus_history_front(mw)) {
-			mw->delete_window(e->time);
-		}
-
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_exposay_all) {
-		auto child = filter_class<notebook_t>(get_current_workspace()->get_all_children());
-		for (auto c : child) {
-			c->start_exposay();
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_toggle_fullscreen) {
-		shared_ptr<client_managed_t> mw;
-		if (get_current_workspace()->client_focus_history_front(mw)) {
-			toggle_fullscreen(mw);
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_toggle_compositor) {
-		if (_compositor == nullptr) {
-			start_compositor();
-		} else {
-			stop_compositor();
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_right_desktop) {
-		unsigned new_desktop = ((_root->_current_desktop + _root->_desktop_list.size()) + 1) % _root->_desktop_list.size();
-		shared_ptr<client_managed_t> mw;
-		if (get_workspace(new_desktop)->client_focus_history_front(mw)) {
-			mw->activate();
-			set_focus(mw, e->time);
-		} else {
-			switch_to_desktop(new_desktop);
-			set_focus(nullptr, e->time);
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_left_desktop) {
-		unsigned new_desktop = ((_root->_current_desktop + _root->_desktop_list.size()) - 1) % _root->_desktop_list.size();
-		shared_ptr<client_managed_t> mw;
-		if (get_workspace(new_desktop)->client_focus_history_front(mw)) {
-			mw->activate();
-			set_focus(mw, e->time);
-		} else {
-			switch_to_desktop(new_desktop);
-			set_focus(nullptr, e->time);
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_bind_window) {
-		shared_ptr<client_managed_t> mw;
-		if (get_current_workspace()->client_focus_history_front(mw)) {
-			if (mw->is(MANAGED_FULLSCREEN)) {
-				unfullscreen(mw);
-			} else if (mw->is(MANAGED_FLOATING)) {
-				bind_window(mw, true);
-			}
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_fullscreen_window) {
-		shared_ptr<client_managed_t> mw;
-		if (get_current_workspace()->client_focus_history_front(mw)) {
-			if (not mw->is(MANAGED_FULLSCREEN)) {
-				fullscreen(mw);
-			}
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (key == bind_float_window) {
-		shared_ptr<client_managed_t> mw;
-		if (get_current_workspace()->client_focus_history_front(mw)) {
-			if (mw->is(MANAGED_FULLSCREEN)) {
-				unfullscreen(mw);
-			}
-
-			if (mw->is(MANAGED_NOTEBOOK)) {
-				unbind_window(mw);
-			}
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	if (_compositor != nullptr) {
-		if (key == bind_debug_1) {
-			if (_root->_fps_overlay == nullptr) {
-
-				auto v = get_current_workspace()->get_any_viewport();
-				int y_pos = v->allocation().y + v->allocation().h - 100;
-				int x_pos = v->allocation().x + (v->allocation().w - 400)/2;
-
-				_root->_fps_overlay = make_shared<compositor_overlay_t>(this, rect{x_pos, y_pos, 400, 100});
-				_root->push_back(_root->_fps_overlay);
-				_root->_fps_overlay->show();
-			} else {
-				_root->remove(_root->_fps_overlay);
-				_root->_fps_overlay = nullptr;
-			}
-			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-			return;
-		}
-
-		if (key == bind_debug_2) {
-			if (_compositor->show_damaged()) {
-				_compositor->set_show_damaged(false);
-			} else {
-				_compositor->set_show_damaged(true);
-			}
-			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-			return;
-		}
-
-		if (key == bind_debug_3) {
-			if (_compositor->show_opac()) {
-				_compositor->set_show_opac(false);
-			} else {
-				_compositor->set_show_opac(true);
-			}
-			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-			return;
-		}
-	}
-
-	if (key == bind_debug_4) {
-		_root->print_tree(0);
-		for (auto i : net_client_list()) {
-			switch (i->get_type()) {
-			case MANAGED_NOTEBOOK:
-				cout << "[" << i->orig() << "] notebook : " << i->title()
-						<< endl;
-				break;
-			case MANAGED_FLOATING:
-				cout << "[" << i->orig() << "] floating : " << i->title()
-						<< endl;
-				break;
-			case MANAGED_FULLSCREEN:
-				cout << "[" << i->orig() << "] fullscreen : " << i->title()
-						<< endl;
-				break;
-			case MANAGED_DOCK:
-				cout << "[" << i->orig() << "] dock : " << i->title() << endl;
-				break;
-			}
-		}
-
-		if(not global_focus_history_is_empty()) {
-			cout << "active window is : ";
-			for(auto & focus: global_client_focus_history()) {
-				cout << focus.lock()->orig() << ",";
-			}
-			cout << endl;
-		} else {
-			cout << "active window is : " << "NONE" << endl;
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	for(int i; i < bind_cmd.size(); ++i) {
-		if (key == bind_cmd[i].key) {
-			run_cmd(bind_cmd[i].cmd);
-			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-			return;
-		}
-	}
-
-	if (key.ks == XK_Tab and (key.mod == XCB_MOD_MASK_1)) {
-		if (_grab_handler == nullptr) {
-			start_alt_tab(e->time);
-		}
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-		return;
-	}
-
-	xcb_allow_events(_dpy->xcb(), XCB_ALLOW_REPLAY_KEYBOARD, e->time);
+////	printf("%s key = %d, mod4 = %s, mod1 = %s\n",
+////			e->response_type == XCB_KEY_PRESS ? "KeyPress" : "KeyRelease",
+////			e->detail,
+////			e->state & XCB_MOD_MASK_4 ? "true" : "false",
+////			e->state & XCB_MOD_MASK_1 ? "true" : "false");
+//
+//	/* get KeyCode for Unmodified Key */
+//
+//	key_desc_t key;
+//
+//	key.ks = _keymap->get(e->detail);
+//	key.mod = e->state;
+//
+//	if (key.ks == 0)
+//		return;
+//
+//
+//	/** XCB_MOD_MASK_2 is num_lock, thus ignore his state **/
+//	if(_keymap->numlock_mod_mask() != 0) {
+//		key.mod &= ~_keymap->numlock_mod_mask();
+//	}
+//
+//	if (key == bind_page_quit) {
+//		_mainloop.stop();
+//	}
+//
+//	if(_grab_handler != nullptr) {
+//		_grab_handler->key_press(e);
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_close) {
+//		shared_ptr<client_managed_t> mw;
+//		if (get_current_workspace()->client_focus_history_front(mw)) {
+//			mw->delete_window(e->time);
+//		}
+//
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_exposay_all) {
+//		auto child = filter_class<notebook_t>(get_current_workspace()->get_all_children());
+//		for (auto c : child) {
+//			c->start_exposay();
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_toggle_fullscreen) {
+//		shared_ptr<client_managed_t> mw;
+//		if (get_current_workspace()->client_focus_history_front(mw)) {
+//			toggle_fullscreen(mw);
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_toggle_compositor) {
+//		if (_compositor == nullptr) {
+//			start_compositor();
+//		} else {
+//			stop_compositor();
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_right_desktop) {
+//		unsigned new_desktop = ((_root->_current_desktop + _root->_desktop_list.size()) + 1) % _root->_desktop_list.size();
+//		shared_ptr<client_managed_t> mw;
+//		if (get_workspace(new_desktop)->client_focus_history_front(mw)) {
+//			mw->activate();
+//			set_focus(mw, e->time);
+//		} else {
+//			switch_to_desktop(new_desktop);
+//			set_focus(nullptr, e->time);
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_left_desktop) {
+//		unsigned new_desktop = ((_root->_current_desktop + _root->_desktop_list.size()) - 1) % _root->_desktop_list.size();
+//		shared_ptr<client_managed_t> mw;
+//		if (get_workspace(new_desktop)->client_focus_history_front(mw)) {
+//			mw->activate();
+//			set_focus(mw, e->time);
+//		} else {
+//			switch_to_desktop(new_desktop);
+//			set_focus(nullptr, e->time);
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_bind_window) {
+//		shared_ptr<client_managed_t> mw;
+//		if (get_current_workspace()->client_focus_history_front(mw)) {
+//			if (mw->is(MANAGED_FULLSCREEN)) {
+//				unfullscreen(mw);
+//			} else if (mw->is(MANAGED_FLOATING)) {
+//				bind_window(mw, true);
+//			}
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_fullscreen_window) {
+//		shared_ptr<client_managed_t> mw;
+//		if (get_current_workspace()->client_focus_history_front(mw)) {
+//			if (not mw->is(MANAGED_FULLSCREEN)) {
+//				fullscreen(mw);
+//			}
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (key == bind_float_window) {
+//		shared_ptr<client_managed_t> mw;
+//		if (get_current_workspace()->client_focus_history_front(mw)) {
+//			if (mw->is(MANAGED_FULLSCREEN)) {
+//				unfullscreen(mw);
+//			}
+//
+//			if (mw->is(MANAGED_NOTEBOOK)) {
+//				unbind_window(mw);
+//			}
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	if (_compositor != nullptr) {
+//		if (key == bind_debug_1) {
+//			if (_root->_fps_overlay == nullptr) {
+//
+//				auto v = get_current_workspace()->get_any_viewport();
+//				int y_pos = v->allocation().y + v->allocation().h - 100;
+//				int x_pos = v->allocation().x + (v->allocation().w - 400)/2;
+//
+//				_root->_fps_overlay = make_shared<compositor_overlay_t>(this, rect{x_pos, y_pos, 400, 100});
+//				_root->push_back(_root->_fps_overlay);
+//				_root->_fps_overlay->show();
+//			} else {
+//				_root->remove(_root->_fps_overlay);
+//				_root->_fps_overlay = nullptr;
+//			}
+//			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//			return;
+//		}
+//
+//		if (key == bind_debug_2) {
+//			if (_compositor->show_damaged()) {
+//				_compositor->set_show_damaged(false);
+//			} else {
+//				_compositor->set_show_damaged(true);
+//			}
+//			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//			return;
+//		}
+//
+//		if (key == bind_debug_3) {
+//			if (_compositor->show_opac()) {
+//				_compositor->set_show_opac(false);
+//			} else {
+//				_compositor->set_show_opac(true);
+//			}
+//			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//			return;
+//		}
+//	}
+//
+//	if (key == bind_debug_4) {
+//		_root->print_tree(0);
+//		for (auto i : net_client_list()) {
+//			switch (i->get_type()) {
+//			case MANAGED_NOTEBOOK:
+//				cout << "[" << i->orig() << "] notebook : " << i->title()
+//						<< endl;
+//				break;
+//			case MANAGED_FLOATING:
+//				cout << "[" << i->orig() << "] floating : " << i->title()
+//						<< endl;
+//				break;
+//			case MANAGED_FULLSCREEN:
+//				cout << "[" << i->orig() << "] fullscreen : " << i->title()
+//						<< endl;
+//				break;
+//			case MANAGED_DOCK:
+//				cout << "[" << i->orig() << "] dock : " << i->title() << endl;
+//				break;
+//			}
+//		}
+//
+//		if(not global_focus_history_is_empty()) {
+//			cout << "active window is : ";
+//			for(auto & focus: global_client_focus_history()) {
+//				cout << focus.lock()->orig() << ",";
+//			}
+//			cout << endl;
+//		} else {
+//			cout << "active window is : " << "NONE" << endl;
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	for(int i; i < bind_cmd.size(); ++i) {
+//		if (key == bind_cmd[i].key) {
+//			run_cmd(bind_cmd[i].cmd);
+//			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//			return;
+//		}
+//	}
+//
+//	if (key.ks == XK_Tab and (key.mod == XCB_MOD_MASK_1)) {
+//		if (_grab_handler == nullptr) {
+//			start_alt_tab(e->time);
+//		}
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
+//		return;
+//	}
+//
+//	xcb_allow_events(_dpy->xcb(), XCB_ALLOW_REPLAY_KEYBOARD, e->time);
 
 }
 
@@ -797,6 +653,9 @@ void page_t::process_key_release_event(xcb_generic_event_t const * _e) {
 /* Button event make page to grab pointer */
 void page_t::process_button_press_event(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_button_press_event_t const *>(_e);
+
+	/* TODO */
+
 //	std::cout << "Button Event Press "
 //			<< " event=" << e->event
 //			<< " child=" << e->child
@@ -807,54 +666,54 @@ void page_t::process_button_press_event(xcb_generic_event_t const * _e) {
 //			<< " mod3=" << (e->state & XCB_MOD_MASK_3 ? "true" : "false")
 //			<< " mod4=" << (e->state & XCB_MOD_MASK_4 ? "true" : "false")
 //			<< std::endl;
-
-
-	if(_grab_handler != nullptr) {
-		_grab_handler->button_press(e);
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_POINTER, e->time);
-		return;
-	}
-
-    if(e->root_x == 0 and e->root_y == 0) {
-        start_alt_tab(e->time);
-    } else {
-        _root->broadcast_button_press(e);
-    }
-
-	/**
-	 * if no change happened to process mode
-	 * We allow events (remove the grab), and focus those window.
-	 **/
-	if (_grab_handler == nullptr) {
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_REPLAY_POINTER, e->time);
-		auto mw = find_managed_window_with(e->event);
-		if (mw != nullptr) {
-			mw->activate();
-			set_focus(mw, e->time);
-		}
-		/* imediatly replay event, to reduce latency */
-		xcb_flush(_dpy->xcb());
-	} else {
-		/* Do not replay events, grab them and process them until Release Button */
-		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_POINTER, e->time);
-	}
+//
+//
+//	if(_grab_handler != nullptr) {
+//		_grab_handler->button_press(e);
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_POINTER, e->time);
+//		return;
+//	}
+//
+//    if(e->root_x == 0 and e->root_y == 0) {
+//        start_alt_tab(e->time);
+//    } else {
+//        _root->broadcast_button_press(e);
+//    }
+//
+//	/**
+//	 * if no change happened to process mode
+//	 * We allow events (remove the grab), and focus those window.
+//	 **/
+//	if (_grab_handler == nullptr) {
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_REPLAY_POINTER, e->time);
+//		auto mw = find_managed_window_with(e->event);
+//		if (mw != nullptr) {
+//			mw->activate();
+//			set_focus(mw, e->time);
+//		}
+//		/* imediatly replay event, to reduce latency */
+//		xcb_flush(_dpy->xcb());
+//	} else {
+//		/* Do not replay events, grab them and process them until Release Button */
+//		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_POINTER, e->time);
+//	}
 
 }
 
 void page_t::process_configure_notify_event(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_configure_notify_event_t const *>(_e);
 
-	//printf("configure (%d) %dx%d+%d+%d\n", e->window, e->width, e->height, e->x, e->y);
-
-	shared_ptr<client_base_t> c = find_client(e->window);
-	if(c != nullptr) {
-		c->process_event(e);
-	}
-
-	/** damage corresponding area **/
-	if(e->event == _dpy->root()) {
-		//add_compositor_damaged(_root->_root_position);
-	}
+//	//printf("configure (%d) %dx%d+%d+%d\n", e->window, e->width, e->height, e->x, e->y);
+//
+//	shared_ptr<client_base_t> c = find_client(e->window);
+//	if(c != nullptr) {
+//		c->process_event(e);
+//	}
+//
+//	/** damage corresponding area **/
+//	if(e->event == _dpy->root()) {
+//		//add_compositor_damaged(_root->_root_position);
+//	}
 
 }
 
@@ -866,19 +725,19 @@ void page_t::process_create_notify_event(xcb_generic_event_t const * e) {
 }
 
 void page_t::process_destroy_notify_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_destroy_notify_event_t const *>(_e);
-	auto c = find_client(e->window);
-	if (c != nullptr) {
-		if(typeid(*c.get()) == typeid(client_managed_t)) {
-			cout << "WARNING: client destroyed a window without sending synthetic unmap" << endl;
-			cout << "Sent Event: " << "false" << endl;
-			auto mw = dynamic_pointer_cast<client_managed_t>(c);
-			unmanage(mw);
-		} else if(typeid(*c) == typeid(client_not_managed_t)) {
-			cleanup_not_managed_client(dynamic_pointer_cast<client_not_managed_t>(c));
-		}
-
-	}
+//	auto e = reinterpret_cast<xcb_destroy_notify_event_t const *>(_e);
+//	auto c = find_client(e->window);
+//	if (c != nullptr) {
+//		if(typeid(*c.get()) == typeid(client_managed_t)) {
+//			cout << "WARNING: client destroyed a window without sending synthetic unmap" << endl;
+//			cout << "Sent Event: " << "false" << endl;
+//			auto mw = dynamic_pointer_cast<client_managed_t>(c);
+//			unmanage(mw);
+//		} else if(typeid(*c) == typeid(client_not_managed_t)) {
+//			cleanup_not_managed_client(dynamic_pointer_cast<client_not_managed_t>(c));
+//		}
+//
+//	}
 }
 
 void page_t::process_gravity_notify_event(xcb_generic_event_t const * e) {
@@ -886,87 +745,87 @@ void page_t::process_gravity_notify_event(xcb_generic_event_t const * e) {
 }
 
 void page_t::process_map_notify_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_map_notify_event_t const *>(_e);
-	/* if map event does not occur within root, ignore it */
-	if (e->event != _dpy->root())
-		return;
-	onmap(e->window);
+//	auto e = reinterpret_cast<xcb_map_notify_event_t const *>(_e);
+//	/* if map event does not occur within root, ignore it */
+//	if (e->event != _dpy->root())
+//		return;
+//	onmap(e->window);
 }
 
 void page_t::process_reparent_notify_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_reparent_notify_event_t const *>(_e);
-	//printf("Reparent window: %lu, parent: %lu, overide: %d, send_event: %d\n",
-	//		e.window, e.parent, e.override_redirect, e.send_event);
-	/* Reparent the root window ? hu :/ */
-	if(e->window == _dpy->root())
-		return;
-
-	/* If reparent occur on managed windows and new parent is an unknown window then unmanage */
-	auto mw = find_managed_window_with(e->window);
-	if (mw != nullptr) {
-		if (e->window == mw->orig() and e->parent != mw->base()) {
-			/* unmanage the window */
-			unmanage(mw);
-		}
-	}
-
-	/* if a unmanaged window leave the root window for any reason, this client is forgoten */
-	auto uw = dynamic_pointer_cast<client_not_managed_t>(find_client_with(e->window));
-	if(uw != nullptr and e->parent != _dpy->root()) {
-		cleanup_not_managed_client(uw);
-	}
+//	auto e = reinterpret_cast<xcb_reparent_notify_event_t const *>(_e);
+//	//printf("Reparent window: %lu, parent: %lu, overide: %d, send_event: %d\n",
+//	//		e.window, e.parent, e.override_redirect, e.send_event);
+//	/* Reparent the root window ? hu :/ */
+//	if(e->window == _dpy->root())
+//		return;
+//
+//	/* If reparent occur on managed windows and new parent is an unknown window then unmanage */
+//	auto mw = find_managed_window_with(e->window);
+//	if (mw != nullptr) {
+//		if (e->window == mw->orig() and e->parent != mw->base()) {
+//			/* unmanage the window */
+//			unmanage(mw);
+//		}
+//	}
+//
+//	/* if a unmanaged window leave the root window for any reason, this client is forgoten */
+//	auto uw = dynamic_pointer_cast<client_not_managed_t>(find_client_with(e->window));
+//	if(uw != nullptr and e->parent != _dpy->root()) {
+//		cleanup_not_managed_client(uw);
+//	}
 
 }
 
 void page_t::process_unmap_notify_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_unmap_notify_event_t const *>(_e);
-	auto c = find_client(e->window);
-	if (c != nullptr) {
-		//add_compositor_damaged(c->get_visible_region());
-		if(typeid(*c) == typeid(client_not_managed_t)) {
-			cleanup_not_managed_client(dynamic_pointer_cast<client_not_managed_t>(c));
-		} else if (typeid(*c) == typeid(client_managed_t)) {
-			auto mw = dynamic_pointer_cast<client_managed_t>(c);
-			if(c->base() == e->event) {
-				_dpy->reparentwindow(mw->orig(), _dpy->root(), 0.0, 0.0);
-				unmanage(mw);
-			}
-		}
-	}
+//	auto e = reinterpret_cast<xcb_unmap_notify_event_t const *>(_e);
+//	auto c = find_client(e->window);
+//	if (c != nullptr) {
+//		//add_compositor_damaged(c->get_visible_region());
+//		if(typeid(*c) == typeid(client_not_managed_t)) {
+//			cleanup_not_managed_client(dynamic_pointer_cast<client_not_managed_t>(c));
+//		} else if (typeid(*c) == typeid(client_managed_t)) {
+//			auto mw = dynamic_pointer_cast<client_managed_t>(c);
+//			if(c->base() == e->event) {
+//				_dpy->reparentwindow(mw->orig(), _dpy->root(), 0.0, 0.0);
+//				unmanage(mw);
+//			}
+//		}
+//	}
 }
 
 void page_t::process_fake_unmap_notify_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_unmap_notify_event_t const *>(_e);
-	/**
-	 * Client must send a fake unmap event if he want get back the window.
-	 * (i.e. he want that we unmanage it.
-	 **/
-
-	/* if client is managed */
-	auto c = find_client(e->window);
-
-	if (c != nullptr) {
-		//add_compositor_damaged(c->get_visible_region());
-		if(typeid(*c) == typeid(client_managed_t)) {
-			auto mw = dynamic_pointer_cast<client_managed_t>(c);
-			_dpy->reparentwindow(mw->orig(), _dpy->root(), 0.0, 0.0);
-			unmanage(mw);
-		}
-		//render();
-	}
+//	auto e = reinterpret_cast<xcb_unmap_notify_event_t const *>(_e);
+//	/**
+//	 * Client must send a fake unmap event if he want get back the window.
+//	 * (i.e. he want that we unmanage it.
+//	 **/
+//
+//	/* if client is managed */
+//	auto c = find_client(e->window);
+//
+//	if (c != nullptr) {
+//		//add_compositor_damaged(c->get_visible_region());
+//		if(typeid(*c) == typeid(client_managed_t)) {
+//			auto mw = dynamic_pointer_cast<client_managed_t>(c);
+//			_dpy->reparentwindow(mw->orig(), _dpy->root(), 0.0, 0.0);
+//			unmanage(mw);
+//		}
+//		//render();
+//	}
 }
 
 void page_t::process_circulate_request_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_circulate_request_event_t const *>(_e);
-	/* will happpen ? */
-	auto c = find_client_with(e->window);
-	if (c != nullptr) {
-		if (e->place == XCB_PLACE_ON_TOP) {
-			c->activate();
-		} else if (e->place == XCB_PLACE_ON_BOTTOM) {
-			_dpy->lower_window(e->window);
-		}
-	}
+//	auto e = reinterpret_cast<xcb_circulate_request_event_t const *>(_e);
+//	/* will happpen ? */
+//	auto c = find_client_with(e->window);
+//	if (c != nullptr) {
+//		if (e->place == XCB_PLACE_ON_TOP) {
+//			c->activate();
+//		} else if (e->place == XCB_PLACE_ON_BOTTOM) {
+//			_dpy->lower_window(e->window);
+//		}
+//	}
 }
 
 void page_t::process_configure_request_event(xcb_generic_event_t const * _e) {
@@ -987,202 +846,202 @@ void page_t::process_configure_request_event(xcb_generic_event_t const * _e) {
 //		printf("has border: %d\n", e.border_width);
 
 
-	auto c = find_client(e->window);
-
-	if (c != nullptr) {
-
-		//add_compositor_damaged(c->get_visible_region());
-
-		if(typeid(*c) == typeid(client_managed_t)) {
-
-			auto mw = dynamic_pointer_cast<client_managed_t>(c);
-
-			if ((e->value_mask & (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT)) != 0) {
-
-				rect old_size = mw->get_floating_wished_position();
-				/** compute floating size **/
-				rect new_size = mw->get_floating_wished_position();
-
-				if (e->value_mask & XCB_CONFIG_WINDOW_X) {
-					new_size.x = e->x;
-				}
-
-				if (e->value_mask & XCB_CONFIG_WINDOW_Y) {
-					new_size.y = e->y;
-				}
-
-				if (e->value_mask & XCB_CONFIG_WINDOW_WIDTH) {
-					new_size.w = e->width;
-				}
-
-				if (e->value_mask & XCB_CONFIG_WINDOW_HEIGHT) {
-					new_size.h = e->height;
-				}
-
-				//printf("new_size = %s\n", new_size.to_std::string().c_str());
-
-//					if ((e.value_mask & (CWX)) and (e.value_mask & (CWY))
-//							and e.x == 0 and e.y == 0
-//							and !viewport_outputs.empty()) {
-//						viewport_t * v = viewport_outputs.begin()->second;
-//						i_rect b = v->raw_area();
-//						/* place on center */
-//						new_size.x = (b.w - new_size.w) / 2 + b.x;
-//						new_size.y = (b.h - new_size.h) / 2 + b.y;
-//					}
-
-				dimention_t<unsigned> final_size = mw->compute_size_with_constrain(new_size.w, new_size.h);
-
-				new_size.w = final_size.width;
-				new_size.h = final_size.height;
-
-				//printf("new_size = %s\n", new_size.to_string().c_str());
-
-				if (new_size != old_size) {
-					/** only affect floating windows **/
-					mw->set_floating_wished_position(new_size);
-					mw->reconfigure();
-				}
-			}
-
-		} else {
-			/** validate configure when window is not managed **/
-			ackwoledge_configure_request(e);
-		}
-
-	} else {
-		/** validate configure when window is not managed **/
-		ackwoledge_configure_request(e);
-	}
+//	auto c = find_client(e->window);
+//
+//	if (c != nullptr) {
+//
+//		//add_compositor_damaged(c->get_visible_region());
+//
+//		if(typeid(*c) == typeid(client_managed_t)) {
+//
+//			auto mw = dynamic_pointer_cast<client_managed_t>(c);
+//
+//			if ((e->value_mask & (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT)) != 0) {
+//
+//				rect old_size = mw->get_floating_wished_position();
+//				/** compute floating size **/
+//				rect new_size = mw->get_floating_wished_position();
+//
+//				if (e->value_mask & XCB_CONFIG_WINDOW_X) {
+//					new_size.x = e->x;
+//				}
+//
+//				if (e->value_mask & XCB_CONFIG_WINDOW_Y) {
+//					new_size.y = e->y;
+//				}
+//
+//				if (e->value_mask & XCB_CONFIG_WINDOW_WIDTH) {
+//					new_size.w = e->width;
+//				}
+//
+//				if (e->value_mask & XCB_CONFIG_WINDOW_HEIGHT) {
+//					new_size.h = e->height;
+//				}
+//
+//				//printf("new_size = %s\n", new_size.to_std::string().c_str());
+//
+////					if ((e.value_mask & (CWX)) and (e.value_mask & (CWY))
+////							and e.x == 0 and e.y == 0
+////							and !viewport_outputs.empty()) {
+////						viewport_t * v = viewport_outputs.begin()->second;
+////						i_rect b = v->raw_area();
+////						/* place on center */
+////						new_size.x = (b.w - new_size.w) / 2 + b.x;
+////						new_size.y = (b.h - new_size.h) / 2 + b.y;
+////					}
+//
+//				dimention_t<unsigned> final_size = mw->compute_size_with_constrain(new_size.w, new_size.h);
+//
+//				new_size.w = final_size.width;
+//				new_size.h = final_size.height;
+//
+//				//printf("new_size = %s\n", new_size.to_string().c_str());
+//
+//				if (new_size != old_size) {
+//					/** only affect floating windows **/
+//					mw->set_floating_wished_position(new_size);
+//					mw->reconfigure();
+//				}
+//			}
+//
+//		} else {
+//			/** validate configure when window is not managed **/
+//			ackwoledge_configure_request(e);
+//		}
+//
+//	} else {
+//		/** validate configure when window is not managed **/
+//		ackwoledge_configure_request(e);
+//	}
 
 }
 
 void page_t::ackwoledge_configure_request(xcb_configure_request_event_t const * e) {
 	//printf("ackwoledge_configure_request ");
 
-	int i = 0;
-	uint32_t value[7] = {0};
-	uint32_t mask = 0;
-	if(e->value_mask & XCB_CONFIG_WINDOW_X) {
-		mask |= XCB_CONFIG_WINDOW_X;
-		value[i++] = e->x;
-		//printf("x = %d ", e->x);
-	}
-
-	if(e->value_mask & XCB_CONFIG_WINDOW_Y) {
-		mask |= XCB_CONFIG_WINDOW_Y;
-		value[i++] = e->y;
-		//printf("y = %d ", e->y);
-	}
-
-	if(e->value_mask & XCB_CONFIG_WINDOW_WIDTH) {
-		mask |= XCB_CONFIG_WINDOW_WIDTH;
-		value[i++] = e->width;
-		//printf("w = %d ", e->width);
-	}
-
-	if(e->value_mask & XCB_CONFIG_WINDOW_HEIGHT) {
-		mask |= XCB_CONFIG_WINDOW_HEIGHT;
-		value[i++] = e->height;
-		//printf("h = %d ", e->height);
-	}
-
-	if(e->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH) {
-		mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
-		value[i++] = e->border_width;
-		//printf("border = %d ", e->border_width);
-	}
-
-	if(e->value_mask & XCB_CONFIG_WINDOW_SIBLING) {
-		mask |= XCB_CONFIG_WINDOW_SIBLING;
-		value[i++] = e->sibling;
-		//printf("sibling = %d ", e->sibling);
-	}
-
-	if(e->value_mask & XCB_CONFIG_WINDOW_STACK_MODE) {
-		mask |= XCB_CONFIG_WINDOW_STACK_MODE;
-		value[i++] = e->stack_mode;
-		//printf("stack_mode = %d ", e->stack_mode);
-	}
-
-	//printf("\n");
-
-	xcb_void_cookie_t ck = xcb_configure_window(_dpy->xcb(), e->window, mask, value);
+//	int i = 0;
+//	uint32_t value[7] = {0};
+//	uint32_t mask = 0;
+//	if(e->value_mask & XCB_CONFIG_WINDOW_X) {
+//		mask |= XCB_CONFIG_WINDOW_X;
+//		value[i++] = e->x;
+//		//printf("x = %d ", e->x);
+//	}
+//
+//	if(e->value_mask & XCB_CONFIG_WINDOW_Y) {
+//		mask |= XCB_CONFIG_WINDOW_Y;
+//		value[i++] = e->y;
+//		//printf("y = %d ", e->y);
+//	}
+//
+//	if(e->value_mask & XCB_CONFIG_WINDOW_WIDTH) {
+//		mask |= XCB_CONFIG_WINDOW_WIDTH;
+//		value[i++] = e->width;
+//		//printf("w = %d ", e->width);
+//	}
+//
+//	if(e->value_mask & XCB_CONFIG_WINDOW_HEIGHT) {
+//		mask |= XCB_CONFIG_WINDOW_HEIGHT;
+//		value[i++] = e->height;
+//		//printf("h = %d ", e->height);
+//	}
+//
+//	if(e->value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH) {
+//		mask |= XCB_CONFIG_WINDOW_BORDER_WIDTH;
+//		value[i++] = e->border_width;
+//		//printf("border = %d ", e->border_width);
+//	}
+//
+//	if(e->value_mask & XCB_CONFIG_WINDOW_SIBLING) {
+//		mask |= XCB_CONFIG_WINDOW_SIBLING;
+//		value[i++] = e->sibling;
+//		//printf("sibling = %d ", e->sibling);
+//	}
+//
+//	if(e->value_mask & XCB_CONFIG_WINDOW_STACK_MODE) {
+//		mask |= XCB_CONFIG_WINDOW_STACK_MODE;
+//		value[i++] = e->stack_mode;
+//		//printf("stack_mode = %d ", e->stack_mode);
+//	}
+//
+//	//printf("\n");
+//
+//	xcb_void_cookie_t ck = xcb_configure_window(_dpy->xcb(), e->window, mask, value);
 
 }
 
 void page_t::process_map_request_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_map_request_event_t const *>(_e);
-	if (e->parent != _dpy->root()) {
-		xcb_map_window(_dpy->xcb(), e->window);
-		return;
-	}
-
-	onmap(e->window);
+//	auto e = reinterpret_cast<xcb_map_request_event_t const *>(_e);
+//	if (e->parent != _dpy->root()) {
+//		xcb_map_window(_dpy->xcb(), e->window);
+//		return;
+//	}
+//
+//	onmap(e->window);
 
 }
 
 void page_t::process_property_notify_event(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_property_notify_event_t const *>(_e);
-	if(e->window == _dpy->root())
-		return;
-
-	/** update the property **/
-	auto c = find_client(e->window);
-	auto mw = dynamic_pointer_cast<client_managed_t>(c);
-	if(mw == nullptr)
-		return;
-
-	mw->on_property_notify(e);
-
-	if (e->atom == A(_NET_WM_USER_TIME)) {
-		/* ignore */
-	} else if (e->atom == A(_NET_WM_STRUT_PARTIAL)) {
-		update_workarea();
-	} else if (e->atom == A(_NET_WM_STRUT)) {
-		update_workarea();
-	} else if (e->atom == A(_NET_WM_WINDOW_TYPE)) {
-		/* window type must be set on map, I guess it should never change ? */
-		/* update cache */
-
-		//window_t::page_window_type_e old = x->get_window_type();
-		//x->read_transient_for();
-		//x->find_window_type();
-		/* I do not see something in ICCCM */
-		//if(x->get_window_type() == window_t::PAGE_NORMAL_WINDOW_TYPE && old != window_t::PAGE_NORMAL_WINDOW_TYPE) {
-		//	manage_notebook(x);
-		//}
-	} else if (e->atom == A(WM_NORMAL_HINTS)) {
-		if (mw->is(MANAGED_NOTEBOOK)) {
-			find_parent_notebook_for(mw)->update_client_position(mw);
-		}
-
-		/* apply normal hint to floating window */
-		rect new_size = mw->get_wished_position();
-
-		dimention_t<unsigned> final_size = mw->compute_size_with_constrain(
-				new_size.w, new_size.h);
-		new_size.w = final_size.width;
-		new_size.h = final_size.height;
-		mw->set_floating_wished_position(new_size);
-		mw->reconfigure();
-	} else if (e->atom == A(WM_PROTOCOLS)) {
-		/* do nothing */
-	} else if (e->atom == A(WM_TRANSIENT_FOR)) {
-		safe_update_transient_for(mw);
-		_need_restack = true;
-	} else if (e->atom == A(WM_HINTS)) {
-		/* do nothing */
-	} else if (e->atom == A(_NET_WM_STATE)) {
-		/* this event are generated by page */
-		/* change of net_wm_state must be requested by client message */
-	} else if (e->atom == A(WM_STATE)) {
-		/** this is set by page ... don't read it **/
-	} else if (e->atom == A(_NET_WM_DESKTOP)) {
-		/* this set by page in most case */
-	} else if (e->atom == A(_MOTIF_WM_HINTS)) {
-		mw->reconfigure();
-	}
+//	if(e->window == _dpy->root())
+//		return;
+//
+//	/** update the property **/
+//	auto c = find_client(e->window);
+//	auto mw = dynamic_pointer_cast<client_managed_t>(c);
+//	if(mw == nullptr)
+//		return;
+//
+//	mw->on_property_notify(e);
+//
+//	if (e->atom == A(_NET_WM_USER_TIME)) {
+//		/* ignore */
+//	} else if (e->atom == A(_NET_WM_STRUT_PARTIAL)) {
+//		update_workarea();
+//	} else if (e->atom == A(_NET_WM_STRUT)) {
+//		update_workarea();
+//	} else if (e->atom == A(_NET_WM_WINDOW_TYPE)) {
+//		/* window type must be set on map, I guess it should never change ? */
+//		/* update cache */
+//
+//		//window_t::page_window_type_e old = x->get_window_type();
+//		//x->read_transient_for();
+//		//x->find_window_type();
+//		/* I do not see something in ICCCM */
+//		//if(x->get_window_type() == window_t::PAGE_NORMAL_WINDOW_TYPE && old != window_t::PAGE_NORMAL_WINDOW_TYPE) {
+//		//	manage_notebook(x);
+//		//}
+//	} else if (e->atom == A(WM_NORMAL_HINTS)) {
+//		if (mw->is(MANAGED_NOTEBOOK)) {
+//			find_parent_notebook_for(mw)->update_client_position(mw);
+//		}
+//
+//		/* apply normal hint to floating window */
+//		rect new_size = mw->get_wished_position();
+//
+//		dimention_t<unsigned> final_size = mw->compute_size_with_constrain(
+//				new_size.w, new_size.h);
+//		new_size.w = final_size.width;
+//		new_size.h = final_size.height;
+//		mw->set_floating_wished_position(new_size);
+//		mw->reconfigure();
+//	} else if (e->atom == A(WM_PROTOCOLS)) {
+//		/* do nothing */
+//	} else if (e->atom == A(WM_TRANSIENT_FOR)) {
+//		safe_update_transient_for(mw);
+//		_need_restack = true;
+//	} else if (e->atom == A(WM_HINTS)) {
+//		/* do nothing */
+//	} else if (e->atom == A(_NET_WM_STATE)) {
+//		/* this event are generated by page */
+//		/* change of net_wm_state must be requested by client message */
+//	} else if (e->atom == A(WM_STATE)) {
+//		/** this is set by page ... don't read it **/
+//	} else if (e->atom == A(_NET_WM_DESKTOP)) {
+//		/* this set by page in most case */
+//	} else if (e->atom == A(_MOTIF_WM_HINTS)) {
+//		mw->reconfigure();
+//	}
 
 }
 
@@ -1190,127 +1049,127 @@ void page_t::process_fake_client_message_event(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_client_message_event_t const *>(_e);
 	//std::shared_ptr<char> name = cnx->get_atom_name(e->type);
 	//std::cout << "ClientMessage type = " << cnx->get_atom_name(e->type) << std::endl;
-
-	xcb_window_t w = e->window;
-	if (w == XCB_NONE)
-		return;
-
-	auto mw = find_managed_window_with(e->window);
-
-	if (e->type == A(_NET_ACTIVE_WINDOW)) {
-		if (mw != nullptr) {
-			mw->activate();
-			if (e->data.data32[1] == XCB_CURRENT_TIME) {
-				set_focus(mw, XCB_CURRENT_TIME);
-			} else {
-				set_focus(mw, e->data.data32[1]);
-			}
-		}
-	} else if (e->type == A(_NET_WM_STATE)) {
-
-		/* process first request */
-		process_net_vm_state_client_message(w, e->data.data32[0], e->data.data32[1]);
-		/* process second request */
-		process_net_vm_state_client_message(w, e->data.data32[0], e->data.data32[2]);
-
-//		for (int i = 1; i < 3; ++i) {
-//			if (std::find(supported_list.begin(), supported_list.end(),
-//					e->data.data32[i]) != supported_list.end()) {
-//				switch (e->data.data32[0]) {
-//				case _NET_WM_STATE_REMOVE:
-//					//w->unset_net_wm_state(e->data.l[i]);
-//					break;
-//				case _NET_WM_STATE_ADD:
-//					//w->set_net_wm_state(e->data.l[i]);
-//					break;
-//				case _NET_WM_STATE_TOGGLE:
-//					//w->toggle_net_wm_state(e->data.l[i]);
-//					break;
-//				}
+//
+//	xcb_window_t w = e->window;
+//	if (w == XCB_NONE)
+//		return;
+//
+//	auto mw = find_managed_window_with(e->window);
+//
+//	if (e->type == A(_NET_ACTIVE_WINDOW)) {
+//		if (mw != nullptr) {
+//			mw->activate();
+//			if (e->data.data32[1] == XCB_CURRENT_TIME) {
+//				set_focus(mw, XCB_CURRENT_TIME);
+//			} else {
+//				set_focus(mw, e->data.data32[1]);
 //			}
 //		}
-	} else if (e->type == A(WM_CHANGE_STATE)) {
-
-		/** When window want to become iconic, just bind them **/
-		if (mw != nullptr) {
-			if (mw->is(MANAGED_FLOATING) and e->data.data32[0] == IconicState) {
-				bind_window(mw, false);
-			} else if (mw->is(
-					MANAGED_NOTEBOOK) and e->data.data32[0] == IconicState) {
-				auto n = dynamic_pointer_cast<notebook_t>(mw->parent()->shared_from_this());
-				n->iconify_client(mw);
-			}
-		}
-
-	} else if (e->type == A(PAGE_QUIT)) {
-		_mainloop.stop();
-	} else if (e->type == A(WM_PROTOCOLS)) {
-
-	} else if (e->type == A(_NET_CLOSE_WINDOW)) {
-		if(mw != nullptr) {
-			mw->delete_window(e->data.data32[0]);
-		}
-	} else if (e->type == A(_NET_REQUEST_FRAME_EXTENTS)) {
-
-	} else if (e->type == A(_NET_WM_MOVERESIZE)) {
-		if (mw != nullptr) {
-			if (mw->is(MANAGED_FLOATING) and _grab_handler == nullptr) {
-
-				int root_x = e->data.data32[0];
-				int root_y = e->data.data32[1];
-				int direction = e->data.data32[2];
-				xcb_button_t button = static_cast<xcb_button_t>(e->data.data32[3]);
-				int source = e->data.data32[4];
-
-				if (direction == _NET_WM_MOVERESIZE_MOVE) {
-					grab_start(new grab_floating_move_t{this, mw, button, root_x, root_y});
-				} else {
-
-					if (direction == _NET_WM_MOVERESIZE_SIZE_TOP) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_TOP});
-					} else if (direction == _NET_WM_MOVERESIZE_SIZE_BOTTOM) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_BOTTOM});
-					} else if (direction == _NET_WM_MOVERESIZE_SIZE_LEFT) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_LEFT});
-					} else if (direction == _NET_WM_MOVERESIZE_SIZE_RIGHT) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_RIGHT});
-					} else if (direction == _NET_WM_MOVERESIZE_SIZE_TOPLEFT) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_TOP_LEFT});
-					} else if (direction == _NET_WM_MOVERESIZE_SIZE_TOPRIGHT) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_TOP_RIGHT});
-					} else if (direction
-							== _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_BOTTOM_LEFT});
-					} else if (direction
-							== _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT) {
-						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_BOTTOM_RIGHT});
-					} else {
-						grab_start(new grab_floating_move_t{this, mw, button, root_x, root_y});
-					}
-				}
-
-				if (_grab_handler != nullptr) {
-					xcb_grab_pointer(_dpy->xcb(), false, _dpy->root(),
-							XCB_EVENT_MASK_BUTTON_PRESS
-									| XCB_EVENT_MASK_BUTTON_RELEASE
-									| XCB_EVENT_MASK_BUTTON_MOTION,
-							XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC,
-							XCB_NONE, XCB_NONE, XCB_CURRENT_TIME);
-				}
-
-			}
-		}
-	} else if (e->type == A(_NET_CURRENT_DESKTOP)) {
-		if(e->data.data32[0] >= 0 and e->data.data32[0] < _root->_desktop_list.size() and e->data.data32[0] != _root->_current_desktop) {
-			switch_to_desktop(e->data.data32[0]);
-			shared_ptr<client_managed_t> mw;
-			if (get_current_workspace()->client_focus_history_front(mw)) {
-				set_focus(mw, e->data.data32[1]);
-			} else {
-				set_focus(nullptr, e->data.data32[1]);
-			}
-		}
-	}
+//	} else if (e->type == A(_NET_WM_STATE)) {
+//
+//		/* process first request */
+//		process_net_vm_state_client_message(w, e->data.data32[0], e->data.data32[1]);
+//		/* process second request */
+//		process_net_vm_state_client_message(w, e->data.data32[0], e->data.data32[2]);
+//
+////		for (int i = 1; i < 3; ++i) {
+////			if (std::find(supported_list.begin(), supported_list.end(),
+////					e->data.data32[i]) != supported_list.end()) {
+////				switch (e->data.data32[0]) {
+////				case _NET_WM_STATE_REMOVE:
+////					//w->unset_net_wm_state(e->data.l[i]);
+////					break;
+////				case _NET_WM_STATE_ADD:
+////					//w->set_net_wm_state(e->data.l[i]);
+////					break;
+////				case _NET_WM_STATE_TOGGLE:
+////					//w->toggle_net_wm_state(e->data.l[i]);
+////					break;
+////				}
+////			}
+////		}
+//	} else if (e->type == A(WM_CHANGE_STATE)) {
+//
+//		/** When window want to become iconic, just bind them **/
+//		if (mw != nullptr) {
+//			if (mw->is(MANAGED_FLOATING) and e->data.data32[0] == IconicState) {
+//				bind_window(mw, false);
+//			} else if (mw->is(
+//					MANAGED_NOTEBOOK) and e->data.data32[0] == IconicState) {
+//				auto n = dynamic_pointer_cast<notebook_t>(mw->parent()->shared_from_this());
+//				n->iconify_client(mw);
+//			}
+//		}
+//
+//	} else if (e->type == A(PAGE_QUIT)) {
+//		_mainloop.stop();
+//	} else if (e->type == A(WM_PROTOCOLS)) {
+//
+//	} else if (e->type == A(_NET_CLOSE_WINDOW)) {
+//		if(mw != nullptr) {
+//			mw->delete_window(e->data.data32[0]);
+//		}
+//	} else if (e->type == A(_NET_REQUEST_FRAME_EXTENTS)) {
+//
+//	} else if (e->type == A(_NET_WM_MOVERESIZE)) {
+//		if (mw != nullptr) {
+//			if (mw->is(MANAGED_FLOATING) and _grab_handler == nullptr) {
+//
+//				int root_x = e->data.data32[0];
+//				int root_y = e->data.data32[1];
+//				int direction = e->data.data32[2];
+//				xcb_button_t button = static_cast<xcb_button_t>(e->data.data32[3]);
+//				int source = e->data.data32[4];
+//
+//				if (direction == _NET_WM_MOVERESIZE_MOVE) {
+//					grab_start(new grab_floating_move_t{this, mw, button, root_x, root_y});
+//				} else {
+//
+//					if (direction == _NET_WM_MOVERESIZE_SIZE_TOP) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_TOP});
+//					} else if (direction == _NET_WM_MOVERESIZE_SIZE_BOTTOM) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_BOTTOM});
+//					} else if (direction == _NET_WM_MOVERESIZE_SIZE_LEFT) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_LEFT});
+//					} else if (direction == _NET_WM_MOVERESIZE_SIZE_RIGHT) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_RIGHT});
+//					} else if (direction == _NET_WM_MOVERESIZE_SIZE_TOPLEFT) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_TOP_LEFT});
+//					} else if (direction == _NET_WM_MOVERESIZE_SIZE_TOPRIGHT) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_TOP_RIGHT});
+//					} else if (direction
+//							== _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_BOTTOM_LEFT});
+//					} else if (direction
+//							== _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT) {
+//						grab_start(new grab_floating_resize_t{this, mw, button, root_x, root_y, RESIZE_BOTTOM_RIGHT});
+//					} else {
+//						grab_start(new grab_floating_move_t{this, mw, button, root_x, root_y});
+//					}
+//				}
+//
+//				if (_grab_handler != nullptr) {
+//					xcb_grab_pointer(_dpy->xcb(), false, _dpy->root(),
+//							XCB_EVENT_MASK_BUTTON_PRESS
+//									| XCB_EVENT_MASK_BUTTON_RELEASE
+//									| XCB_EVENT_MASK_BUTTON_MOTION,
+//							XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC,
+//							XCB_NONE, XCB_NONE, XCB_CURRENT_TIME);
+//				}
+//
+//			}
+//		}
+//	} else if (e->type == A(_NET_CURRENT_DESKTOP)) {
+//		if(e->data.data32[0] >= 0 and e->data.data32[0] < _root->_desktop_list.size() and e->data.data32[0] != _root->_current_desktop) {
+//			switch_to_desktop(e->data.data32[0]);
+//			shared_ptr<client_managed_t> mw;
+//			if (get_current_workspace()->client_focus_history_front(mw)) {
+//				set_focus(mw, e->data.data32[1]);
+//			} else {
+//				set_focus(nullptr, e->data.data32[1]);
+//			}
+//		}
+//	}
 }
 
 void page_t::process_damage_notify_event(xcb_generic_event_t const * e) {
@@ -1318,17 +1177,20 @@ void page_t::process_damage_notify_event(xcb_generic_event_t const * e) {
 }
 
 void page_t::render() {
-	// ask to update everything to draw the time64_t::now() frame
-	_root->broadcast_update_layout(time64_t::now());
-	// ask to flush all pending drawing
-	_root->broadcast_trigger_redraw();
-	// render on screen if we need too.
-	if (_compositor != nullptr) {
-		// TODO or remove.
-		//_compositor->render(_root.get());
-	}
-	xcb_flush(_dpy->xcb());
-	_root->broadcast_render_finished();
+
+	/* TODO: remove */
+
+//	// ask to update everything to draw the time64_t::now() frame
+//	_root->broadcast_update_layout(time64_t::now());
+//	// ask to flush all pending drawing
+//	_root->broadcast_trigger_redraw();
+//	// render on screen if we need too.
+//	if (_compositor != nullptr) {
+//		// TODO or remove.
+//		//_compositor->render(_root.get());
+//	}
+//	xcb_flush(_dpy->xcb());
+//	_root->broadcast_render_finished();
 }
 
 void page_t::fullscreen(shared_ptr<client_managed_t> mw) {
@@ -1500,69 +1362,69 @@ void page_t::insert_window_in_notebook(
 
 /* update viewport and childs allocation */
 void page_t::update_workarea() {
-	for (auto d : _root->_desktop_list) {
-		for (auto v : d->get_viewports()) {
-			compute_viewport_allocation(d, v);
-		}
-		d->set_workarea(d->primary_viewport()->allocation());
-	}
-
-	std::vector<uint32_t> workarea_data(_root->_desktop_list.size()*4);
-	for(unsigned k = 0; k < _root->_desktop_list.size(); ++k) {
-		workarea_data[k*4+0] = _root->_desktop_list[k]->workarea().x;
-		workarea_data[k*4+1] = _root->_desktop_list[k]->workarea().y;
-		workarea_data[k*4+2] = _root->_desktop_list[k]->workarea().w;
-		workarea_data[k*4+3] = _root->_desktop_list[k]->workarea().h;
-	}
-
-	_dpy->change_property(_dpy->root(), _NET_WORKAREA, CARDINAL, 32,
-			&workarea_data[0], workarea_data.size());
+//	for (auto d : _root->_desktop_list) {
+//		for (auto v : d->get_viewports()) {
+//			compute_viewport_allocation(d, v);
+//		}
+//		d->set_workarea(d->primary_viewport()->allocation());
+//	}
+//
+//	std::vector<uint32_t> workarea_data(_root->_desktop_list.size()*4);
+//	for(unsigned k = 0; k < _root->_desktop_list.size(); ++k) {
+//		workarea_data[k*4+0] = _root->_desktop_list[k]->workarea().x;
+//		workarea_data[k*4+1] = _root->_desktop_list[k]->workarea().y;
+//		workarea_data[k*4+2] = _root->_desktop_list[k]->workarea().w;
+//		workarea_data[k*4+3] = _root->_desktop_list[k]->workarea().h;
+//	}
+//
+//	_dpy->change_property(_dpy->root(), _NET_WORKAREA, CARDINAL, 32,
+//			&workarea_data[0], workarea_data.size());
 
 }
 
 void page_t::set_focus(shared_ptr<client_managed_t> new_focus, xcb_timestamp_t tfocus) {
-	/* if we want to defocus something */
-	if(new_focus == nullptr) {
-		if(conf()._auto_refocus) {
-			if (get_current_workspace()->client_focus_history_front(new_focus)) {
-				new_focus->activate();
-				get_current_workspace()->client_focus_history_move_front(new_focus);
-				global_focus_history_move_front(new_focus);
-				_dpy->set_net_active_window(new_focus->orig());
-				new_focus->activate();
-				new_focus->focus(tfocus);
-				_net_active_window = new_focus;
-			} else {
-				_net_active_window.reset();
-				_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, tfocus);
-				_dpy->set_net_active_window(XCB_WINDOW_NONE);
-			}
-		} else {
-			_net_active_window.reset();
-			_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, tfocus);
-			_dpy->set_net_active_window(XCB_WINDOW_NONE);
-		}
-	} else {
-
-		if(tfocus == XCB_CURRENT_TIME) {
-			xcb_timestamp_t time = 0;
-			if (get_safe_net_wm_user_time(new_focus, time)) {
-				tfocus = time;
-			}
-		}
-
-		if(tfocus == XCB_CURRENT_TIME)
-			std::cout << "Warning: Invalid focus time (0)" << std::endl;
-
-		get_current_workspace()->client_focus_history_move_front(new_focus);
-		global_focus_history_move_front(new_focus);
-		_dpy->set_net_active_window(new_focus->orig());
-		new_focus->activate();
-		new_focus->focus(tfocus);
-		_net_active_window = new_focus;
-	}
-
-	_need_restack = true;
+//	/* if we want to defocus something */
+//	if(new_focus == nullptr) {
+//		if(conf()._auto_refocus) {
+//			if (get_current_workspace()->client_focus_history_front(new_focus)) {
+//				new_focus->activate();
+//				get_current_workspace()->client_focus_history_move_front(new_focus);
+//				global_focus_history_move_front(new_focus);
+//				_dpy->set_net_active_window(new_focus->orig());
+//				new_focus->activate();
+//				new_focus->focus(tfocus);
+//				_net_active_window = new_focus;
+//			} else {
+//				_net_active_window.reset();
+//				_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, tfocus);
+//				_dpy->set_net_active_window(XCB_WINDOW_NONE);
+//			}
+//		} else {
+//			_net_active_window.reset();
+//			_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, tfocus);
+//			_dpy->set_net_active_window(XCB_WINDOW_NONE);
+//		}
+//	} else {
+//
+//		if(tfocus == XCB_CURRENT_TIME) {
+//			xcb_timestamp_t time = 0;
+//			if (get_safe_net_wm_user_time(new_focus, time)) {
+//				tfocus = time;
+//			}
+//		}
+//
+//		if(tfocus == XCB_CURRENT_TIME)
+//			std::cout << "Warning: Invalid focus time (0)" << std::endl;
+//
+//		get_current_workspace()->client_focus_history_move_front(new_focus);
+//		global_focus_history_move_front(new_focus);
+//		_dpy->set_net_active_window(new_focus->orig());
+//		new_focus->activate();
+//		new_focus->focus(tfocus);
+//		_net_active_window = new_focus;
+//	}
+//
+//	_need_restack = true;
 
 }
 
@@ -2312,61 +2174,63 @@ shared_ptr<workspace_t> page_t::find_desktop_of(shared_ptr<tree_t> n) {
 
 void page_t::update_windows_stack() {
 
-	auto tree = _root->get_all_children();
+	// TODO: this one have to be done diferently.
 
-	{
-		/**
-		 * only re-stack managed clients or unmanaged clients with transient_for
-		 * or unmanaged window with net_wm_window_type.
-		 * Other client are expected to re-stack them self (it's a guess).
-		 **/
-		int k = 0;
-		for (int i = 0; i < tree.size(); ++i) {
-			if(tree[i]->get_xid() != XCB_WINDOW_NONE) {
-				tree[k++] = tree[i];
-			}
-		}
-		tree.resize(k);
-	}
-
-	reverse(tree.begin(), tree.end());
-	vector<xcb_window_t> stack;
-
-	if (_compositor != nullptr)
-		stack.push_back(_compositor->get_composite_overlay());
-
-	for (auto i : tree) {
-		stack.push_back(i->get_xid());
-	}
-
-	unsigned k = 0;
-
-	/* place the first one on top */
-	if (stack.size() > k) {
-		uint32_t value[1];
-		uint32_t mask{0};
-		value[0] = XCB_STACK_MODE_ABOVE;
-		mask |= XCB_CONFIG_WINDOW_STACK_MODE;
-		xcb_configure_window(_dpy->xcb(),
-				stack[k], mask, value);
-		++k;
-	}
-
-	/* place following windows bellow */
-	while (stack.size() > k) {
-		uint32_t value[2];
-		uint32_t mask { 0 };
-
-		value[0] = stack[k-1];
-		mask |= XCB_CONFIG_WINDOW_SIBLING;
-
-		value[1] = XCB_STACK_MODE_BELOW;
-		mask |= XCB_CONFIG_WINDOW_STACK_MODE;
-
-		xcb_configure_window(_dpy->xcb(), stack[k], mask,
-				value);
-		++k;
-	}
+//	auto tree = _root->get_all_children();
+//
+//	{
+//		/**
+//		 * only re-stack managed clients or unmanaged clients with transient_for
+//		 * or unmanaged window with net_wm_window_type.
+//		 * Other client are expected to re-stack them self (it's a guess).
+//		 **/
+//		int k = 0;
+//		for (int i = 0; i < tree.size(); ++i) {
+//			if(tree[i]->get_xid() != XCB_WINDOW_NONE) {
+//				tree[k++] = tree[i];
+//			}
+//		}
+//		tree.resize(k);
+//	}
+//
+//	reverse(tree.begin(), tree.end());
+//	vector<xcb_window_t> stack;
+//
+//	if (_compositor != nullptr)
+//		stack.push_back(_compositor->get_composite_overlay());
+//
+//	for (auto i : tree) {
+//		stack.push_back(i->get_xid());
+//	}
+//
+//	unsigned k = 0;
+//
+//	/* place the first one on top */
+//	if (stack.size() > k) {
+//		uint32_t value[1];
+//		uint32_t mask{0};
+//		value[0] = XCB_STACK_MODE_ABOVE;
+//		mask |= XCB_CONFIG_WINDOW_STACK_MODE;
+//		xcb_configure_window(_dpy->xcb(),
+//				stack[k], mask, value);
+//		++k;
+//	}
+//
+//	/* place following windows bellow */
+//	while (stack.size() > k) {
+//		uint32_t value[2];
+//		uint32_t mask { 0 };
+//
+//		value[0] = stack[k-1];
+//		mask |= XCB_CONFIG_WINDOW_SIBLING;
+//
+//		value[1] = XCB_STACK_MODE_BELOW;
+//		mask |= XCB_CONFIG_WINDOW_STACK_MODE;
+//
+//		xcb_configure_window(_dpy->xcb(), stack[k], mask,
+//				value);
+//		++k;
+//	}
 
 }
 
@@ -2378,175 +2242,180 @@ void page_t::update_windows_stack() {
  * sub-rectangle that do not overlap previous allocated area.
  **/
 void page_t::update_viewport_layout() {
-	_left_most_border = std::numeric_limits<int>::max();
-	_top_most_border = std::numeric_limits<int>::max();
 
-	/** update root size infos **/
-	xcb_get_geometry_cookie_t ck0 = xcb_get_geometry(_dpy->xcb(), _dpy->root());
-	xcb_randr_get_screen_resources_cookie_t ck1 = xcb_randr_get_screen_resources(_dpy->xcb(), _dpy->root());
+	/* TODO: based on output list */
 
-	xcb_get_geometry_reply_t * geometry = xcb_get_geometry_reply(_dpy->xcb(), ck0, nullptr);
-	xcb_randr_get_screen_resources_reply_t * randr_resources = xcb_randr_get_screen_resources_reply(_dpy->xcb(), ck1, 0);
-
-	if(geometry == nullptr or randr_resources == nullptr) {
-		throw exception_t("FATAL: cannot read root window attributes");
-	}
-
-	_root->_root_position = rect{geometry->x, geometry->y, geometry->width, geometry->height};
-	set_desktop_geometry(_root->_root_position.w, _root->_root_position.h);
-
-	map<xcb_randr_crtc_t, xcb_randr_get_crtc_info_reply_t *> crtc_info;
-
-	vector<xcb_randr_get_crtc_info_cookie_t> ckx(xcb_randr_get_screen_resources_crtcs_length(randr_resources));
-	xcb_randr_crtc_t * crtc_list = xcb_randr_get_screen_resources_crtcs(randr_resources);
-	for (unsigned k = 0; k < xcb_randr_get_screen_resources_crtcs_length(randr_resources); ++k) {
-		ckx[k] = xcb_randr_get_crtc_info(_dpy->xcb(), crtc_list[k], XCB_CURRENT_TIME);
-	}
-
-	for (unsigned k = 0; k < xcb_randr_get_screen_resources_crtcs_length(randr_resources); ++k) {
-		xcb_randr_get_crtc_info_reply_t * r = xcb_randr_get_crtc_info_reply(_dpy->xcb(), ckx[k], 0);
-		if(r != nullptr) {
-			crtc_info[crtc_list[k]] = r;
-		}
-
-		// keep left more screen to move iconnified window there
-		if(r->x < _left_most_border) {
-			_left_most_border = r->x;
-		}
-
-		if(r->y < _top_most_border) {
-			_top_most_border = r->y;
-		}
-
-	}
-
-	// compute all viewport  that does not overlap and cover the full area of
-	// crts
-	region already_allocated;
-	vector<rect> viewport_allocation;
-	for(auto crtc: crtc_info) {
-		if(crtc.second->num_outputs <= 0)
-			continue;
-
-		/* the location of crts */
-		region location{crtc.second->x, crtc.second->y, crtc.second->width,
-			crtc.second->height};
-		location -= already_allocated;
-		for(auto & b: location.rects()) {
-			viewport_allocation.push_back(b);
-		}
-		already_allocated += location;
-	}
-
-	for(auto d: _root->_desktop_list) {
-		//d->set_allocation(_root->_root_position);
-		/** get old layout to recycle old viewport, and keep unchanged outputs **/
-		vector<shared_ptr<viewport_t>> old_layout = d->get_viewport_map();
-		/** store the newer layout, to be able to cleanup obsolete viewports **/
-		vector<shared_ptr<viewport_t>> new_layout;
-		/** for each not overlaped rectangle **/
-		for(unsigned i = 0; i < viewport_allocation.size(); ++i) {
-			printf("%d: found viewport (%d,%d,%d,%d)\n", d->id(),
-					viewport_allocation[i].x, viewport_allocation[i].y,
-					viewport_allocation[i].w, viewport_allocation[i].h);
-			shared_ptr<viewport_t> vp;
-			if(i < old_layout.size()) {
-				vp = old_layout[i];
-				vp->set_raw_area(viewport_allocation[i]);
-			} else {
-				vp = make_shared<viewport_t>(this, viewport_allocation[i]);
-			}
-			compute_viewport_allocation(d, vp);
-			new_layout.push_back(vp);
-		}
-
-		/** if no layout is found fallback to on screen **/
-		if(new_layout.size() < 1) {
-			rect area{_root->_root_position};
-			shared_ptr<viewport_t> vp;
-			if(0 < old_layout.size()) {
-				vp = old_layout[0];
-				vp->set_raw_area(area);
-			} else {
-				vp = make_shared<viewport_t>(this, area);
-			}
-			compute_viewport_allocation(d, vp);
-			new_layout.push_back(vp);
-		}
-
-		d->set_layout(new_layout);
-		d->update_default_pop();
-
-		/** clean up obsolete layout **/
-		for (unsigned i = new_layout.size(); i < old_layout.size(); ++i) {
-			/** destroy this viewport **/
-			remove_viewport(d, old_layout[i]);
-			old_layout[i] = nullptr;
-		}
-
-		if(new_layout.size() > 0) {
-			// update position of floating managed clients to avoid offscreen
-			// floating window
-			for(auto x: net_client_list()) {
-				if(x->is(MANAGED_FLOATING)) {
-					auto r = x->position();
-					r.x = new_layout[0]->allocation().x
-							+ _theme->floating.margin.left;
-					r.y = new_layout[0]->allocation().y
-							+ _theme->floating.margin.top;
-					x->set_floating_wished_position(r);
-					x->reconfigure();
-				}
-			}
-		}
-
-	}
-
-	for(auto i: crtc_info) {
-		if(i.second != nullptr)
-			free(i.second);
-	}
-
-	if(geometry != nullptr) {
-		free(geometry);
-	}
-
-	if(randr_resources != nullptr) {
-		free(randr_resources);
-	}
-
-	update_desktop_visibility();
-
-	/* set viewport */
-	std::vector<uint32_t> viewport(_root->_desktop_list.size()*2);
-	std::fill_n(viewport.begin(), _root->_desktop_list.size()*2, 0);
-	_dpy->change_property(_dpy->root(), _NET_DESKTOP_VIEWPORT,
-			CARDINAL, 32, &viewport[0], _root->_desktop_list.size()*2);
-
-	/* define desktop geometry */
-	set_desktop_geometry(_root->_root_position.w, _root->_root_position.h);
-
-	update_workarea();
-	reconfigure_docks(_root->_desktop_list[_root->_current_desktop]);
+//	_left_most_border = std::numeric_limits<int>::max();
+//	_top_most_border = std::numeric_limits<int>::max();
+//
+//	/** update root size infos **/
+//	xcb_get_geometry_cookie_t ck0 = xcb_get_geometry(_dpy->xcb(), _dpy->root());
+//	xcb_randr_get_screen_resources_cookie_t ck1 = xcb_randr_get_screen_resources(_dpy->xcb(), _dpy->root());
+//
+//	xcb_get_geometry_reply_t * geometry = xcb_get_geometry_reply(_dpy->xcb(), ck0, nullptr);
+//	xcb_randr_get_screen_resources_reply_t * randr_resources = xcb_randr_get_screen_resources_reply(_dpy->xcb(), ck1, 0);
+//
+//	if(geometry == nullptr or randr_resources == nullptr) {
+//		throw exception_t("FATAL: cannot read root window attributes");
+//	}
+//
+//	_root->_root_position = rect{geometry->x, geometry->y, geometry->width, geometry->height};
+//	set_desktop_geometry(_root->_root_position.w, _root->_root_position.h);
+//
+//	map<xcb_randr_crtc_t, xcb_randr_get_crtc_info_reply_t *> crtc_info;
+//
+//	vector<xcb_randr_get_crtc_info_cookie_t> ckx(xcb_randr_get_screen_resources_crtcs_length(randr_resources));
+//	xcb_randr_crtc_t * crtc_list = xcb_randr_get_screen_resources_crtcs(randr_resources);
+//	for (unsigned k = 0; k < xcb_randr_get_screen_resources_crtcs_length(randr_resources); ++k) {
+//		ckx[k] = xcb_randr_get_crtc_info(_dpy->xcb(), crtc_list[k], XCB_CURRENT_TIME);
+//	}
+//
+//	for (unsigned k = 0; k < xcb_randr_get_screen_resources_crtcs_length(randr_resources); ++k) {
+//		xcb_randr_get_crtc_info_reply_t * r = xcb_randr_get_crtc_info_reply(_dpy->xcb(), ckx[k], 0);
+//		if(r != nullptr) {
+//			crtc_info[crtc_list[k]] = r;
+//		}
+//
+//		// keep left more screen to move iconnified window there
+//		if(r->x < _left_most_border) {
+//			_left_most_border = r->x;
+//		}
+//
+//		if(r->y < _top_most_border) {
+//			_top_most_border = r->y;
+//		}
+//
+//	}
+//
+//	// compute all viewport  that does not overlap and cover the full area of
+//	// crts
+//	region already_allocated;
+//	vector<rect> viewport_allocation;
+//	for(auto crtc: crtc_info) {
+//		if(crtc.second->num_outputs <= 0)
+//			continue;
+//
+//		/* the location of crts */
+//		region location{crtc.second->x, crtc.second->y, crtc.second->width,
+//			crtc.second->height};
+//		location -= already_allocated;
+//		for(auto & b: location.rects()) {
+//			viewport_allocation.push_back(b);
+//		}
+//		already_allocated += location;
+//	}
+//
+//	for(auto d: _root->_desktop_list) {
+//		//d->set_allocation(_root->_root_position);
+//		/** get old layout to recycle old viewport, and keep unchanged outputs **/
+//		vector<shared_ptr<viewport_t>> old_layout = d->get_viewport_map();
+//		/** store the newer layout, to be able to cleanup obsolete viewports **/
+//		vector<shared_ptr<viewport_t>> new_layout;
+//		/** for each not overlaped rectangle **/
+//		for(unsigned i = 0; i < viewport_allocation.size(); ++i) {
+//			printf("%d: found viewport (%d,%d,%d,%d)\n", d->id(),
+//					viewport_allocation[i].x, viewport_allocation[i].y,
+//					viewport_allocation[i].w, viewport_allocation[i].h);
+//			shared_ptr<viewport_t> vp;
+//			if(i < old_layout.size()) {
+//				vp = old_layout[i];
+//				vp->set_raw_area(viewport_allocation[i]);
+//			} else {
+//				vp = make_shared<viewport_t>(this, viewport_allocation[i]);
+//			}
+//			compute_viewport_allocation(d, vp);
+//			new_layout.push_back(vp);
+//		}
+//
+//		/** if no layout is found fallback to on screen **/
+//		if(new_layout.size() < 1) {
+//			rect area{_root->_root_position};
+//			shared_ptr<viewport_t> vp;
+//			if(0 < old_layout.size()) {
+//				vp = old_layout[0];
+//				vp->set_raw_area(area);
+//			} else {
+//				vp = make_shared<viewport_t>(this, area);
+//			}
+//			compute_viewport_allocation(d, vp);
+//			new_layout.push_back(vp);
+//		}
+//
+//		d->set_layout(new_layout);
+//		d->update_default_pop();
+//
+//		/** clean up obsolete layout **/
+//		for (unsigned i = new_layout.size(); i < old_layout.size(); ++i) {
+//			/** destroy this viewport **/
+//			remove_viewport(d, old_layout[i]);
+//			old_layout[i] = nullptr;
+//		}
+//
+//		if(new_layout.size() > 0) {
+//			// update position of floating managed clients to avoid offscreen
+//			// floating window
+//			for(auto x: net_client_list()) {
+//				if(x->is(MANAGED_FLOATING)) {
+//					auto r = x->position();
+//					r.x = new_layout[0]->allocation().x
+//							+ _theme->floating.margin.left;
+//					r.y = new_layout[0]->allocation().y
+//							+ _theme->floating.margin.top;
+//					x->set_floating_wished_position(r);
+//					x->reconfigure();
+//				}
+//			}
+//		}
+//
+//	}
+//
+//	for(auto i: crtc_info) {
+//		if(i.second != nullptr)
+//			free(i.second);
+//	}
+//
+//	if(geometry != nullptr) {
+//		free(geometry);
+//	}
+//
+//	if(randr_resources != nullptr) {
+//		free(randr_resources);
+//	}
+//
+//	update_desktop_visibility();
+//
+//	/* set viewport */
+//	std::vector<uint32_t> viewport(_root->_desktop_list.size()*2);
+//	std::fill_n(viewport.begin(), _root->_desktop_list.size()*2, 0);
+//	_dpy->change_property(_dpy->root(), _NET_DESKTOP_VIEWPORT,
+//			CARDINAL, 32, &viewport[0], _root->_desktop_list.size()*2);
+//
+//	/* define desktop geometry */
+//	set_desktop_geometry(_root->_root_position.w, _root->_root_position.h);
+//
+//	update_workarea();
+//	reconfigure_docks(_root->_desktop_list[_root->_current_desktop]);
 
 }
 
 void page_t::remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v) {
 
-	/* remove fullscreened clients if needed */
-	for (auto &x : _fullscreen_client_to_viewport) {
-		if (x.second.viewport.lock() == v) {
-			unfullscreen(x.second.client.lock());
-			break;
-		}
-	}
+	/* TODO: on output */
 
-	/* Transfer clients to a valid notebook */
-	for (auto nbk : filter_class<notebook_t>(v->get_all_children())) {
-		for (auto c : filter_class<client_managed_t>(nbk->children())) {
-			d->default_pop()->add_client(c, false);
-		}
-	}
+//	/* remove fullscreened clients if needed */
+//	for (auto &x : _fullscreen_client_to_viewport) {
+//		if (x.second.viewport.lock() == v) {
+//			unfullscreen(x.second.client.lock());
+//			break;
+//		}
+//	}
+//
+//	/* Transfer clients to a valid notebook */
+//	for (auto nbk : filter_class<notebook_t>(v->get_all_children())) {
+//		for (auto c : filter_class<client_managed_t>(nbk->children())) {
+//			d->default_pop()->add_client(c, false);
+//		}
+//	}
 
 }
 
@@ -2556,11 +2425,6 @@ void page_t::remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v
  * The function create unmanaged window.
  **/
 void page_t::onmap(xcb_window_t w) {
-	if(_compositor != nullptr)
-		if (w == _compositor->get_composite_overlay())
-			return;
-	if(w == _dpy->root())
-		return;
 
 	/* check if this window is a page window */
 	for(auto const & x: _root->get_all_children()) {
@@ -2577,83 +2441,86 @@ void page_t::onmap(xcb_window_t w) {
 	}
 
 	try {
-		auto props = _dpy->create_client_proxy(w);
 
-		/* abuse try - catch */
-		if(props->wa()._class == XCB_WINDOW_CLASS_INPUT_ONLY) {
-			throw invalid_client_t{};
-		}
+		/* TODO: thinks are eassyer, but need changes */
 
-		//props->print_window_attributes();
-		//props->print_properties();
-
-		xcb_atom_t type = props->wm_type();
-
-		if (not props->wa().override_redirect) {
-			if (type == A(_NET_WM_WINDOW_TYPE_DESKTOP)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DOCK)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLBAR)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_MENU)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_UTILITY)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_SPLASH)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DIALOG)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_POPUP_MENU)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_COMBO)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DND)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
-				create_managed_window(w, type);
-			}
-		} else {
-			if (type == A(_NET_WM_WINDOW_TYPE_DESKTOP)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DOCK)) {
-				create_managed_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLBAR)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_MENU)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_UTILITY)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_SPLASH)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DIALOG)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_POPUP_MENU)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_COMBO)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_DND)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
-				create_unmanaged_window(w, type);
-			} else if (type == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
-				create_unmanaged_window(w, type);
-			}
-		}
+//		auto props = _dpy->create_client_proxy(w);
+//
+//		/* abuse try - catch */
+//		if(props->wa()._class == XCB_WINDOW_CLASS_INPUT_ONLY) {
+//			throw invalid_client_t{};
+//		}
+//
+//		//props->print_window_attributes();
+//		//props->print_properties();
+//
+//		xcb_atom_t type = props->wm_type();
+//
+//		if (not props->wa().override_redirect) {
+//			if (type == A(_NET_WM_WINDOW_TYPE_DESKTOP)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DOCK)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLBAR)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_MENU)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_UTILITY)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_SPLASH)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DIALOG)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_POPUP_MENU)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_COMBO)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DND)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
+//				create_managed_window(w, type);
+//			}
+//		} else {
+//			if (type == A(_NET_WM_WINDOW_TYPE_DESKTOP)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DOCK)) {
+//				create_managed_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLBAR)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_MENU)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_UTILITY)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_SPLASH)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DIALOG)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DROPDOWN_MENU)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_POPUP_MENU)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_TOOLTIP)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_COMBO)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_DND)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_NOTIFICATION)) {
+//				create_unmanaged_window(w, type);
+//			} else if (type == A(_NET_WM_WINDOW_TYPE_NORMAL)) {
+//				create_unmanaged_window(w, type);
+//			}
+//		}
 
 	} catch (invalid_client_t const & e) {
 		/* ignore invalid client */
@@ -2800,10 +2667,10 @@ void page_t::manage_client(shared_ptr<client_managed_t> mw, xcb_atom_t type) {
 }
 
 void page_t::create_unmanaged_window(xcb_window_t w, xcb_atom_t type) {
-	auto uw = make_shared<client_not_managed_t>(this, w, type);
-	_dpy->map(uw->orig());
-	uw->show();
-	safe_update_transient_for(uw);
+//	auto uw = make_shared<client_not_managed_t>(this, w, type);
+//	_dpy->map(uw->orig());
+//	uw->show();
+//	safe_update_transient_for(uw);
 }
 
 shared_ptr<viewport_t> page_t::find_mouse_viewport(int x, int y) const {
@@ -2822,26 +2689,8 @@ shared_ptr<viewport_t> page_t::find_mouse_viewport(int x, int y) const {
  * @input c: a window client handler.
  **/
 bool page_t::get_safe_net_wm_user_time(shared_ptr<client_base_t> c, xcb_timestamp_t & time) {
-	if (c->net_wm_user_time() != nullptr) {
-		time = *(c->net_wm_user_time());
-		return true;
-	} else {
-		if (c->net_wm_user_time_window() == nullptr)
-			return false;
-		if (*(c->net_wm_user_time_window()) == XCB_WINDOW_NONE)
-			return false;
-		try {
-			auto xc = _dpy->create_client_proxy(*(c->net_wm_user_time_window()));
-			if(xc->net_wm_user_time() == nullptr)
-				return false;
-			if (*(xc->net_wm_user_time()) == 0)
-				return false;
-			time = *(xc->net_wm_user_time());
-			return true;
-		} catch (invalid_client_t & e) {
-			return false;
-		}
-	}
+
+	/* TODO: Serial if apply */
 }
 
 shared_ptr<client_managed_t> page_t::find_managed_window_with(xcb_window_t w) {
@@ -2897,12 +2746,14 @@ void page_t::safe_update_transient_for(shared_ptr<client_base_t> c) {
 }
 
 void page_t::set_desktop_geometry(long width, long height) {
+	/* DO NOT APPLY ANYMORE */
+
 	/* define desktop geometry */
-	uint32_t desktop_geometry[2];
-	desktop_geometry[0] = width;
-	desktop_geometry[1] = height;
-	_dpy->change_property(_dpy->root(), _NET_DESKTOP_GEOMETRY,
-			CARDINAL, 32, desktop_geometry, 2);
+//	uint32_t desktop_geometry[2];
+//	desktop_geometry[0] = width;
+//	desktop_geometry[1] = height;
+//	_dpy->change_property(_dpy->root(), _NET_DESKTOP_GEOMETRY,
+//			CARDINAL, 32, desktop_geometry, 2);
 }
 
 shared_ptr<client_managed_t> page_t::find_client_managed_with(xcb_window_t w) {
@@ -2949,111 +2800,92 @@ void replace(shared_ptr<page_component_t> const & src, shared_ptr<page_component
 }
 
 void page_t::create_identity_window() {
-	/* create an invisible window to identify page */
-	uint32_t pid = getpid();
-	uint32_t attrs[2];
-
-	/* OVERRIDE_REDIRECT */
-	attrs[0] = 1;
-	/* EVENT_MASK */
-	attrs[1] = XCB_EVENT_MASK_STRUCTURE_NOTIFY|XCB_EVENT_MASK_PROPERTY_CHANGE;
-
-	uint32_t attrs_mask = XCB_CW_OVERRIDE_REDIRECT|XCB_CW_EVENT_MASK;
-
-	/* Warning: This window must be focusable, thus it MUST be an INPUT_OUTPUT window */
-	identity_window = xcb_generate_id(_dpy->xcb());
-	xcb_void_cookie_t ck = xcb_create_window(_dpy->xcb(), XCB_COPY_FROM_PARENT, identity_window,
-			_dpy->root(), -100, -100, 1, 1, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
-			XCB_COPY_FROM_PARENT, attrs_mask, attrs);
-
-	std::string name{"page"};
-	_dpy->change_property(identity_window, _NET_WM_NAME, UTF8_STRING, 8, name.c_str(),
-			name.length() + 1);
-	_dpy->change_property(identity_window, _NET_SUPPORTING_WM_CHECK, WINDOW, 32,
-			&identity_window, 1);
-	_dpy->change_property(identity_window, _NET_WM_PID, CARDINAL, 32, &pid, 1);
-	_dpy->map(identity_window);
+	/* OBSOLETE */
 }
 
 void page_t::register_wm() {
-	if (!_dpy->register_wm(identity_window, configuration._replace_wm)) {
-		throw exception_t("Cannot register window manager");
-	}
+	/* OBSOLETE */
 }
 
 void page_t::register_cm() {
-	if (!_dpy->register_cm(identity_window)) {
-		throw exception_t("Cannot register composite manager");
-	}
+	/* OBSOLETE */
 }
 
 inline void grab_key(xcb_connection_t * xcb, xcb_window_t w, key_desc_t & key, keymap_t * _keymap) {
-	int kc = 0;
-	if ((kc = _keymap->find_keysim(key.ks))) {
-		xcb_grab_key(xcb, true, w, key.mod, kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-		if(_keymap->numlock_mod_mask() != 0) {
-			xcb_grab_key(xcb, true, w, key.mod|_keymap->numlock_mod_mask(), kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-		}
-	}
+//	int kc = 0;
+//	if ((kc = _keymap->find_keysim(key.ks))) {
+//		xcb_grab_key(xcb, true, w, key.mod, kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
+//		if(_keymap->numlock_mod_mask() != 0) {
+//			xcb_grab_key(xcb, true, w, key.mod|_keymap->numlock_mod_mask(), kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
+//		}
+//	}
+
+	/** TODO **/
+
 }
 
 /**
  * Update grab keys aware of current _keymap
  */
 void page_t::update_grabkey() {
+	/** TODO **/
 
-	assert(_keymap != nullptr);
 
-	/** ungrab all previews key **/
-	xcb_ungrab_key(_dpy->xcb(), XCB_GRAB_ANY, _dpy->root(), XCB_MOD_MASK_ANY);
-
-	int kc = 0;
-
-	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_1, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_2, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_3, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_4, _keymap);
-
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[0].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[1].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[2].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[3].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[4].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[5].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[6].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[7].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[8].key, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[9].key, _keymap);
-
-	grab_key(_dpy->xcb(), _dpy->root(), bind_page_quit, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_close, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_exposay_all, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_toggle_fullscreen, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_toggle_compositor, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_right_desktop, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_left_desktop, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_bind_window, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_fullscreen_window, _keymap);
-	grab_key(_dpy->xcb(), _dpy->root(), bind_float_window, _keymap);
-
-	/* Alt-Tab */
-	if ((kc = _keymap->find_keysim(XK_Tab))) {
-		xcb_grab_key(_dpy->xcb(), true, _dpy->root(), XCB_MOD_MASK_1, kc,
-				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-		if (_keymap->numlock_mod_mask() != 0) {
-			xcb_grab_key(_dpy->xcb(), true, _dpy->root(),
-					XCB_MOD_MASK_1 | _keymap->numlock_mod_mask(), kc,
-					XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-		}
-	}
+//
+//	assert(_keymap != nullptr);
+//
+//	/** ungrab all previews key **/
+//	xcb_ungrab_key(_dpy->xcb(), XCB_GRAB_ANY, _dpy->root(), XCB_MOD_MASK_ANY);
+//
+//	int kc = 0;
+//
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_1, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_2, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_3, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_4, _keymap);
+//
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[0].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[1].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[2].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[3].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[4].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[5].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[6].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[7].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[8].key, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[9].key, _keymap);
+//
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_page_quit, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_close, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_exposay_all, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_toggle_fullscreen, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_toggle_compositor, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_right_desktop, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_left_desktop, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_bind_window, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_fullscreen_window, _keymap);
+//	grab_key(_dpy->xcb(), _dpy->root(), bind_float_window, _keymap);
+//
+//	/* Alt-Tab */
+//	if ((kc = _keymap->find_keysim(XK_Tab))) {
+//		xcb_grab_key(_dpy->xcb(), true, _dpy->root(), XCB_MOD_MASK_1, kc,
+//				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
+//		if (_keymap->numlock_mod_mask() != 0) {
+//			xcb_grab_key(_dpy->xcb(), true, _dpy->root(),
+//					XCB_MOD_MASK_1 | _keymap->numlock_mod_mask(), kc,
+//					XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
+//		}
+//	}
 
 }
 
 void page_t::update_keymap() {
-	if(_keymap != nullptr) {
-		delete _keymap;
-	}
-	_keymap = new keymap_t{_dpy->xcb()};
+	/* TODO */
+
+//	if(_keymap != nullptr) {
+//		delete _keymap;
+//	}
+//	_keymap = new keymap_t{_dpy->xcb()};
 }
 
 /** debug function that try to print the state of page in stdout **/
@@ -3070,10 +2902,7 @@ void page_t::print_state() const {
 }
 
 void page_t::update_current_desktop() const {
-	/* set current desktop */
-	uint32_t current_desktop = _root->_current_desktop;
-	_dpy->change_property(_dpy->root(), _NET_CURRENT_DESKTOP, CARDINAL,
-			32, &current_desktop, 1);
+	/* OBSOLETE */
 }
 
 void page_t::switch_to_desktop(unsigned int desktop) {
@@ -3147,42 +2976,45 @@ void page_t::_event_handler_bind(int type, callback_event_t f) {
 }
 
 void page_t::_bind_all_default_event() {
-	_event_handlers.clear();
 
-	_event_handler_bind(XCB_BUTTON_PRESS, &page_t::process_button_press_event);
-	_event_handler_bind(XCB_BUTTON_RELEASE, &page_t::process_button_release);
-	_event_handler_bind(XCB_MOTION_NOTIFY, &page_t::process_motion_notify);
-	_event_handler_bind(XCB_KEY_PRESS, &page_t::process_key_press_event);
-	_event_handler_bind(XCB_KEY_RELEASE, &page_t::process_key_release_event);
-	_event_handler_bind(XCB_CONFIGURE_NOTIFY, &page_t::process_configure_notify_event);
-	_event_handler_bind(XCB_CREATE_NOTIFY, &page_t::process_create_notify_event);
-	_event_handler_bind(XCB_DESTROY_NOTIFY, &page_t::process_destroy_notify_event);
-	_event_handler_bind(XCB_GRAVITY_NOTIFY, &page_t::process_gravity_notify_event);
-	_event_handler_bind(XCB_MAP_NOTIFY, &page_t::process_map_notify_event);
-	_event_handler_bind(XCB_REPARENT_NOTIFY, &page_t::process_reparent_notify_event);
-	_event_handler_bind(XCB_UNMAP_NOTIFY, &page_t::process_unmap_notify_event);
-	//_event_handler_bind(XCB_CIRCULATE_NOTIFY, &page_t::process_circulate_notify_event);
-	_event_handler_bind(XCB_CONFIGURE_REQUEST, &page_t::process_configure_request_event);
-	_event_handler_bind(XCB_MAP_REQUEST, &page_t::process_map_request_event);
-	_event_handler_bind(XCB_MAPPING_NOTIFY, &page_t::process_mapping_notify_event);
-	_event_handler_bind(XCB_SELECTION_CLEAR, &page_t::process_selection_clear_event);
-	_event_handler_bind(XCB_PROPERTY_NOTIFY, &page_t::process_property_notify_event);
-	_event_handler_bind(XCB_EXPOSE, &page_t::process_expose_event);
-	_event_handler_bind(XCB_FOCUS_IN, &page_t::process_focus_in_event);
-	_event_handler_bind(XCB_FOCUS_OUT, &page_t::process_focus_out_event);
-	_event_handler_bind(XCB_ENTER_NOTIFY, &page_t::process_enter_window_event);
-	_event_handler_bind(XCB_LEAVE_NOTIFY, &page_t::process_leave_window_event);
+	/* TODO: event will be changed */
 
-
-	_event_handler_bind(0, &page_t::process_error);
-
-	_event_handler_bind(XCB_UNMAP_NOTIFY|0x80, &page_t::process_fake_unmap_notify_event);
-	_event_handler_bind(XCB_CLIENT_MESSAGE|0x80, &page_t::process_fake_client_message_event);
-
-	/** Extension **/
-	_event_handler_bind(_dpy->damage_event + XCB_DAMAGE_NOTIFY, &page_t::process_damage_notify_event);
-	_event_handler_bind(_dpy->randr_event + XCB_RANDR_NOTIFY, &page_t::process_randr_notify_event);
-	_event_handler_bind(_dpy->shape_event + XCB_SHAPE_NOTIFY, &page_t::process_shape_notify_event);
+//	_event_handlers.clear();
+//
+//	_event_handler_bind(XCB_BUTTON_PRESS, &page_t::process_button_press_event);
+//	_event_handler_bind(XCB_BUTTON_RELEASE, &page_t::process_button_release);
+//	_event_handler_bind(XCB_MOTION_NOTIFY, &page_t::process_motion_notify);
+//	_event_handler_bind(XCB_KEY_PRESS, &page_t::process_key_press_event);
+//	_event_handler_bind(XCB_KEY_RELEASE, &page_t::process_key_release_event);
+//	_event_handler_bind(XCB_CONFIGURE_NOTIFY, &page_t::process_configure_notify_event);
+//	_event_handler_bind(XCB_CREATE_NOTIFY, &page_t::process_create_notify_event);
+//	_event_handler_bind(XCB_DESTROY_NOTIFY, &page_t::process_destroy_notify_event);
+//	_event_handler_bind(XCB_GRAVITY_NOTIFY, &page_t::process_gravity_notify_event);
+//	_event_handler_bind(XCB_MAP_NOTIFY, &page_t::process_map_notify_event);
+//	_event_handler_bind(XCB_REPARENT_NOTIFY, &page_t::process_reparent_notify_event);
+//	_event_handler_bind(XCB_UNMAP_NOTIFY, &page_t::process_unmap_notify_event);
+//	//_event_handler_bind(XCB_CIRCULATE_NOTIFY, &page_t::process_circulate_notify_event);
+//	_event_handler_bind(XCB_CONFIGURE_REQUEST, &page_t::process_configure_request_event);
+//	_event_handler_bind(XCB_MAP_REQUEST, &page_t::process_map_request_event);
+//	_event_handler_bind(XCB_MAPPING_NOTIFY, &page_t::process_mapping_notify_event);
+//	_event_handler_bind(XCB_SELECTION_CLEAR, &page_t::process_selection_clear_event);
+//	_event_handler_bind(XCB_PROPERTY_NOTIFY, &page_t::process_property_notify_event);
+//	_event_handler_bind(XCB_EXPOSE, &page_t::process_expose_event);
+//	_event_handler_bind(XCB_FOCUS_IN, &page_t::process_focus_in_event);
+//	_event_handler_bind(XCB_FOCUS_OUT, &page_t::process_focus_out_event);
+//	_event_handler_bind(XCB_ENTER_NOTIFY, &page_t::process_enter_window_event);
+//	_event_handler_bind(XCB_LEAVE_NOTIFY, &page_t::process_leave_window_event);
+//
+//
+//	_event_handler_bind(0, &page_t::process_error);
+//
+//	_event_handler_bind(XCB_UNMAP_NOTIFY|0x80, &page_t::process_fake_unmap_notify_event);
+//	_event_handler_bind(XCB_CLIENT_MESSAGE|0x80, &page_t::process_fake_client_message_event);
+//
+//	/** Extension **/
+//	_event_handler_bind(_dpy->damage_event + XCB_DAMAGE_NOTIFY, &page_t::process_damage_notify_event);
+//	_event_handler_bind(_dpy->randr_event + XCB_RANDR_NOTIFY, &page_t::process_randr_notify_event);
+//	_event_handler_bind(_dpy->shape_event + XCB_SHAPE_NOTIFY, &page_t::process_shape_notify_event);
 
 }
 
@@ -3193,113 +3025,119 @@ void page_t::process_mapping_notify_event(xcb_generic_event_t const * e) {
 }
 
 void page_t::process_selection_clear_event(xcb_generic_event_t const * _e) {
-	auto e = reinterpret_cast<xcb_selection_clear_event_t const *>(_e);
-	if(e->selection == _dpy->wm_sn_atom)
-		_mainloop.stop();
-	if(e->selection == _dpy->cm_sn_atom)
-		stop_compositor();
+	/** OBSOLETE **/
+
+//	auto e = reinterpret_cast<xcb_selection_clear_event_t const *>(_e);
+//	if(e->selection == _dpy->wm_sn_atom)
+//		_mainloop.stop();
+//	if(e->selection == _dpy->cm_sn_atom)
+//		stop_compositor();
 }
 
 void page_t::process_focus_in_event(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_focus_in_event_t const *>(_e);
 
-	cout << focus_in_to_string(e) << endl;
+	/* TODO */
 
-	/**
-	 * Since we can detect the client_id the focus rules is based on current
-	 * focussed client. i.e. as soon as the a client has the focus, he is
-	 * allowed to give the focus to any window he own.
-	 **/
-
-	if (e->event == _dpy->root() and e->detail == XCB_NOTIFY_DETAIL_NONE) {
-		_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, XCB_CURRENT_TIME);
-		return;
-	}
-
-	shared_ptr<client_managed_t> focused;
-	if (get_current_workspace()->client_focus_history_front(focused)) {
-		// client are only allowed to focus their own windows
-		// NOTE: client_id() is based on Xorg client XID allocation and may be
-		//   invalid for other X11 server implementation.
-		if(client_id(focused->orig()) != client_id(e->event)) {
-			focused->focus(XCB_CURRENT_TIME);
-		}
-	} else {
-		/**
-		 * if no client should be focussed and the event does not belong
-		 * identity window, refocus identity window.
-		 **/
-		if(e->event != identity_window) {
-			_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE,
-					XCB_CURRENT_TIME);
-		}
-	}
-
-	{
-		auto c = find_client_managed_with(e->event);
-		if(c != nullptr) {
-			switch(e->detail) {
-			case XCB_NOTIFY_DETAIL_INFERIOR:
-			case XCB_NOTIFY_DETAIL_ANCESTOR:
-			case XCB_NOTIFY_DETAIL_VIRTUAL:
-			case XCB_NOTIFY_DETAIL_NONLINEAR:
-			case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
-				c->grab_button_focused_unsafe();
-				c->set_focus_state(true);
-			default:
-				break;
-			}
-		}
-	}
+//	cout << focus_in_to_string(e) << endl;
+//
+//	/**
+//	 * Since we can detect the client_id the focus rules is based on current
+//	 * focussed client. i.e. as soon as the a client has the focus, he is
+//	 * allowed to give the focus to any window he own.
+//	 **/
+//
+//	if (e->event == _dpy->root() and e->detail == XCB_NOTIFY_DETAIL_NONE) {
+//		_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, XCB_CURRENT_TIME);
+//		return;
+//	}
+//
+//	shared_ptr<client_managed_t> focused;
+//	if (get_current_workspace()->client_focus_history_front(focused)) {
+//		// client are only allowed to focus their own windows
+//		// NOTE: client_id() is based on Xorg client XID allocation and may be
+//		//   invalid for other X11 server implementation.
+//		if(client_id(focused->orig()) != client_id(e->event)) {
+//			focused->focus(XCB_CURRENT_TIME);
+//		}
+//	} else {
+//		/**
+//		 * if no client should be focussed and the event does not belong
+//		 * identity window, refocus identity window.
+//		 **/
+//		if(e->event != identity_window) {
+//			_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE,
+//					XCB_CURRENT_TIME);
+//		}
+//	}
+//
+//	{
+//		auto c = find_client_managed_with(e->event);
+//		if(c != nullptr) {
+//			switch(e->detail) {
+//			case XCB_NOTIFY_DETAIL_INFERIOR:
+//			case XCB_NOTIFY_DETAIL_ANCESTOR:
+//			case XCB_NOTIFY_DETAIL_VIRTUAL:
+//			case XCB_NOTIFY_DETAIL_NONLINEAR:
+//			case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
+//				c->grab_button_focused_unsafe();
+//				c->set_focus_state(true);
+//			default:
+//				break;
+//			}
+//		}
+//	}
 
 }
 
 void page_t::process_focus_out_event(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_focus_in_event_t const *>(_e);
 
-	cout << focus_in_to_string(e) << endl;
+	/* TODO */
 
-	/**
-	 * if the root window loose the focus, give the focus back to the
-	 * proper window.
-	 **/
-	if(e->event == _dpy->root()) {
-		/* ignore all focus due to grabs */
-		if(e->mode != XCB_NOTIFY_MODE_NORMAL)
-			return;
-
-		/* ignore all focus event related to the pointer */
-		if(e->detail == XCB_NOTIFY_DETAIL_POINTER)
-			return;
-
-		shared_ptr<client_managed_t> focused;
-		if (get_current_workspace()->client_focus_history_front(focused)) {
-			focused->focus(XCB_CURRENT_TIME);
-		} else {
-			if (e->event == identity_window or e->event == _dpy->root()) {
-				_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE,
-						XCB_CURRENT_TIME);
-			}
-		}
-	} else {
-		auto c = find_client_managed_with(e->event);
-		if(c != nullptr) {
-			switch(e->detail) {
-			case XCB_NOTIFY_DETAIL_ANCESTOR:
-			case XCB_NOTIFY_DETAIL_NONLINEAR:
-			case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
-				c->grab_button_unfocused_unsafe();
-				c->set_focus_state(false);
-				break;
-			case XCB_NOTIFY_DETAIL_INFERIOR:
-				c->grab_button_focused_unsafe();
-				c->set_focus_state(true);
-				break;
-			default:
-				break;
-			}
-		}
-	}
+//	cout << focus_in_to_string(e) << endl;
+//
+//	/**
+//	 * if the root window loose the focus, give the focus back to the
+//	 * proper window.
+//	 **/
+//	if(e->event == _dpy->root()) {
+//		/* ignore all focus due to grabs */
+//		if(e->mode != XCB_NOTIFY_MODE_NORMAL)
+//			return;
+//
+//		/* ignore all focus event related to the pointer */
+//		if(e->detail == XCB_NOTIFY_DETAIL_POINTER)
+//			return;
+//
+//		shared_ptr<client_managed_t> focused;
+//		if (get_current_workspace()->client_focus_history_front(focused)) {
+//			focused->focus(XCB_CURRENT_TIME);
+//		} else {
+//			if (e->event == identity_window or e->event == _dpy->root()) {
+//				_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE,
+//						XCB_CURRENT_TIME);
+//			}
+//		}
+//	} else {
+//		auto c = find_client_managed_with(e->event);
+//		if(c != nullptr) {
+//			switch(e->detail) {
+//			case XCB_NOTIFY_DETAIL_ANCESTOR:
+//			case XCB_NOTIFY_DETAIL_NONLINEAR:
+//			case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
+//				c->grab_button_unfocused_unsafe();
+//				c->set_focus_state(false);
+//				break;
+//			case XCB_NOTIFY_DETAIL_INFERIOR:
+//				c->grab_button_focused_unsafe();
+//				c->set_focus_state(true);
+//				break;
+//			default:
+//				break;
+//			}
+//		}
+//	}
 }
 
 void page_t::process_enter_window_event(xcb_generic_event_t const * _e) {
@@ -3350,8 +3188,7 @@ void page_t::process_randr_notify_event(xcb_generic_event_t const * e) {
 
 	if (ev->subCode == XCB_RANDR_NOTIFY_CRTC_CHANGE) {
 		update_viewport_layout();
-		if(_compositor != nullptr)
-			_compositor->update_layout();
+		_dpy->update_layout();
 		_theme->update();
 	}
 
@@ -3396,27 +3233,11 @@ void page_t::process_button_release(xcb_generic_event_t const * _e) {
 }
 
 void page_t::start_compositor() {
-	if (_dpy->has_composite) {
-		try {
-			register_cm();
-		} catch (std::exception & e) {
-			std::cout << e.what() << std::endl;
-			return;
-		}
-
-		/** TODO: replace it by weston compositor */
-		//_compositor = new compositor_t{_dpy};
-		_dpy->enable();
-	}
+	/* OBSOLETE */
 }
 
 void page_t::stop_compositor() {
-	if (_dpy->has_composite) {
-		_dpy->unregister_cm();
-		_dpy->disable();
-		delete _compositor;
-		_compositor = nullptr;
-	}
+	/* OBSOLETE */
 }
 
 void page_t::process_expose_event(xcb_generic_event_t const * _e) {
@@ -3426,7 +3247,7 @@ void page_t::process_expose_event(xcb_generic_event_t const * _e) {
 
 void page_t::process_error(xcb_generic_event_t const * _e) {
 	auto e = reinterpret_cast<xcb_generic_error_t const *>(_e);
-	_dpy->print_error(e);
+	// TODO: _dpy->print_error(e);
 }
 
 
@@ -3510,13 +3331,15 @@ unsigned int page_t::find_current_desktop(shared_ptr<client_base_t> c) {
 
 void page_t::process_pending_events() {
 
-	/* on connection error, terminate */
-	if(xcb_connection_has_error(_dpy->xcb()) != 0) {
-		_mainloop.stop();
-		return;
-	}
+	/* TODO: wayland mainloop */
 
-	_dpy->fetch_pending_events();
+//	/* on connection error, terminate */
+//	if(xcb_connection_has_error(_dpy->xcb()) != 0) {
+//		_mainloop.stop();
+//		return;
+//	}
+//
+//	_dpy->fetch_pending_events();
 
 }
 
@@ -3524,12 +3347,12 @@ theme_t const * page_t::theme() const {
 	return _theme;
 }
 
-display_t * page_t::dpy() const {
+display_compositor_t * page_t::dpy() const {
 	return _dpy;
 }
 
-compositor_t * page_t::cmp() const {
-	return _compositor;
+display_compositor_t * page_t::cmp() const {
+	return _dpy;
 }
 
 void page_t::grab_start(grab_handler_t * handler) {
@@ -3548,9 +3371,7 @@ void page_t::overlay_add(shared_ptr<tree_t> x) {
 }
 
 void page_t::add_global_damage(region const & r) {
-	if(_compositor != nullptr) {
-		_compositor->add_damaged(r);
-	}
+	/* TODO */
 }
 
 shared_ptr<workspace_t> const & page_t::get_current_workspace() const {
@@ -3571,11 +3392,6 @@ int page_t::create_workspace() {
 	_root->_desktop_stack->push_front(d);
 	d->hide();
 
-	/* update number of desktop */
-	uint32_t number_of_desktop = _root->_desktop_list.size();
-	_dpy->change_property(_dpy->root(), _NET_NUMBER_OF_DESKTOPS,
-			CARDINAL, 32, &number_of_desktop, 1);
-
 	update_viewport_layout();
 	update_current_desktop();
 	update_desktop_visibility();
@@ -3594,7 +3410,7 @@ keymap_t const * page_t::keymap() const {
 }
 
 xcb_atom_t page_t::A(atom_e atom) {
-	return _dpy->A(atom);
+	/* OBSOLETE */
 }
 
 list<weak_ptr<client_managed_t>> page_t::global_client_focus_history() {
@@ -3623,45 +3439,48 @@ bool page_t::global_focus_history_is_empty() {
 }
 
 void page_t::start_alt_tab(xcb_timestamp_t time) {
-	auto _x = net_client_list();
-	list<shared_ptr<client_managed_t>> managed_window{_x.begin(), _x.end()};
 
-	auto focus_history = global_client_focus_history();
-	/* reorder client to follow focused order */
-	for (auto i = focus_history.rbegin();
-			i != focus_history.rend();
-			++i) {
-		if (not i->expired()) {
-			auto x = std::find_if(managed_window.begin(), managed_window.end(), [i](shared_ptr<client_managed_t> const & x) -> bool { return x == i->lock(); });
-			if(x != managed_window.end()) {
-				managed_window.splice(managed_window.begin(), managed_window, x);
-			}
-		}
-	}
+	/* TODO */
 
-	managed_window.remove_if([](shared_ptr<client_managed_t> const & c) { return c->skip_task_bar() or c->is(MANAGED_DOCK); });
-
-	if(managed_window.size() > 1) {
-		/* Grab keyboard */
-		auto ck = xcb_grab_keyboard(_dpy->xcb(),
-				false, _dpy->root(), time,
-				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
-
-		xcb_generic_error_t * err;
-		auto reply = xcb_grab_keyboard_reply(_dpy->xcb(), ck, &err);
-
-		if(err != nullptr) {
-			cout << "page_t::start_alt_tab error while trying to grab : " << xcb_event_get_error_label(err->error_code) << endl;
-			xcb_discard_reply(_dpy->xcb(), ck.sequence);
-		} else {
-			if(reply->status == XCB_GRAB_STATUS_SUCCESS) {
-				grab_start(new grab_alt_tab_t{this, managed_window, time});
-			} else {
-				cout << "page_t::start_alt_tab error while trying to grab" << endl;
-			}
-			free(reply);
-		}
-	}
+//	auto _x = net_client_list();
+//	list<shared_ptr<client_managed_t>> managed_window{_x.begin(), _x.end()};
+//
+//	auto focus_history = global_client_focus_history();
+//	/* reorder client to follow focused order */
+//	for (auto i = focus_history.rbegin();
+//			i != focus_history.rend();
+//			++i) {
+//		if (not i->expired()) {
+//			auto x = std::find_if(managed_window.begin(), managed_window.end(), [i](shared_ptr<client_managed_t> const & x) -> bool { return x == i->lock(); });
+//			if(x != managed_window.end()) {
+//				managed_window.splice(managed_window.begin(), managed_window, x);
+//			}
+//		}
+//	}
+//
+//	managed_window.remove_if([](shared_ptr<client_managed_t> const & c) { return c->skip_task_bar() or c->is(MANAGED_DOCK); });
+//
+//	if(managed_window.size() > 1) {
+//		/* Grab keyboard */
+//		auto ck = xcb_grab_keyboard(_dpy->xcb(),
+//				false, _dpy->root(), time,
+//				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
+//
+//		xcb_generic_error_t * err;
+//		auto reply = xcb_grab_keyboard_reply(_dpy->xcb(), ck, &err);
+//
+//		if(err != nullptr) {
+//			cout << "page_t::start_alt_tab error while trying to grab : " << xcb_event_get_error_label(err->error_code) << endl;
+//			xcb_discard_reply(_dpy->xcb(), ck.sequence);
+//		} else {
+//			if(reply->status == XCB_GRAB_STATUS_SUCCESS) {
+//				grab_start(new grab_alt_tab_t{this, managed_window, time});
+//			} else {
+//				cout << "page_t::start_alt_tab error while trying to grab" << endl;
+//			}
+//			free(reply);
+//		}
+//	}
 }
 
 void page_t::on_visibility_change_handler(xcb_window_t xid, bool visible) {
@@ -3677,27 +3496,29 @@ void page_t::on_visibility_change_handler(xcb_window_t xid, bool visible) {
 
 void page_t::on_block_mainloop_handler() {
 
-	while (_dpy->has_pending_events()) {
-		while (_dpy->has_pending_events()) {
-			process_event(_dpy->front_event());
-			_dpy->pop_event();
-		}
+	/** OBSOLETE **/
 
-		if (_need_restack) {
-			_need_restack = false;
-			update_windows_stack();
-			_need_update_client_list = true;
-		}
-
-		if(_need_update_client_list) {
-			_need_update_client_list = false;
-			update_client_list();
-			update_client_list_stacking();
-		}
-		xcb_flush(_dpy->xcb());
-	}
-
-	render();
+//	while (_dpy->has_pending_events()) {
+//		while (_dpy->has_pending_events()) {
+//			process_event(_dpy->front_event());
+//			_dpy->pop_event();
+//		}
+//
+//		if (_need_restack) {
+//			_need_restack = false;
+//			update_windows_stack();
+//			_need_update_client_list = true;
+//		}
+//
+//		if(_need_update_client_list) {
+//			_need_update_client_list = false;
+//			update_client_list();
+//			update_client_list_stacking();
+//		}
+//		xcb_flush(_dpy->xcb());
+//	}
+//
+//	render();
 }
 
 auto page_t::conf() const -> page_configuration_t const & {
@@ -3705,11 +3526,13 @@ auto page_t::conf() const -> page_configuration_t const & {
 }
 
 auto page_t::create_view(xcb_window_t w) -> shared_ptr<client_view_t> {
-	return _dpy->create_view(w);
+	// TODO: use weston view
+
+	//return _dpy->create_view(w);
 }
 
 void page_t::make_surface_stats(int & size, int & count) {
-	_dpy->make_surface_stats(size, count);
+	//_dpy->make_surface_stats(size, count);
 }
 
 auto page_t::net_client_list() -> list<client_managed_p> {
@@ -3719,6 +3542,116 @@ auto page_t::net_client_list() -> list<client_managed_p> {
 auto page_t::mainloop() -> mainloop_t * {
 	return &_mainloop;
 }
+
+
+
+using backend_init_func =
+		int (*)(struct weston_compositor *c,
+	    int *argc, char *argv[],
+	    struct weston_config *config,
+	    struct weston_backend_config *config_base);
+
+void page_t::load_x11_backend(weston_compositor* ec) {
+	weston_x11_backend_config config = {{ 0, }};
+	weston_x11_backend_output_config default_output = { 0, };
+
+	default_output.height = 1600;
+	default_output.width = 1600;
+	default_output.name = strdup("Wayland output");
+	default_output.scale = 1;
+	default_output.transform = WL_OUTPUT_TRANSFORM_NORMAL;
+
+	config.base.struct_size = sizeof(weston_x11_backend_config);
+	config.base.struct_version = WESTON_X11_BACKEND_CONFIG_VERSION;
+
+	config.fullscreen = 0;
+	config.no_input = 0;
+	config.num_outputs = 1;
+	config.outputs = &default_output;
+	config.use_pixman = 0;
+
+	auto backend_init = reinterpret_cast<backend_init_func>(
+			weston_load_module("x11-backend.so", "backend_init"));
+	if (!backend_init)
+		return;
+
+	backend_init(ec, NULL, NULL, NULL, &config.base);
+
+	free(default_output.name);
+
+}
+
+void page_t::connect_all() {
+
+	destroy.notify = [](wl_listener *l, void *data) { weston_log("compositor::destroy\n"); };
+    create_surface.notify = [](wl_listener *l, void *data) { weston_log("compositor::create_surface\n"); };
+    activate.notify = [](wl_listener *l, void *data) { weston_log("compositor::activate\n"); };
+    transform.notify = [](wl_listener *l, void *data) { weston_log("compositor::transform\n"); };
+    kill.notify = [](wl_listener *l, void *data) { weston_log("compositor::kill\n"); };
+    idle.notify = [](wl_listener *l, void *data) { weston_log("compositor::idle\n"); };
+    wake.notify = [](wl_listener *l, void *data) { weston_log("compositor::wake\n"); };
+    show_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::show_input_panel\n"); };
+    hide_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::hide_input_panel\n"); };
+    update_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::update_input_panel\n"); };
+    seat_created.notify = [](wl_listener *l, void *data) { weston_log("compositor::seat_created\n"); };
+
+    output_created.connect(&ec->output_created_signal, [this](weston_output * o) { this->on_output_created(o);});
+
+    output_destroyed.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_destroyed\n"); };
+    output_moved.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_moved\n"); };
+    session.notify = [](wl_listener *l, void *data) { weston_log("compositor::session\n"); };
+
+
+    wl_signal_add(&ec->destroy_signal, &destroy);
+    wl_signal_add(&ec->create_surface_signal, &create_surface);
+    wl_signal_add(&ec->activate_signal, &activate);
+    wl_signal_add(&ec->transform_signal, &transform);
+    wl_signal_add(&ec->kill_signal, &kill);
+    wl_signal_add(&ec->idle_signal, &idle);
+    wl_signal_add(&ec->wake_signal, &wake);
+    wl_signal_add(&ec->show_input_panel_signal, &show_input_panel);
+    wl_signal_add(&ec->hide_input_panel_signal, &hide_input_panel);
+    wl_signal_add(&ec->update_input_panel_signal, &update_input_panel);
+    wl_signal_add(&ec->seat_created_signal, &seat_created);
+
+    wl_signal_add(&ec->output_destroyed_signal, &output_destroyed);
+    wl_signal_add(&ec->output_moved_signal, &output_moved);
+    wl_signal_add(&ec->session_signal, &session);
+}
+
+void page_t::on_output_created(weston_output * output) {
+	weston_log("compositor::output_created\n");
+
+	auto stest = weston_surface_create(ec);
+	weston_surface_set_size(stest, output->width, output->height);
+    pixman_region32_fini(&stest->opaque);
+    pixman_region32_init_rect(&stest->opaque, 0, 0, output->width,
+    		output->height);
+    weston_surface_damage(stest);
+
+    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, output->width,
+    		output->height);
+
+    auto cr = cairo_create(surf);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
+    cairo_paint(cr);
+    cairo_destroy(cr);
+
+//    auto sbuffer = weston_buffer_from_memory(output->width, output->height,
+//    		cairo_image_surface_get_stride(surf), WL_SHM_FORMAT_ARGB8888, cairo_image_surface_get_data(surf));
+//    weston_surface_attach(stest, sbuffer);
+//    weston_surface_damage(stest);
+//
+//    auto sview = weston_view_create(stest);
+//	weston_view_set_position(sview, output->x, output->y);
+//	stest->timeline.force_refresh = 1;
+//	weston_layer_entry_insert(&default_layer.view_list, &sview->layer_link);
+//    weston_surface_commit(stest);
+
+}
+
+
 
 }
 

@@ -21,7 +21,7 @@
 
 #include "time.hxx"
 #include "display.hxx"
-#include "compositor.hxx"
+#include "display-compositor.hxx"
 
 #include "config_handler.hxx"
 
@@ -108,6 +108,33 @@ class page_t : public page_context_t {
 
 public:
 
+
+	//wl_display* dpy;
+	weston_compositor* ec;
+	weston_layer default_layer;
+
+	wl_listener destroy;
+
+	/* surface signals */
+	wl_listener create_surface;
+	wl_listener activate;
+	wl_listener transform;
+
+	wl_listener kill;
+	wl_listener idle;
+	wl_listener wake;
+
+	wl_listener show_input_panel;
+	wl_listener hide_input_panel;
+	wl_listener update_input_panel;
+
+	wl_listener seat_created;
+	listener_t<weston_output> output_created;
+	wl_listener output_destroyed;
+	wl_listener output_moved;
+
+	wl_listener session;
+
 private:
 	grab_handler_t * _grab_handler;
 
@@ -117,8 +144,7 @@ public:
 	/** window that handle page identity for others clients */
 	xcb_window_t identity_window;
 
-	display_t * _dpy;
-	compositor_t * _compositor;
+	display_compositor_t * _dpy;
 	theme_t * _theme;
 
 	page_configuration_t configuration;
@@ -188,7 +214,7 @@ public:
 	virtual ~page_t();
 
 	void set_default_pop(shared_ptr<notebook_t> x);
-	compositor_t * get_render_context();
+	display_compositor_t * get_render_context();
 	display_t * get_xconnection();
 
 
@@ -369,14 +395,18 @@ public:
 
 	auto find_client_managed_with(xcb_window_t w) -> shared_ptr<client_managed_t>;
 
+	void connect_all();
+	void on_output_created(weston_output * output);
+	void load_x11_backend(weston_compositor* ec);
+
 	/**
 	 * page_context_t virtual API
 	 **/
 
 	virtual auto conf() const -> page_configuration_t const &;
 	virtual auto theme() const -> theme_t const *;
-	virtual auto dpy() const -> display_t *;
-	virtual auto cmp() const -> compositor_t *;
+	virtual auto dpy() const -> display_compositor_t *;
+	virtual auto cmp() const -> display_compositor_t *;
 	virtual void overlay_add(shared_ptr<tree_t> x);
 	virtual void add_global_damage(region const & r);
 	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t>;

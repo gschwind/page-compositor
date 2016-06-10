@@ -188,7 +188,7 @@ static void xdg_popup_destroy(wl_client * client, wl_resource * resource)
 	dpy->xdg_popup_destroy(client, resource);
 }
 
-struct xdg_surface_interface display_compositor_t::xdg_popup_implementation = {
+struct xdg_popup_interface display_compositor_t::xdg_popup_implementation = {
 	page::xdg_popup_destroy
 };
 

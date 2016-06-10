@@ -14,7 +14,6 @@
 #include <memory>
 
 #include <cairo/cairo.h>
-#include <cairo/cairo-xlib.h>
 
 #include "utils.hxx"
 #include "theme.hxx"
@@ -27,8 +26,6 @@ namespace page {
 
 class simple2_theme_t : public theme_t {
 public:
-
-	display_t * _cnx;
 
 	std::string notebook_active_font_name;
 	std::string notebook_selected_font_name;
@@ -54,7 +51,6 @@ public:
 
 	PangoFontMap * pango_font_map;
 	PangoContext * pango_context;
-
 
 	cairo_surface_t * vsplit_button_s;
 	cairo_surface_t * hsplit_button_s;
@@ -119,7 +115,7 @@ public:
 
 	std::shared_ptr<pixmap_t> backgroun_px;
 
-	simple2_theme_t(display_t * cnx, config_handler_t & conf);
+	simple2_theme_t(config_handler_t & conf);
 
 	virtual ~simple2_theme_t();
 
