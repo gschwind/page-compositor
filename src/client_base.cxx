@@ -161,13 +161,13 @@ dimention_t<unsigned> xdg_surface_base_t::compute_size_with_constrain(unsigned w
 
 }
 
-auto xdg_surface_base_t::get_xid() const -> xcb_window_t {
-	return base();
-}
-
-auto xdg_surface_base_t::get_parent_xid() const -> xcb_window_t {
-	return base();
-}
+//auto xdg_surface_base_t::get_xid() const -> xcb_window_t {
+//	return base();
+//}
+//
+//auto xdg_surface_base_t::get_parent_xid() const -> xcb_window_t {
+//	return base();
+//}
 
 weston_view * xdg_surface_base_t::create_view() {
 	auto view = weston_view_create(_surface);

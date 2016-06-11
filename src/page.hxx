@@ -233,7 +233,7 @@ struct page_t : public page_context_t, public display_compositor_t {
 //
 //	void process_net_vm_state_client_message(xcb_window_t c, long type, xcb_atom_t state_properties);
 //
-//	void insert_in_tree_using_transient_for(shared_ptr<xdg_surface_base_t> c);
+	void insert_in_tree_using_transient_for(shared_ptr<xdg_surface_base_t> c);
 //
 //	void safe_update_transient_for(shared_ptr<xdg_surface_base_t> c);
 //
@@ -241,32 +241,32 @@ struct page_t : public page_context_t, public display_compositor_t {
 //	void logical_raise(shared_ptr<xdg_surface_base_t> c);
 //
 //	/* attach floating window in a notebook */
-//	void bind_window(shared_ptr<xdg_surface_toplevel_t> mw, bool activate);
+	void bind_window(shared_ptr<xdg_surface_toplevel_t> mw, bool activate);
 //	void grab_pointer();
 //	/* if grab is linked to a given window remove this grab */
 //	void cleanup_grab();
 //	/* find a valid notebook, that is in subtree base and that is no nbk */
-//	shared_ptr<notebook_t> get_another_notebook(shared_ptr<tree_t> base, shared_ptr<tree_t> nbk);
+	shared_ptr<notebook_t> get_another_notebook(shared_ptr<tree_t> base, shared_ptr<tree_t> nbk);
 //	/* find where the managed window is */
-//	static shared_ptr<notebook_t> find_parent_notebook_for(shared_ptr<xdg_surface_toplevel_t> mw);
+	static shared_ptr<notebook_t> find_parent_notebook_for(shared_ptr<xdg_surface_toplevel_t> mw);
 //	shared_ptr<xdg_surface_toplevel_t> find_managed_window_with(xcb_window_t w);
-//	static shared_ptr<viewport_t> find_viewport_of(shared_ptr<tree_t> n);
-//	static shared_ptr<workspace_t> find_desktop_of(shared_ptr<tree_t> n);
+	static shared_ptr<viewport_t> find_viewport_of(shared_ptr<tree_t> n);
+	static shared_ptr<workspace_t> find_desktop_of(shared_ptr<tree_t> n);
 //	void set_window_cursor(xcb_window_t w, xcb_cursor_t c);
-//	void update_windows_stack();
+	void update_windows_stack();
 //	void update_viewport_layout();
 //	void remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v);
 //	void onmap(xcb_window_t w);
 //	void create_managed_window(xcb_window_t w, xcb_atom_t type);
-//	void manage_client(shared_ptr<xdg_surface_toplevel_t> mw);
+	void manage_client(shared_ptr<xdg_surface_toplevel_t> mw);
 //	void ackwoledge_configure_request(xcb_configure_request_event_t const * e);
-//	void create_unmanaged_window(xcb_window_t w, xcb_atom_t type);
+	void create_unmanaged_window(xcb_window_t w, xcb_atom_t type);
 //	bool get_safe_net_wm_user_time(shared_ptr<xdg_surface_base_t> c, xcb_timestamp_t & time);
 //	void update_page_areas();
 //	void set_desktop_geometry(long width, long height);
 //	shared_ptr<xdg_surface_base_t> find_client_with(xcb_window_t w);
 //	shared_ptr<xdg_surface_base_t> find_client(xcb_window_t w);
-//	void remove_client(shared_ptr<xdg_surface_base_t> c);
+	void remove_client(shared_ptr<xdg_surface_base_t> c);
 //
 //	void raise_child(shared_ptr<tree_t> t);
 //	void process_notebook_client_menu(shared_ptr<xdg_surface_toplevel_t> c, int selected);
@@ -301,16 +301,16 @@ struct page_t : public page_context_t, public display_compositor_t {
 //	//void process_error(xcb_generic_event_t const * e);
 //	void start_compositor();
 //	void stop_compositor();
-//	void run_cmd(string const & cmd_with_args);
+	void run_cmd(string const & cmd_with_args);
 //
 //	void start_alt_tab(xcb_timestamp_t time);
 //
-//	vector<shared_ptr<xdg_surface_toplevel_t>> get_sticky_client_managed(shared_ptr<tree_t> base);
+	vector<shared_ptr<xdg_surface_toplevel_t>> get_sticky_client_managed(shared_ptr<tree_t> base);
 //	void reconfigure_docks(shared_ptr<workspace_t> const & d);
 //
 //	void mark_durty(shared_ptr<tree_t> t);
 //
-//	unsigned int find_current_desktop(shared_ptr<xdg_surface_base_t> c);
+	unsigned int find_current_desktop(shared_ptr<xdg_surface_base_t> c);
 //
 //	void process_pending_events();
 //
@@ -337,17 +337,17 @@ struct page_t : public page_context_t, public display_compositor_t {
 //	 * page_context_t virtual API
 //	 **/
 //
-//	virtual auto conf() const -> page_configuration_t const &;
-//	virtual auto theme() const -> theme_t const *;
+	virtual auto conf() const -> page_configuration_t const &;
+	virtual auto theme() const -> theme_t const *;
 //	virtual auto dpy() const -> display_compositor_t *;
 //	virtual auto cmp() const -> display_compositor_t *;
 //	virtual void overlay_add(shared_ptr<tree_t> x);
 //	virtual void add_global_damage(region const & r);
-//	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t>;
-//	virtual auto get_current_workspace() const -> shared_ptr<workspace_t> const &;
-//	virtual auto get_workspace(int id) const -> shared_ptr<workspace_t> const &;
-//	virtual int  get_workspace_count() const;
-//	virtual int  create_workspace();
+	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t>;
+	virtual auto get_current_workspace() const -> shared_ptr<workspace_t> const &;
+	virtual auto get_workspace(int id) const -> shared_ptr<workspace_t> const &;
+	virtual int  get_workspace_count() const;
+	virtual int  create_workspace();
 //	virtual void grab_start(pointer_grab_handler_t * handler);
 //	virtual void grab_stop();
 	virtual void detach(shared_ptr<tree_t> t);
@@ -359,7 +359,7 @@ struct page_t : public page_context_t, public display_compositor_t {
 	virtual void split_top(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c);
 	virtual void split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c);
 //	virtual void set_focus(shared_ptr<xdg_surface_toplevel_t> w, uint32_t tfocus);
-//	virtual void notebook_close(shared_ptr<notebook_t> nbk);
+	virtual void notebook_close(shared_ptr<notebook_t> nbk);
 //	virtual int  left_most_border();
 //	virtual int  top_most_border();
 //	virtual auto global_client_focus_history() -> list<weak_ptr<xdg_surface_toplevel_t>>;
@@ -368,7 +368,7 @@ struct page_t : public page_context_t, public display_compositor_t {
 //	virtual auto create_view(xcb_window_t w) -> shared_ptr<client_view_t>;
 //	virtual void make_surface_stats(int & size, int & count);
 //	virtual auto mainloop() -> mainloop_t *;
-//
+	virtual void sync_tree_view();
 
 	/**
 	 * the xdg-shell

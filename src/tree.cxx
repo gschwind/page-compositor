@@ -67,6 +67,8 @@ void tree_t::hide() {
  **/
 void tree_t::show() {
 	_is_visible = true;
+
+
 }
 
 /**
@@ -83,6 +85,7 @@ void tree_t::remove(shared_ptr<tree_t> t) {
 	assert(has_key(_children, t));
 	_children.remove(t);
 	t->clear_parent();
+
 }
 
 void tree_t::clear()
@@ -330,5 +333,6 @@ auto tree_t::get_damaged() -> region
 {
 	return region{};
 }
+
 
 }

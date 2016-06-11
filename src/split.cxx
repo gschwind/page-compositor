@@ -185,6 +185,11 @@ void split_t::set_pack0(shared_ptr<page_component_t> x) {
 	_pack0 = x;
 	if (_pack0 != nullptr) {
 		_pack0->set_parent(this);
+		if(!_children.empty())
+			x->set_around_me(_children.back().get(), nullptr);
+		else
+			x->set_around_me(this, nullptr);
+
 		_children.push_back(_pack0);
 		update_allocation();
 	}
@@ -198,6 +203,11 @@ void split_t::set_pack1(shared_ptr<page_component_t> x) {
 	_pack1 = x;
 	if (_pack1 != nullptr) {
 		_pack1->set_parent(this);
+		if(!_children.empty())
+			x->set_around_me(_children.back().get(), nullptr);
+		else
+			x->set_around_me(this, nullptr);
+
 		_children.push_back(_pack1);
 		update_allocation();
 	}

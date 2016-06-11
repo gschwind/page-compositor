@@ -44,6 +44,11 @@ bool notebook_t::add_client(client_managed_p x, bool prefer_activate) {
 
 	x->set_parent(this);
 	x->set_managed_type(MANAGED_NOTEBOOK);
+
+	if(!_children.empty())
+		x->set_around_me(_children.back().get(), nullptr);
+	else
+		x->set_around_me(this, nullptr);
 	_children.push_back(x);
 
 	_client_context_t client_context{this, x};

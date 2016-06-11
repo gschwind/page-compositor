@@ -22,6 +22,9 @@
 #define EXCEPTION_HXX_
 
 #include <cstdarg>
+#include <cstdio>
+#include <cstring>
+#include <exception>
 
 namespace page {
 

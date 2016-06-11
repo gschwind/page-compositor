@@ -88,6 +88,7 @@ public:
 //	virtual auto create_view(xcb_window_t w) -> shared_ptr<client_view_t> = 0;
 //	virtual void make_surface_stats(int & size, int & count) = 0;
 //	virtual auto mainloop() -> mainloop_t * = 0;
+	virtual void sync_tree_view() = 0;
 
 };
 

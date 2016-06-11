@@ -6,6 +6,7 @@
  */
 
 
+#include "exception.hxx"
 #include "pixmap.hxx"
 
 namespace page {

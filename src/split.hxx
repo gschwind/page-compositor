@@ -35,7 +35,7 @@ class split_t : public page_component_t {
 	list<shared_ptr<tree_t>> _children;
 
 	/** window used for cursor **/
-	xcb_window_t _wid;
+	//xcb_window_t _wid;
 
 	split_t(split_t const &);
 	split_t & operator=(split_t const &);
@@ -88,13 +88,16 @@ public:
 
 	virtual void activate();
 	virtual void activate(shared_ptr<tree_t> t);
-	virtual bool button_press(xcb_button_press_event_t const * ev);
+	//virtual bool button_press(xcb_button_press_event_t const * ev);
 	//virtual bool button_release(xcb_button_release_event_t const * ev);
-	virtual bool button_motion(xcb_motion_notify_event_t const * ev);
-	virtual bool leave(xcb_leave_notify_event_t const * ev);
+	//virtual bool button_motion(xcb_motion_notify_event_t const * ev);
+	//virtual bool leave(xcb_leave_notify_event_t const * ev);
 	//virtual bool enter(xcb_enter_notify_event_t const * ev);
 	//virtual void expose(xcb_expose_event_t const * ev);
 	//virtual void trigger_redraw();
+
+	virtual bool button(uint32_t time, uint32_t button, uint32_t state);
+	virtual bool motion(uint32_t time, weston_pointer_motion_event * event);
 
 	//virtual auto get_xid() const -> xcb_window_t;
 	//virtual auto get_parent_xid() const -> xcb_window_t;

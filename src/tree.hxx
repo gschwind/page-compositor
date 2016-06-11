@@ -76,6 +76,7 @@ protected:
 		(this->*f)(args...);
 	}
 
+
 	template<char const c>
 	string _get_node_name() const {
 		return xformat("%c(%ld) #%016lx #%016lx", c, shared_from_this().use_count(), _parent, (uintptr_t) this);
@@ -125,6 +126,8 @@ public:
 	void broadcast_update_layout(time64_t const time);
 	void broadcast_render_finished();
 
+	auto find_view_bellow() const -> weston_view *;
+
 	void add_transition(shared_ptr<transition_t> t);
 
 	rect to_root_position(rect const & r) const;
@@ -163,6 +166,8 @@ public:
 	virtual auto get_parent_xid() const -> uint32_t;
 	virtual rect get_window_position() const;
 	virtual void queue_redraw();
+
+	virtual auto get_default_view() const -> weston_view *;
 
 };
 

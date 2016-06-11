@@ -24,26 +24,26 @@ namespace page {
 
 using namespace std;
 
-display_compositor_t * dpy{nullptr};
+display_compositor_t * dc{nullptr};
 
 static void xdg_shell_destroy(wl_client * client, wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_shell_destroy(client, resource);
+	dc->xdg_shell_destroy(client, resource);
 }
 
 static void xdg_shell_use_unstable_version(wl_client * client,
 		wl_resource * resource, int32_t version)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_shell_use_unstable_version(client, resource, version);
+	dc->xdg_shell_use_unstable_version(client, resource, version);
 }
 
 static void xdg_shell_get_xdg_surface(wl_client * client,
 		wl_resource * resource, uint32_t id, wl_resource* surface_resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_shell_get_xdg_surface(client, resource, id, surface_resource);
+	dc->xdg_shell_get_xdg_surface(client, resource, id, surface_resource);
 }
 
 static void xdg_shell_get_xdg_popup(wl_client * client, wl_resource * resource,
@@ -52,7 +52,7 @@ static void xdg_shell_get_xdg_popup(wl_client * client, wl_resource * resource,
 		uint32_t serial, int32_t x, int32_t y)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_shell_get_xdg_popup(client, resource, id, surface_resource,
+	dc->xdg_shell_get_xdg_popup(client, resource, id, surface_resource,
 			parent_resource, seat_resource, serial, x, y);
 }
 
@@ -60,7 +60,7 @@ static void xdg_shell_pong(wl_client * client, wl_resource * resource,
 		uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_shell_pong(client, resource, serial);
+	dc->xdg_shell_pong(client, resource, serial);
 }
 
 struct xdg_shell_interface display_compositor_t::xdg_shell_implementation = {
@@ -72,21 +72,21 @@ struct xdg_shell_interface display_compositor_t::xdg_shell_implementation = {
 static void xdg_surface_destroy(wl_client * client, wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_destroy(client, resource);
+	dc->xdg_surface_destroy(client, resource);
 }
 
 static void xdg_surface_set_parent(wl_client * client, wl_resource * resource,
 		wl_resource * parent_resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_set_parent(client, resource, parent_resource);
+	dc->xdg_surface_set_parent(client, resource, parent_resource);
 }
 
 static void xdg_surface_set_app_id(wl_client * client, wl_resource * resource,
 		const char* app_id)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_set_app_id(client, resource, app_id);
+	dc->xdg_surface_set_app_id(client, resource, app_id);
 }
 
 static void xdg_surface_show_window_menu(wl_client * client,
@@ -94,7 +94,7 @@ static void xdg_surface_show_window_menu(wl_client * client,
 		uint32_t serial, int32_t x, int32_t y)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_show_window_menu(client, surface_resource, seat_resource,
+	dc->xdg_surface_show_window_menu(client, surface_resource, seat_resource,
 			serial, x, y);
 }
 
@@ -102,28 +102,28 @@ static void xdg_surface_set_title(wl_client * client, wl_resource * resource,
 		char const * title)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_set_title(client, resource, title);
+	dc->xdg_surface_set_title(client, resource, title);
 }
 
 static void xdg_surface_move(wl_client * client, wl_resource * resource,
 		wl_resource * seat_resource, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_move(client, resource, seat_resource, serial);
+	dc->xdg_surface_move(client, resource, seat_resource, serial);
 }
 
 static void xdg_surface_resize(wl_client * client, wl_resource * resource,
 		wl_resource * seat_resource, uint32_t serial, uint32_t edges)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_resize(client, resource, seat_resource, serial, edges);
+	dc->xdg_surface_resize(client, resource, seat_resource, serial, edges);
 }
 
 static void xdg_surface_ack_configure(wl_client * client,
 		wl_resource * resource, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_ack_configure(client, resource, serial);
+	dc->xdg_surface_ack_configure(client, resource, serial);
 }
 
 static void xdg_surface_set_window_geometry(wl_client * client,
@@ -131,42 +131,42 @@ static void xdg_surface_set_window_geometry(wl_client * client,
 		int32_t height)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_set_window_geometry(client, resource, x, y, width, height);
+	dc->xdg_surface_set_window_geometry(client, resource, x, y, width, height);
 }
 
 static void xdg_surface_set_maximized(wl_client * client,
 		wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_set_maximized(client, resource);
+	dc->xdg_surface_set_maximized(client, resource);
 }
 
 static void xdg_surface_unset_maximized(wl_client * client,
 		wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_unset_maximized(client, resource);
+	dc->xdg_surface_unset_maximized(client, resource);
 }
 
 static void xdg_surface_set_fullscreen(wl_client * client,
 		wl_resource * resource, wl_resource * output_resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_set_fullscreen(client, resource, output_resource);
+	dc->xdg_surface_set_fullscreen(client, resource, output_resource);
 }
 
 static void xdg_surface_unset_fullscreen(wl_client * client,
 		wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_unset_fullscreen(client, resource);
+	dc->xdg_surface_unset_fullscreen(client, resource);
 }
 
 static void xdg_surface_set_minimized(wl_client * client,
 		wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_surface_set_minimized(client, resource);
+	dc->xdg_surface_set_minimized(client, resource);
 }
 
 struct xdg_surface_interface display_compositor_t::xdg_surface_implementation = {
@@ -185,7 +185,7 @@ struct xdg_surface_interface display_compositor_t::xdg_surface_implementation = 
 static void xdg_popup_destroy(wl_client * client, wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	dpy->xdg_popup_destroy(client, resource);
+	dc->xdg_popup_destroy(client, resource);
 }
 
 struct xdg_popup_interface display_compositor_t::xdg_popup_implementation = {

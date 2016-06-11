@@ -32,6 +32,7 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area) :
 	_subtree = make_shared<notebook_t>(_ctx);
 	_subtree->set_parent(this);
 	_subtree->set_allocation(_page_area);
+	_subtree->set_around_me(this, nullptr);
 
 }
 
@@ -49,6 +50,7 @@ void viewport_t::replace(shared_ptr<page_component_t> src, shared_ptr<page_compo
 		_subtree = by;
 		_subtree->set_parent(this);
 		_subtree->set_allocation(_page_area);
+		_subtree->set_around_me(this, nullptr);
 	} else {
 		throw std::runtime_error("viewport: bad child replacement!");
 	}

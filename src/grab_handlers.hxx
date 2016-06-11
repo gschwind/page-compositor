@@ -71,6 +71,8 @@ public:
 			shared_ptr<xdg_surface_toplevel_t> c, uint32_t button,
 			rect const & pos);
 
+	virtual ~grab_bind_client_t();
+
 	virtual void focus();
 	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
 	virtual void motion(uint32_t time, weston_pointer_motion_event *event) = 0;
@@ -78,10 +80,7 @@ public:
 	virtual void frame();
 	virtual void cancel();
 
-	virtual ~grab_bind_client_t();
-	virtual void button_press(xcb_button_press_event_t const * e);
-	virtual void button_motion(xcb_motion_notify_event_t const * e);
-	virtual void button_release(xcb_button_release_event_t const * e);
+
 };
 
 struct mode_data_notebook_client_menu_t  : public pointer_grab_handler_t {

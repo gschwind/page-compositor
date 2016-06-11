@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 
+#include "display-compositor.hxx"
 #include "icon_handler.hxx"
 #include "theme.hxx"
 
@@ -86,44 +87,12 @@ class xdg_surface_toplevel_t : public xdg_surface_base_t {
 	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
 	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &) = delete;
 
-	void fake_configure_unsafe();
 	void set_wished_position(rect const & position);
 	rect const & get_wished_position() const;
 
-	cairo_t * get_cairo_context();
-
-	void update_icon();
 	void set_theme(theme_t const * theme);
 
-	uint32_t deco() const;
-
-	void map_unsafe();
-	void unmap_unsafe();
-	void ungrab_all_button_unsafe();
-	void select_inputs_unsafe();
-	void unselect_inputs_unsafe();
-
-	void _update_visible_region();
-	void _update_opaque_region();
-	void _apply_floating_hints_constraint();
-
 	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
-
-	void destroy_back_buffer();
-	void create_back_buffer();
-	void update_floating_areas();
-	void set_opaque_region(xcb_window_t w, region & region);
-	display_t * cnx();
-
-	void compute_floating_areas();
-	rect compute_floating_bind_position(rect const & allocation) const;
-	rect compute_floating_close_position(rect const & allocation) const;
-
-	void update_title();
-	bool prefer_window_border() const;
-
-	void _update_backbuffers();
-	void _paint_exposed();
 
 	static void xdg_surface_delete(wl_resource *resource);
 
@@ -143,7 +112,6 @@ public:
 	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_title_change;
 	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_focus_change;
 	signal_t<shared_ptr<xdg_surface_toplevel_t>, int32_t, int32_t> on_configure;
-
 
 	bool is(managed_window_type_e type);
 	auto title() const -> string const &;

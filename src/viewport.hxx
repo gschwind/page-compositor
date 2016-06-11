@@ -30,7 +30,7 @@ class viewport_t: public page_component_t {
 
 	region _damaged;
 
-	xcb_window_t _win;
+	//xcb_window_t _win;
 
 	bool _is_durty;
 	bool _exposed;
@@ -93,11 +93,11 @@ public:
 	//virtual bool button_motion(xcb_motion_notify_event_t const * ev);
 	//virtual bool leave(xcb_leave_notify_event_t const * ev);
 	//virtual bool enter(xcb_enter_notify_event_t const * ev);
-	virtual void expose(xcb_expose_event_t const * ev);
+	//virtual void expose(xcb_expose_event_t const * ev);
 	virtual void trigger_redraw();
 
-	virtual auto get_xid() const -> xcb_window_t;
-	virtual auto get_parent_xid() const -> xcb_window_t;
+	//virtual auto get_xid() const -> xcb_window_t;
+	//virtual auto get_parent_xid() const -> xcb_window_t;
 	virtual rect get_window_position() const;
 	virtual void queue_redraw();
 

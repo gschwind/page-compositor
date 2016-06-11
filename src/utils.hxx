@@ -873,14 +873,42 @@ void cairo_rectangle_arc_corner(cairo_t * cr, rect const & position, double radi
 //	return oss.str();
 //}
 
-using xcb_button_press_event_t = void;
-using xcb_button_release_event_t = void;
-using xcb_motion_notify_event_t = void;
-using xcb_leave_notify_event_t = void;
-using xcb_enter_notify_event_t = void;
-using xcb_expose_event_t = void;
+template<typename T>
+struct link_t {
+	T * next;
+	T * prev;
 
-using xcb_window_t = uint32_t;
+	link_t() {
+		next = this;
+		prev = this;
+	}
+
+	void insert(link_t * l) {
+		l->next = this;
+		l->prev = prev;
+		prev->next = l;
+		prev = l;
+	}
+
+	void remove() {
+		prev->next = next;
+		next->prev = prev;
+		next = prev = this;
+	}
+
+	bool empty() const {
+		return next == prev;
+	}
+
+	T * frnt() const {
+		return next;
+	}
+
+	T * back() const {
+		return prev;
+	}
+
+};
 
 }
 
