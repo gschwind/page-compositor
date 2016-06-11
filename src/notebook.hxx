@@ -44,9 +44,9 @@ class notebook_t : public page_component_t {
 
 	time64_t _swap_start;
 
-	shared_ptr<renderable_thumbnail_t> tooltips;
-	shared_ptr<renderable_notebook_fading_t> fading_notebook;
-	vector<renderable_thumbnail_p> _exposay_thumbnail;
+//	shared_ptr<renderable_thumbnail_t> tooltips;
+//	shared_ptr<renderable_notebook_fading_t> fading_notebook;
+//	vector<renderable_thumbnail_p> _exposay_thumbnail;
 
 
 	theme_notebook_t _theme_notebook;
@@ -148,7 +148,7 @@ class notebook_t : public page_component_t {
 	void _update_layout();
 	void _update_mouse_over();
 
-	void _process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<xdg_surface_toplevel_t> c, int selected);
+	//void _process_notebook_client_menu(dropdown_menu_t<int> * ths, shared_ptr<xdg_surface_toplevel_t> c, int selected);
 
 	void _mouse_over_reset();
 	void _mouse_over_set();
@@ -187,7 +187,7 @@ class notebook_t : public page_component_t {
 
 	void _update_exposay();
 	void _stop_exposay();
-	void _start_client_menu(shared_ptr<xdg_surface_toplevel_t> c, xcb_button_t button, uint16_t x, uint16_t y);
+	//void _start_client_menu(shared_ptr<xdg_surface_toplevel_t> c, xcb_button_t button, uint16_t x, uint16_t y);
 
 	void _scroll_left(int x);
 	void _scroll_right(int x);

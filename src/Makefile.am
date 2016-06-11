@@ -16,6 +16,8 @@ BUILT_SOURCES = \
 	xdg-shell-server-protocol.h
 
 page_compositor_SOURCES = \
+	pointer-grab-handler.cxx \
+	pointer-grab-handler.hxx \
 	page.cxx \
 	page.hxx \
 	page-context.hxx \
@@ -28,11 +30,9 @@ page_compositor_SOURCES = \
 	display-compositor.cxx \
 	display-compositor.hxx \
 	tree.cxx \
+	tree.hxx \
 	utils.cxx \
 	pixmap.cxx \
-	tree.cxx \
-	client_not_managed.cxx \
-	client_managed.cxx \
 	grab_handlers.cxx \
 	notebook.cxx \
 	split.cxx \
@@ -47,7 +47,6 @@ page_compositor_SOURCES = \
 	main.cxx \
 	blur_image_surface.cxx \
 	leak_checker.cxx \
-	tree.hxx \
 	blur_image_surface.hxx \
 	notebook.hxx \
 	client_proxy.hxx \

@@ -20,9 +20,7 @@
 #include "utils.hxx"
 #include "region.hxx"
 
-#include "atoms.hxx"
 #include "exception.hxx"
-#include "display.hxx"
 
 #include "tree.hxx"
 #include "page_context.hxx"

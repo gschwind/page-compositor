@@ -14,7 +14,6 @@
 
 #include <memory>
 #include <cairo/cairo.h>
-#include <cairo/cairo-xlib.h>
 
 #include "utils.hxx"
 #include "theme.hxx"

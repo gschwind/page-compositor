@@ -8,8 +8,6 @@
  */
 
 #include <cstdio>
-#include <cairo-xlib.h>
-#include <X11/cursorfont.h>
 #include <cmath>
 
 #include "split.hxx"

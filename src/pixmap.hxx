@@ -9,7 +9,6 @@
 #define PIXMAP_HXX_
 
 #include <cairo/cairo.h>
-#include <cairo/cairo-xcb.h>
 
 namespace page {
 

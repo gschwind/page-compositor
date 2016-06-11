@@ -5,7 +5,6 @@
  *      Author: gschwind
  */
 
-#include "display.hxx"
 
 #include "pixmap.hxx"
 

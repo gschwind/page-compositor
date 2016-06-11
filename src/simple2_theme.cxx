@@ -7,7 +7,6 @@
  *
  */
 
-#include <cairo/cairo-xcb.h>
 #include <string>
 #include <algorithm>
 #include <iostream>

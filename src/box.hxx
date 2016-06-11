@@ -10,9 +10,6 @@
 #ifndef BOX_HXX_
 #define BOX_HXX_
 
-#include <X11/Xlib.h>
-#include <xcb/xcb.h>
-
 #include <cmath>
 #include <sstream>
 
@@ -37,14 +34,6 @@ struct i_rect_t {
 
 	i_rect_t(T x, T y, T w, T h) :
 			x(x), y(y), w(w), h(h) {
-	}
-
-	i_rect_t(XRectangle const & rec) :
-			x(rec.x), y(rec.y), w(rec.width), h(rec.height) {
-	}
-
-	i_rect_t(xcb_rectangle_t const & rec) :
-			x(rec.x), y(rec.y), w(rec.width), h(rec.height) {
 	}
 
 	bool is_null() const {

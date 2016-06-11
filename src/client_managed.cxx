@@ -10,8 +10,6 @@
 #include "leak_checker.hxx"
 
 #include <cairo.h>
-#include <cairo-xlib.h>
-#include <cairo-xcb.h>
 
 #include "renderable_floating_outer_gradien.hxx"
 #include "client_managed.hxx"
@@ -94,7 +92,7 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(page_context_t * ctx, wl_client *
 
 	uint32_t cursor;
 
-	cursor = cnx()->xc_top_side;
+	//cursor = cnx()->xc_top_side;
 
 	select_inputs_unsafe();
 
@@ -106,7 +104,11 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 
 	_ctx->add_global_damage(get_visible_region());
 
-	_default_view = nullptr;
+	if(_default_view) {
+		weston_layer_entry_remove(&_default_view->layer_link);
+		weston_view_destroy(_default_view);
+		_default_view = nullptr;
+	}
 
 	on_destroy.signal(this);
 

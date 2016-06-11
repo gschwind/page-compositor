@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-#include <xcb/xcb.h>
-
 #include "icon_handler.hxx"
 #include "theme.hxx"
 
@@ -85,8 +83,8 @@ class xdg_surface_toplevel_t : public xdg_surface_base_t {
 	managed_window_type_e _managed_type;
 
 	/* private to avoid copy */
-	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &);
-	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &);
+	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
+	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &) = delete;
 
 	void fake_configure_unsafe();
 	void set_wished_position(rect const & position);
@@ -98,7 +96,6 @@ class xdg_surface_toplevel_t : public xdg_surface_base_t {
 	void set_theme(theme_t const * theme);
 
 	uint32_t deco() const;
-	void icccm_focus_unsafe(xcb_timestamp_t t);
 
 	void map_unsafe();
 	void unmap_unsafe();
@@ -111,9 +108,6 @@ class xdg_surface_toplevel_t : public xdg_surface_base_t {
 	void _apply_floating_hints_constraint();
 
 	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
-
-	xcb_atom_t net_wm_type();
-	bool get_wm_normal_hints(XSizeHints * size_hints);
 
 	void destroy_back_buffer();
 	void create_back_buffer();
@@ -161,14 +155,14 @@ public:
 	void iconify();
 	bool has_focus() const;
 	bool is_iconic();
-	void delete_window(xcb_timestamp_t);
+	//void delete_window(xcb_timestamp_t);
 	auto icon() const -> shared_ptr<icon16>;
 	void set_notebook_wished_position(rect const & pos);
 	void set_current_desktop(unsigned int n);
 	bool is_stiky();
 	bool is_modal();
-	void net_wm_state_add(atom_e atom);
-	void net_wm_state_remove(atom_e atom);
+	//void net_wm_state_add(atom_e atom);
+	//void net_wm_state_remove(atom_e atom);
 	void net_wm_state_delete();
 	void wm_state_delete();
 	bool is_fullscreen();
@@ -179,7 +173,7 @@ public:
 	void set_focus_state(bool is_focused);
 	void set_demands_attention(bool x);
 	bool demands_attention();
-	void focus(xcb_timestamp_t t);
+	//void focus(xcb_timestamp_t t);
 	auto get_type() -> managed_window_type_e;
 	void set_managed_type(managed_window_type_e type);
 	void grab_button_focused_unsafe();
@@ -241,7 +235,7 @@ public:
 	virtual auto orig() const -> uint32_t;
 	virtual auto base_position() const -> rect const &;
 	virtual auto orig_position() const -> rect const &;
-	virtual void on_property_notify(xcb_property_notify_event_t const * e);
+	//virtual void on_property_notify(xcb_property_notify_event_t const * e);
 
 };
 

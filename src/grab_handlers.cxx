@@ -14,7 +14,9 @@ namespace page {
 
 using namespace std;
 
-grab_split_t::grab_split_t(page_context_t * ctx, shared_ptr<split_t> s) : _ctx{ctx}, _split{s} {
+grab_split_t::grab_split_t(page_context_t * ctx, shared_ptr<split_t> s) :
+		_ctx { ctx }, _split { s }
+{
 	_slider_area = s->to_root_position(s->get_split_bar_area());
 	_split_ratio = s->ratio();
 	_split_root_allocation = s->root_location();
@@ -28,24 +30,25 @@ grab_split_t::~grab_split_t() {
 		_ctx->detach(_ps);
 }
 
-void grab_split_t::button_press(xcb_button_press_event_t const *) {
-	/* ignore */
-}
+void grab_split_t::motion(uint32_t time, weston_pointer_motion_event * event) {
+	auto pointer = _pod.grab.pointer;
 
-void grab_split_t::button_motion(xcb_motion_notify_event_t const * e) {
 	if(_split.expired()) {
-		_ctx->grab_stop();
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
+	/** current global position **/
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	/** update pointer position **/
+	weston_pointer_move(pointer, event);
+
 	if (_split.lock()->type() == VERTICAL_SPLIT) {
-		_split_ratio = (e->root_x
-				- _split_root_allocation.x)
-				/ (double) (_split_root_allocation.w);
+		_split_ratio = (x - _split_root_allocation.x) / _split_root_allocation.w;
 	} else {
-		_split_ratio = (e->root_y
-				- _split_root_allocation.y)
-				/ (double) (_split_root_allocation.h);
+		_split_ratio = (y - _split_root_allocation.y) / _split_root_allocation.h;
 	}
 
 	_split_ratio = _split.lock()->compute_split_constaint(_split_ratio);
@@ -53,21 +56,25 @@ void grab_split_t::button_motion(xcb_motion_notify_event_t const * e) {
 	_ps->set_position(_split_ratio);
 }
 
-void grab_split_t::button_release(xcb_button_release_event_t const * e) {
+void grab_split_t::button(uint32_t time, uint32_t button, uint32_t state) {
+	auto pointer = _pod.grab.pointer;
+
 	if(_split.expired()) {
-		_ctx->grab_stop();
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
-	if (e->detail == XCB_BUTTON_INDEX_1) {
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	if (pointer->button_count == 0
+			and state == WL_POINTER_BUTTON_STATE_RELEASED) {
 
 		if (_split.lock()->type() == VERTICAL_SPLIT) {
-			_split_ratio = (e->root_x
-					- _split_root_allocation.x)
+			_split_ratio = (x - _split_root_allocation.x)
 					/ (double) (_split_root_allocation.w);
 		} else {
-			_split_ratio = (e->root_y
-					- _split_root_allocation.y)
+			_split_ratio = (y - _split_root_allocation.y)
 					/ (double) (_split_root_allocation.h);
 		}
 
@@ -80,11 +87,16 @@ void grab_split_t::button_release(xcb_button_release_event_t const * e) {
 
 		_split.lock()->queue_redraw();
 		_split.lock()->set_split(_split_ratio);
-		_ctx->grab_stop();
+
+		weston_pointer_end_grab(pointer);
+
 	}
+
 }
 
-grab_bind_client_t::grab_bind_client_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> c, xcb_button_t button, rect const & pos) :
+grab_bind_client_t::grab_bind_client_t(page_context_t * ctx,
+		shared_ptr<xdg_surface_toplevel_t> c, uint32_t button,
+		rect const & pos) :
 		ctx{ctx},
 		c{c},
 		start_position{pos},
@@ -140,15 +152,20 @@ void grab_bind_client_t::_find_target_notebook(int x, int y,
 	}
 }
 
-void grab_bind_client_t::button_press(xcb_button_press_event_t const * e) {
+void grab_bind_client_t::motion(uint32_t time,
+		weston_pointer_motion_event * event)
+{
+	auto pointer = _pod.grab.pointer;
 
-}
+	/** update pointer position **/
+	weston_pointer_move(pointer, event);
 
-void grab_bind_client_t::button_motion(xcb_motion_notify_event_t const * e) {
-
+	/** current global position **/
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
 
 	/* do not start drag&drop for small move */
-	if (not start_position.is_inside(e->root_x, e->root_y) and pn0 == nullptr) {
+	if (not start_position.is_inside(x, y) and pn0 == nullptr) {
 		pn0 = make_shared<popup_notebook0_t>(ctx);
 		ctx->overlay_add(pn0);
 		pn0->show();
@@ -159,12 +176,13 @@ void grab_bind_client_t::button_motion(xcb_motion_notify_event_t const * e) {
 
 	shared_ptr<notebook_t> new_target;
 	notebook_area_e new_zone;
-	_find_target_notebook(e->root_x, e->root_y, new_target, new_zone);
+	_find_target_notebook(x, y, new_target, new_zone);
 
-	if((new_target != target_notebook.lock() or new_zone != zone) and new_zone != NOTEBOOK_AREA_NONE) {
+	if ((new_target != target_notebook.lock() or new_zone != zone)
+			and new_zone != NOTEBOOK_AREA_NONE) {
 		target_notebook = new_target;
 		zone = new_zone;
-		switch(zone) {
+		switch (zone) {
 		case NOTEBOOK_AREA_TAB:
 			pn0->move_resize(new_target->_area.tab);
 			break;
@@ -187,19 +205,26 @@ void grab_bind_client_t::button_motion(xcb_motion_notify_event_t const * e) {
 	}
 }
 
-void grab_bind_client_t::button_release(xcb_button_release_event_t const * e) {
+void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
+{
+	auto pointer = _pod.grab.pointer;
+
 	if(c.expired()) {
-		ctx->grab_stop();
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
 	auto c = this->c.lock();
 
-	if (e->detail == _button) {
+	if (pointer->button_count == 0
+			and state == WL_POINTER_BUTTON_STATE_RELEASED) {
 
 		shared_ptr<notebook_t> new_target;
 		notebook_area_e new_zone;
-		_find_target_notebook(e->root_x, e->root_y, new_target, new_zone);
+		_find_target_notebook(x, y, new_target, new_zone);
 
 		/* if the mouse is no where, keep old location */
 		if((new_target == nullptr or new_zone == NOTEBOOK_AREA_NONE) and not target_notebook.expired()) {
@@ -207,13 +232,14 @@ void grab_bind_client_t::button_release(xcb_button_release_event_t const * e) {
 			new_target = target_notebook.lock();
 		}
 
-		if(new_target == nullptr or new_zone == NOTEBOOK_AREA_NONE or start_position.is_inside(e->root_x, e->root_y)) {
+		if(new_target == nullptr or new_zone == NOTEBOOK_AREA_NONE
+				or start_position.is_inside(x, y)) {
 			if(c->is(MANAGED_FLOATING)) {
 				ctx->detach(c);
 				ctx->insert_window_in_notebook(c, nullptr, true);
 			} else {
 				c->activate();
-				ctx->set_focus(c, e->time);
+				ctx->set_focus(c, time);
 			}
 			ctx->grab_stop();
 			return;
@@ -228,61 +254,62 @@ void grab_bind_client_t::button_release(xcb_button_release_event_t const * e) {
 				ctx->detach(c);
 				ctx->insert_window_in_notebook(c, new_target, true);
 				c->activate();
-				ctx->set_focus(c, e->time);
+				ctx->set_focus(c, time);
 			}
 			break;
 		case NOTEBOOK_AREA_TOP:
 			ctx->split_top(new_target, c);
 			c->activate();
-			ctx->set_focus(c, e->time);
+			ctx->set_focus(c, time);
 			break;
 		case NOTEBOOK_AREA_LEFT:
 			ctx->split_left(new_target, c);
 			c->activate();
-			ctx->set_focus(c, e->time);
+			ctx->set_focus(c, time);
 			break;
 		case NOTEBOOK_AREA_BOTTOM:
 			ctx->split_bottom(new_target, c);
 			c->activate();
-			ctx->set_focus(c, e->time);
+			ctx->set_focus(c, time);
 			break;
 		case NOTEBOOK_AREA_RIGHT:
 			ctx->split_right(new_target, c);
 			c->activate();
-			ctx->set_focus(c, e->time);
+			ctx->set_focus(c, time);
 			break;
 		default:
 			if(c->parent() != nullptr and c->is(MANAGED_NOTEBOOK)) {
 				if(ctx->conf()._enable_shade_windows) {
 					if(c->is_visible()) {
-						ctx->set_focus(nullptr, e->time);
+						ctx->set_focus(nullptr, time);
 						dynamic_pointer_cast<notebook_t>(c->parent())->iconify_client(c);
 					} else {
 						cout << "activate = " << c << endl;
 						c->activate();
-						ctx->set_focus(c, e->time);
+						ctx->set_focus(c, time);
 					}
 				} else {
 					c->activate();
-					ctx->set_focus(c, e->time);
+					ctx->set_focus(c, time);
 				}
 			}
 		}
 
-		ctx->grab_stop();
+		weston_pointer_end_grab(pointer);
 
 	}
 }
 
 
-grab_floating_move_t::grab_floating_move_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> f, unsigned int button, int x, int y) :
+grab_floating_move_t::grab_floating_move_t(page_context_t * ctx,
+		shared_ptr<xdg_surface_toplevel_t> f, uint32_t button, int x, int y) :
 		_ctx{ctx},
 		f{f},
 		original_position{f->get_wished_position()},
 		final_position{f->get_wished_position()},
 		x_root{x},
 		y_root{y},
-		button{button},
+		_button{button},
 		popup_original_position{f->get_base_position()},
 		pfm{}
 {
@@ -301,38 +328,54 @@ grab_floating_move_t::~grab_floating_move_t() {
 		_ctx->detach(pfm);
 }
 
-void grab_floating_move_t::button_press(xcb_button_press_event_t const * e) {
-	/* ignore */
-}
 
-void grab_floating_move_t::button_motion(xcb_motion_notify_event_t const * e) {
+void grab_floating_move_t::motion(uint32_t time,
+		weston_pointer_motion_event * event)
+{
+	auto pointer = _pod.grab.pointer;
+
 	if(f.expired()) {
-		_ctx->grab_stop();
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
+	/** current global position **/
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	/** update pointer position **/
+	weston_pointer_move(pointer, event);
+
 	/* compute new window position */
 	rect new_position = original_position;
-	new_position.x += e->root_x - x_root;
-	new_position.y += e->root_y - y_root;
+	new_position.x += x - x_root;
+	new_position.y += y - y_root;
 	final_position = new_position;
 
 	rect new_popup_position = popup_original_position;
-	new_popup_position.x += e->root_x - x_root;
-	new_popup_position.y += e->root_y - y_root;
+	new_popup_position.x += x - x_root;
+	new_popup_position.y += y - y_root;
 	pfm->move_resize(new_popup_position);
 
 }
 
-void grab_floating_move_t::button_release(xcb_button_release_event_t const * e) {
-	if(f.expired()) {
-		_ctx->grab_stop();
+void grab_floating_move_t::button(uint32_t time, uint32_t button,
+		uint32_t state)
+{
+	auto pointer = _pod.grab.pointer;
+
+	if (f.expired()) {
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
 	auto f = this->f.lock();
 
-	if (e->detail == XCB_BUTTON_INDEX_1 or e->detail == XCB_BUTTON_INDEX_3 or e->detail == button) {
+	if (pointer->button_count == 0
+			and state == WL_POINTER_BUTTON_STATE_RELEASED) {
 
 		//_ctx->dpy()->set_window_cursor(f->base(), XCB_NONE);
 		//_ctx->dpy()->set_window_cursor(f->orig(), XCB_NONE);
@@ -340,43 +383,15 @@ void grab_floating_move_t::button_release(xcb_button_release_event_t const * e) 
 		f->set_floating_wished_position(final_position);
 		f->reconfigure();
 
-		_ctx->set_focus(f, e->time);
+		_ctx->set_focus(f, time);
 		_ctx->grab_stop();
 	}
 }
 
-xcb_cursor_t grab_floating_resize_t::_get_cursor() {
-//	switch(mode) {
-//	case RESIZE_TOP:
-//		return _ctx->dpy()->xc_top_side;
-//		break;
-//	case RESIZE_BOTTOM:
-//		return _ctx->dpy()->xc_bottom_side;
-//		break;
-//	case RESIZE_LEFT:
-//		return _ctx->dpy()->xc_left_side;
-//		break;
-//	case RESIZE_RIGHT:
-//		return _ctx->dpy()->xc_right_side;
-//		break;
-//	case RESIZE_TOP_LEFT:
-//		return _ctx->dpy()->xc_top_left_corner;
-//		break;
-//	case RESIZE_TOP_RIGHT:
-//		return _ctx->dpy()->xc_top_right_corner;
-//		break;
-//	case RESIZE_BOTTOM_LEFT:
-//		return _ctx->dpy()->xc_bottom_left_corner;
-//		break;
-//	case RESIZE_BOTTOM_RIGHT:
-//		return _ctx->dpy()->xc_bottom_righ_corner;
-//		break;
-//	}
 
-	return XCB_WINDOW_NONE;
-}
-
-grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> f, xcb_button_t button, int x, int y, resize_mode_e mode) :
+grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx,
+		shared_ptr<xdg_surface_toplevel_t> f, uint32_t button,
+		int x, int y, resize_mode_e mode) :
 		_ctx{ctx},
 		f{f},
 		mode{mode},
@@ -384,7 +399,7 @@ grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx, shared_ptr<
 		y_root{y},
 		original_position{f->get_wished_position()},
 		final_position{f->get_wished_position()},
-		button{button}
+		_button{_button}
 
 {
 
@@ -403,46 +418,54 @@ grab_floating_resize_t::~grab_floating_resize_t() {
 		_ctx->detach(pfm);
 }
 
-void grab_floating_resize_t::button_press(xcb_button_press_event_t const * e) {
+void grab_floating_resize_t::motion(uint32_t time,
+		weston_pointer_motion_event * event)
+{
 
-}
+	auto pointer = _pod.grab.pointer;
 
-void grab_floating_resize_t::button_motion(xcb_motion_notify_event_t const * e) {
-	if(f.expired()) {
-		_ctx->grab_stop();
+	if (f.expired()) {
+		weston_pointer_end_grab(pointer);
 		return;
 	}
+
+	/** update pointer position **/
+	weston_pointer_move(pointer, event);
+
+	/** current global position **/
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
 
 	rect size = original_position;
 
 	switch(mode) {
 	case RESIZE_TOP_LEFT:
-		size.w -= e->root_x - x_root;
-		size.h -= e->root_y - y_root;
+		size.w -= x - x_root;
+		size.h -= y - y_root;
 		break;
 	case RESIZE_TOP:
-		size.h -= e->root_y - y_root;
+		size.h -= y - y_root;
 		break;
 	case RESIZE_TOP_RIGHT:
-		size.w += e->root_x - x_root;
-		size.h -= e->root_y - y_root;
+		size.w += x - x_root;
+		size.h -= y - y_root;
 		break;
 	case RESIZE_LEFT:
-		size.w -= e->root_x - x_root;
+		size.w -= x - x_root;
 		break;
 	case RESIZE_RIGHT:
-		size.w += e->root_x - x_root;
+		size.w += x - x_root;
 		break;
 	case RESIZE_BOTTOM_LEFT:
-		size.w -= e->root_x - x_root;
-		size.h += e->root_y - y_root;
+		size.w -= x - x_root;
+		size.h += y - y_root;
 		break;
 	case RESIZE_BOTTOM:
-		size.h += e->root_y - y_root;
+		size.h += y - y_root;
 		break;
 	case RESIZE_BOTTOM_RIGHT:
-		size.w += e->root_x - x_root;
-		size.h += e->root_y - y_root;
+		size.w += x - x_root;
+		size.h += y - y_root;
 		break;
 	}
 
@@ -509,29 +532,38 @@ void grab_floating_resize_t::button_motion(xcb_motion_notify_event_t const * e) 
 
 }
 
-void grab_floating_resize_t::button_release(xcb_button_release_event_t const * e) {
-	if(f.expired()) {
-		_ctx->grab_stop();
+void grab_floating_resize_t::button(uint32_t time, uint32_t _button,
+		uint32_t state)
+{
+	auto pointer = _pod.grab.pointer;
+
+	if (f.expired()) {
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
 	auto f = this->f.lock();
 
-	if (e->detail == button) {
+	if (pointer->button_count == 0
+			and state == WL_POINTER_BUTTON_STATE_RELEASED) {
 		//_ctx->dpy()->set_window_cursor(f->base(), XCB_NONE);
 		//_ctx->dpy()->set_window_cursor(f->orig(), XCB_NONE);
 		f->set_floating_wished_position(final_position);
 		f->reconfigure();
-		_ctx->set_focus(f, e->time);
-		_ctx->grab_stop();
+		_ctx->set_focus(f, time);
+		weston_pointer_end_grab(pointer);
 	}
 }
 
-grab_fullscreen_client_t::grab_fullscreen_client_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> mw, xcb_button_t button, int x, int y) :
+grab_fullscreen_client_t::grab_fullscreen_client_t(page_context_t * ctx,
+		shared_ptr<xdg_surface_toplevel_t> mw, uint32_t button, int x, int y) :
  _ctx{ctx},
  mw{mw},
  pn0{nullptr},
- button{button}
+ _button{button}
 {
 	v = _ctx->find_mouse_viewport(x, y);
 	pn0 = make_shared<popup_notebook0_t>(ctx);
@@ -546,17 +578,22 @@ grab_fullscreen_client_t::~grab_fullscreen_client_t() {
 		_ctx->detach(pn0);
 }
 
-void grab_fullscreen_client_t::button_press(xcb_button_press_event_t const * e) {
+void grab_fullscreen_client_t::motion(uint32_t time, weston_pointer_motion_event * event) {
+	auto pointer = _pod.grab.pointer;
 
-}
-
-void grab_fullscreen_client_t::button_motion(xcb_motion_notify_event_t const * e) {
-	if(mw.expired()) {
-		_ctx->grab_stop();
+	if (mw.expired()) {
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
-	shared_ptr<viewport_t> new_viewport = _ctx->find_mouse_viewport(e->root_x, e->root_y);
+	/** update pointer position **/
+	weston_pointer_move(pointer, event);
+
+	/** current global position **/
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	shared_ptr<viewport_t> new_viewport = _ctx->find_mouse_viewport(x, y);
 
 	if(new_viewport != v.lock()) {
 		if(new_viewport != nullptr) {
@@ -567,16 +604,22 @@ void grab_fullscreen_client_t::button_motion(xcb_motion_notify_event_t const * e
 
 }
 
-void grab_fullscreen_client_t::button_release(xcb_button_release_event_t const * e) {
+void grab_fullscreen_client_t::button(uint32_t time, uint32_t _button, uint32_t state) {
+	auto pointer = _pod.grab.pointer;
+
 	if(mw.expired()) {
-		_ctx->grab_stop();
+		weston_pointer_end_grab(pointer);
 		return;
 	}
 
-	if (button == e->detail) {
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	if (pointer->button_count == 0
+			and state == WL_POINTER_BUTTON_STATE_RELEASED) {
 		/** drop the fullscreen window to the new viewport **/
 
-		auto new_viewport = _ctx->find_mouse_viewport(e->root_x, e->root_y);
+		auto new_viewport = _ctx->find_mouse_viewport(x, y);
 
 		if(new_viewport != nullptr) {
 			_ctx->fullscreen_client_to_viewport(mw.lock(), new_viewport);
@@ -597,158 +640,158 @@ void grab_alt_tab_t::_destroy_client(xdg_surface_toplevel_t * c) {
 	}
 }
 
-grab_alt_tab_t::grab_alt_tab_t(page_context_t * ctx, list<client_managed_p> managed_window, xcb_timestamp_t time) : _ctx{ctx} {
-	_client_list = weak(managed_window);
-
-	auto viewport_list = _ctx->get_current_workspace()->get_viewports();
-
-	for(auto v: viewport_list) {
-		auto pat = popup_alt_tab_t::create(_ctx, managed_window, v);
-		pat->show();
-		if(_client_list.size() > 0)
-			pat->selected(_client_list.front());
-		_ctx->overlay_add(pat);
-		_popup_list.push_back(pat);
-	}
-
-	if(_client_list.size() > 0) {
-		_selected = _client_list.front();
-	}
+//grab_alt_tab_t::grab_alt_tab_t(page_context_t * ctx, list<client_managed_p> managed_window, xcb_timestamp_t time) : _ctx{ctx} {
+//	_client_list = weak(managed_window);
 //
-//	auto ck = xcb_grab_pointer(
-//		_ctx->dpy()->xcb(),
-//		false,
-//		_ctx->dpy()->root(),
-//		XCB_EVENT_MASK_BUTTON_PRESS|XCB_EVENT_MASK_BUTTON_RELEASE|XCB_EVENT_MASK_BUTTON_MOTION|XCB_EVENT_MASK_POINTER_MOTION,
-//		XCB_GRAB_MODE_ASYNC,
-//		XCB_GRAB_MODE_ASYNC,
-//		XCB_NONE,
-//		XCB_NONE,
-//		time);
+//	auto viewport_list = _ctx->get_current_workspace()->get_viewports();
 //
-//	xcb_generic_error_t * err;
-//	auto reply = xcb_grab_pointer_reply(_ctx->dpy()->xcb(), ck, &err);
-//
-//	if(err != nullptr) {
-//		cout << "grab_alt_tab_t::grab_alt_tab_t error while trying to grab : " << xcb_event_get_error_label(err->error_code) << endl;
-//		xcb_discard_reply(_ctx->dpy()->xcb(), ck.sequence);
-//	} else {
-//		if(reply->status != XCB_GRAB_STATUS_SUCCESS) {
-//			cout << "grab_alt_tab_t::grab_alt_tab_t: grab fail" << endl;
-//		}
-//		free(reply);
+//	for(auto v: viewport_list) {
+//		auto pat = popup_alt_tab_t::create(_ctx, managed_window, v);
+//		pat->show();
+//		if(_client_list.size() > 0)
+//			pat->selected(_client_list.front());
+//		_ctx->overlay_add(pat);
+//		_popup_list.push_back(pat);
 //	}
-
-}
-
-grab_alt_tab_t::~grab_alt_tab_t() {
-
-	for(auto x: _popup_list) {
-		_ctx->detach(x);
-	}
-
-	//xcb_ungrab_pointer(_ctx->dpy()->xcb(), XCB_CURRENT_TIME);
-}
-
-void grab_alt_tab_t::button_press(xcb_button_press_event_t const * e) {
-
-	if (e->detail == XCB_BUTTON_INDEX_1) {
-		for(auto & pat: _popup_list) {
-			pat->grab_button_press(e);
-			auto _mw = pat->selected();
-			if(not _mw.expired()) {
-				auto mw = _mw.lock();
-				mw->activate();
-				_ctx->set_focus(mw, e->time);
-				break;
-			}
-		}
-
-		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
-		_ctx->grab_stop();
-
-	}
-}
-
-void grab_alt_tab_t::button_motion(xcb_motion_notify_event_t const * e) {
-	for(auto & pat: _popup_list) {
-		pat->grab_button_motion(e);
-		auto _mw = pat->selected();
-		if(not _mw.expired()) {
-			_selected = _mw;
-		}
-	}
-}
-
-void grab_alt_tab_t::key_press(xcb_key_press_event_t const * e) {
-	/* get KeyCode for Unmodified Key */
-	xcb_keysym_t k = _ctx->keymap()->get(e->detail);
-
-	if (k == 0)
-		return;
-
-	/** XCB_MOD_MASK_2 is num_lock, thus ignore his state **/
-	unsigned int state = e->state;
-	if(_ctx->keymap()->numlock_mod_mask() != 0) {
-		state &= ~(_ctx->keymap()->numlock_mod_mask());
-	}
-
-	if (k == XK_Tab and (state == XCB_MOD_MASK_1)) {
-		if(_selected.expired()) {
-			if(_client_list.size() > 0) {
-				_selected = _client_list.front();
-				for(auto & pat: _popup_list) {
-					pat->selected(_selected);
-				}
-			}
-		} else {
-			auto c = _selected.lock();
-			_selected.reset();
-			auto xc = std::find_if(_client_list.begin(), _client_list.end(),
-				[c](client_managed_w & x) -> bool { return c == x.lock(); });
-
-			if(xc != _client_list.end())
-				++xc;
-			if(xc != _client_list.end()) {
-				_selected = (*xc);
-			}
-
-			for(auto & pat: _popup_list) {
-				pat->selected(_selected);
-			}
-		}
-	}
-}
-
-void grab_alt_tab_t::key_release(xcb_key_release_event_t const * e) {
-	/* get KeyCode for Unmodified Key */
-	xcb_keysym_t k = _ctx->keymap()->get(e->detail);
-
-	if (k == 0)
-		return;
-
-	/** XCB_MOD_MASK_2 is num_lock, thus ignore his state **/
-	unsigned int state = e->state;
-	if(_ctx->keymap()->numlock_mod_mask() != 0) {
-		state &= ~(_ctx->keymap()->numlock_mod_mask());
-	}
-
-	if (XK_Escape == k) {
-		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
-		_ctx->grab_stop();
-	}
-
-	/** here we guess Mod1 is bound to Alt **/
-	if (XK_Alt_L == k or XK_Alt_R == k) {
-		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
-		if(not _selected.expired()) {
-			auto mw = _selected.lock();
-			mw->activate();
-			_ctx->set_focus(mw, e->time);
-		}
-		_ctx->grab_stop();
-	}
-
-}
+//
+//	if(_client_list.size() > 0) {
+//		_selected = _client_list.front();
+//	}
+////
+////	auto ck = xcb_grab_pointer(
+////		_ctx->dpy()->xcb(),
+////		false,
+////		_ctx->dpy()->root(),
+////		XCB_EVENT_MASK_BUTTON_PRESS|XCB_EVENT_MASK_BUTTON_RELEASE|XCB_EVENT_MASK_BUTTON_MOTION|XCB_EVENT_MASK_POINTER_MOTION,
+////		XCB_GRAB_MODE_ASYNC,
+////		XCB_GRAB_MODE_ASYNC,
+////		XCB_NONE,
+////		XCB_NONE,
+////		time);
+////
+////	xcb_generic_error_t * err;
+////	auto reply = xcb_grab_pointer_reply(_ctx->dpy()->xcb(), ck, &err);
+////
+////	if(err != nullptr) {
+////		cout << "grab_alt_tab_t::grab_alt_tab_t error while trying to grab : " << xcb_event_get_error_label(err->error_code) << endl;
+////		xcb_discard_reply(_ctx->dpy()->xcb(), ck.sequence);
+////	} else {
+////		if(reply->status != XCB_GRAB_STATUS_SUCCESS) {
+////			cout << "grab_alt_tab_t::grab_alt_tab_t: grab fail" << endl;
+////		}
+////		free(reply);
+////	}
+//
+//}
+//
+//grab_alt_tab_t::~grab_alt_tab_t() {
+//
+//	for(auto x: _popup_list) {
+//		_ctx->detach(x);
+//	}
+//
+//	//xcb_ungrab_pointer(_ctx->dpy()->xcb(), XCB_CURRENT_TIME);
+//}
+//
+//void grab_alt_tab_t::button_press(xcb_button_press_event_t const * e) {
+//
+//	if (e->detail == XCB_BUTTON_INDEX_1) {
+//		for(auto & pat: _popup_list) {
+//			pat->grab_button_press(e);
+//			auto _mw = pat->selected();
+//			if(not _mw.expired()) {
+//				auto mw = _mw.lock();
+//				mw->activate();
+//				_ctx->set_focus(mw, e->time);
+//				break;
+//			}
+//		}
+//
+//		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
+//		_ctx->grab_stop();
+//
+//	}
+//}
+//
+//void grab_alt_tab_t::button_motion(xcb_motion_notify_event_t const * e) {
+//	for(auto & pat: _popup_list) {
+//		pat->grab_button_motion(e);
+//		auto _mw = pat->selected();
+//		if(not _mw.expired()) {
+//			_selected = _mw;
+//		}
+//	}
+//}
+//
+//void grab_alt_tab_t::key_press(xcb_key_press_event_t const * e) {
+//	/* get KeyCode for Unmodified Key */
+//	xcb_keysym_t k = _ctx->keymap()->get(e->detail);
+//
+//	if (k == 0)
+//		return;
+//
+//	/** XCB_MOD_MASK_2 is num_lock, thus ignore his state **/
+//	unsigned int state = e->state;
+//	if(_ctx->keymap()->numlock_mod_mask() != 0) {
+//		state &= ~(_ctx->keymap()->numlock_mod_mask());
+//	}
+//
+//	if (k == XK_Tab and (state == XCB_MOD_MASK_1)) {
+//		if(_selected.expired()) {
+//			if(_client_list.size() > 0) {
+//				_selected = _client_list.front();
+//				for(auto & pat: _popup_list) {
+//					pat->selected(_selected);
+//				}
+//			}
+//		} else {
+//			auto c = _selected.lock();
+//			_selected.reset();
+//			auto xc = std::find_if(_client_list.begin(), _client_list.end(),
+//				[c](client_managed_w & x) -> bool { return c == x.lock(); });
+//
+//			if(xc != _client_list.end())
+//				++xc;
+//			if(xc != _client_list.end()) {
+//				_selected = (*xc);
+//			}
+//
+//			for(auto & pat: _popup_list) {
+//				pat->selected(_selected);
+//			}
+//		}
+//	}
+//}
+//
+//void grab_alt_tab_t::key_release(xcb_key_release_event_t const * e) {
+//	/* get KeyCode for Unmodified Key */
+//	xcb_keysym_t k = _ctx->keymap()->get(e->detail);
+//
+//	if (k == 0)
+//		return;
+//
+//	/** XCB_MOD_MASK_2 is num_lock, thus ignore his state **/
+//	unsigned int state = e->state;
+//	if(_ctx->keymap()->numlock_mod_mask() != 0) {
+//		state &= ~(_ctx->keymap()->numlock_mod_mask());
+//	}
+//
+//	if (XK_Escape == k) {
+//		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
+//		_ctx->grab_stop();
+//	}
+//
+//	/** here we guess Mod1 is bound to Alt **/
+//	if (XK_Alt_L == k or XK_Alt_R == k) {
+//		//xcb_ungrab_keyboard(_ctx->dpy()->xcb(), e->time);
+//		if(not _selected.expired()) {
+//			auto mw = _selected.lock();
+//			mw->activate();
+//			_ctx->set_focus(mw, e->time);
+//		}
+//		_ctx->grab_stop();
+//	}
+//
+//}
 
 }

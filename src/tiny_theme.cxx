@@ -7,8 +7,6 @@
  *
  */
 
-#include <cairo/cairo-xcb.h>
-
 #include "config.hxx"
 #include "renderable_solid.hxx"
 #include "renderable_pixmap.hxx"

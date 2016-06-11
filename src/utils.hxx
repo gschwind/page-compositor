@@ -10,12 +10,6 @@
 #ifndef UTILS_HXX_
 #define UTILS_HXX_
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/extensions/shape.h>
-
-#include <xcb/xcb_util.h>
-
 #include <cairo/cairo.h>
 
 #include <algorithm>
@@ -28,7 +22,6 @@
 
 #include "color.hxx"
 #include "box.hxx"
-#include "x11_func_name.hxx"
 #include "exception.hxx"
 
 namespace page {
@@ -811,75 +804,83 @@ enum corner_mask_e : uint8_t {
 void cairo_rectangle_arc_corner(cairo_t * cr, double x, double y, double w, double h, double radius, uint8_t corner_mask);
 void cairo_rectangle_arc_corner(cairo_t * cr, rect const & position, double radius, uint8_t corner_mask);
 
-inline
-std::string focus_in_to_string(xcb_focus_in_event_t const * e) {
-	std::ostringstream oss;
+//inline
+//std::string focus_in_to_string(xcb_focus_in_event_t const * e) {
+//	std::ostringstream oss;
+//
+//	oss << "Focus ";
+//
+//	if (e->response_type == XCB_FOCUS_IN) {
+//		oss << "in";
+//	} else if (e->response_type == XCB_FOCUS_OUT) {
+//		oss << "out";
+//	} else {
+//		oss << "invalid";
+//		return oss.str();
+//	}
+//
+//	oss << " 0x" << format("08x", e->event) << " ";
+//
+//	switch (e->mode) {
+//	case XCB_NOTIFY_MODE_GRAB:
+//		oss << "mode=GRAB";
+//		break;
+//	case XCB_NOTIFY_MODE_NORMAL:
+//		oss << "mode=NORMAL";
+//		break;
+//	case XCB_NOTIFY_MODE_UNGRAB:
+//		oss << "mode=UNGRAB";
+//		break;
+//	case XCB_NOTIFY_MODE_WHILE_GRABBED:
+//		oss << "mode=WHILE_GRABBED";
+//		break;
+//	default:
+//		oss << "mode=UNKNOWN";
+//	}
+//
+//	oss << " ";
+//
+//	switch (e->detail) {
+//	case XCB_NOTIFY_DETAIL_ANCESTOR:
+//		oss << "detail=ANCESTOR";
+//		break;
+//	case XCB_NOTIFY_DETAIL_INFERIOR:
+//		oss << "detail=INFERIOR";
+//		break;
+//	case XCB_NOTIFY_DETAIL_NONE:
+//		oss << "detail=NONE";
+//		break;
+//	case XCB_NOTIFY_DETAIL_NONLINEAR:
+//		oss << "detail=NONLINEAR";
+//		break;
+//	case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
+//		oss << "detail=NONLINEAR_VIRTUAL";
+//		break;
+//	case XCB_NOTIFY_DETAIL_POINTER:
+//		oss << "detail=POINTER";
+//		break;
+//	case XCB_NOTIFY_DETAIL_POINTER_ROOT:
+//		oss << "detail=POINTER_ROOT";
+//		break;
+//	case XCB_NOTIFY_DETAIL_VIRTUAL:
+//		oss << "detail=VIRTUAL";
+//		break;
+//	default:
+//		oss << "detail=UNKNOWN";
+//		break;
+//	}
+//
+//	return oss.str();
+//}
 
-	oss << "Focus ";
+using xcb_button_press_event_t = void;
+using xcb_button_release_event_t = void;
+using xcb_motion_notify_event_t = void;
+using xcb_leave_notify_event_t = void;
+using xcb_enter_notify_event_t = void;
+using xcb_expose_event_t = void;
 
-	if (e->response_type == XCB_FOCUS_IN) {
-		oss << "in";
-	} else if (e->response_type == XCB_FOCUS_OUT) {
-		oss << "out";
-	} else {
-		oss << "invalid";
-		return oss.str();
-	}
-
-	oss << " 0x" << format("08x", e->event) << " ";
-
-	switch (e->mode) {
-	case XCB_NOTIFY_MODE_GRAB:
-		oss << "mode=GRAB";
-		break;
-	case XCB_NOTIFY_MODE_NORMAL:
-		oss << "mode=NORMAL";
-		break;
-	case XCB_NOTIFY_MODE_UNGRAB:
-		oss << "mode=UNGRAB";
-		break;
-	case XCB_NOTIFY_MODE_WHILE_GRABBED:
-		oss << "mode=WHILE_GRABBED";
-		break;
-	default:
-		oss << "mode=UNKNOWN";
-	}
-
-	oss << " ";
-
-	switch (e->detail) {
-	case XCB_NOTIFY_DETAIL_ANCESTOR:
-		oss << "detail=ANCESTOR";
-		break;
-	case XCB_NOTIFY_DETAIL_INFERIOR:
-		oss << "detail=INFERIOR";
-		break;
-	case XCB_NOTIFY_DETAIL_NONE:
-		oss << "detail=NONE";
-		break;
-	case XCB_NOTIFY_DETAIL_NONLINEAR:
-		oss << "detail=NONLINEAR";
-		break;
-	case XCB_NOTIFY_DETAIL_NONLINEAR_VIRTUAL:
-		oss << "detail=NONLINEAR_VIRTUAL";
-		break;
-	case XCB_NOTIFY_DETAIL_POINTER:
-		oss << "detail=POINTER";
-		break;
-	case XCB_NOTIFY_DETAIL_POINTER_ROOT:
-		oss << "detail=POINTER_ROOT";
-		break;
-	case XCB_NOTIFY_DETAIL_VIRTUAL:
-		oss << "detail=VIRTUAL";
-		break;
-	default:
-		oss << "detail=UNKNOWN";
-		break;
-	}
-
-	return oss.str();
-}
-
+using xcb_window_t = uint32_t;
 
 }
 

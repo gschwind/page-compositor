@@ -12,9 +12,7 @@
 #include <cmath>
 
 #include <cstdlib>
-#include <xcb/xcb.h>
 #include <cairo/cairo.h>
-#include <cairo/cairo-xcb.h>
 
 #include "region.hxx"
 #include "time.hxx"

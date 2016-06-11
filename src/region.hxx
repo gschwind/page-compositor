@@ -533,9 +533,6 @@ public:
 			clear();
 		}
 	}
-	region_t(xcb_rectangle_t const * r) : region_t(r->x, r->y, r->width, r->height) {
-
-	}
 
 	region_t(vector<int> const & l) : _data{nullptr} {
 		clear();
