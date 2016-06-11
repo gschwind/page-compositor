@@ -18,6 +18,8 @@ BUILT_SOURCES = \
 page_compositor_SOURCES = \
 	pointer-grab-handler.cxx \
 	pointer-grab-handler.hxx \
+	keyboard-grab-handler.cxx \
+	keyboard-grab-handler.hxx \
 	page.cxx \
 	page.hxx \
 	page-context.hxx \

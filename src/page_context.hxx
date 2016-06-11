@@ -15,6 +15,7 @@
 #include "theme_split.hxx"
 #include "keymap.hxx"
 #include "pointer-grab-handler.hxx"
+#include "keyboard-grab-handler.hxx"
 
 namespace page {
 
@@ -29,19 +30,6 @@ class client_proxy_t;
 class client_view_t;
 class workspace_t;
 class mainloop_t;
-
-struct keyboard_grab_handler_t {
-	keyboard_grab_handler_t();
-
-	virtual ~keyboard_grab_handler_t() { }
-
-	virtual void key(uint32_t time, uint32_t key, uint32_t state);
-	virtual void modifiers(uint32_t serial, uint32_t mods_depressed,
-			uint32_t mods_latched, uint32_t mods_locked, uint32_t group);
-	virtual void cancel(struct weston_keyboard_grab *grab);
-
-};
-
 
 
 struct page_configuration_t {
