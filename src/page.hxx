@@ -350,9 +350,9 @@ struct page_t : public page_context_t, public display_compositor_t {
 //	virtual int  create_workspace();
 //	virtual void grab_start(pointer_grab_handler_t * handler);
 //	virtual void grab_stop();
-//	virtual void detach(shared_ptr<tree_t> t);
-//	virtual void insert_window_in_notebook(shared_ptr<xdg_surface_toplevel_t> x, shared_ptr<notebook_t> n, bool prefer_activate);
-//	virtual void fullscreen_client_to_viewport(shared_ptr<xdg_surface_toplevel_t> c, shared_ptr<viewport_t> v);
+	virtual void detach(shared_ptr<tree_t> t);
+	virtual void insert_window_in_notebook(shared_ptr<xdg_surface_toplevel_t> x, shared_ptr<notebook_t> n, bool prefer_activate);
+	virtual void fullscreen_client_to_viewport(shared_ptr<xdg_surface_toplevel_t> c, shared_ptr<viewport_t> v);
 	virtual void unbind_window(shared_ptr<xdg_surface_toplevel_t> mw);
 	virtual void split_left(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c);
 	virtual void split_right(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c);

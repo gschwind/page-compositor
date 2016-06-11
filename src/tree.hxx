@@ -14,6 +14,8 @@
 #include <iostream>
 #include <map>
 
+#include <libweston-0/compositor.h>
+
 #include "utils.hxx"
 #include "renderable.hxx"
 #include "time.hxx"
@@ -118,12 +120,8 @@ public:
 
 	void broadcast_trigger_redraw();
 
-	bool broadcast_button_press(xcb_button_press_event_t const * ev);
-	bool broadcast_button_release(xcb_button_release_event_t const * ev);
-	bool broadcast_button_motion(xcb_motion_notify_event_t const * ev);
-	bool broadcast_leave(xcb_leave_notify_event_t const * ev);
-	bool broadcast_enter(xcb_enter_notify_event_t const * ev);
-	void broadcast_expose(xcb_expose_event_t const * ev);
+	bool broadcast_button(uint32_t time, uint32_t button, uint32_t state);
+	bool broadcast_motion(uint32_t time, weston_pointer_motion_event * event);
 	void broadcast_update_layout(time64_t const time);
 	void broadcast_render_finished();
 
@@ -158,15 +156,11 @@ public:
 	virtual void activate();
 	virtual void activate(shared_ptr<tree_t> t);
 
-	virtual bool button_press(xcb_button_press_event_t const * ev);
-	virtual bool button_release(xcb_button_release_event_t const * ev);
-	virtual bool button_motion(xcb_motion_notify_event_t const * ev);
-	virtual bool leave(xcb_leave_notify_event_t const * ev);
-	virtual bool enter(xcb_enter_notify_event_t const * ev);
-	virtual void expose(xcb_expose_event_t const * ev);
+	virtual bool button(uint32_t time, uint32_t button, uint32_t state);
+	virtual bool motion(uint32_t time, weston_pointer_motion_event * event);
 
-	virtual auto get_xid() const -> xcb_window_t;
-	virtual auto get_parent_xid() const -> xcb_window_t;
+	virtual auto get_xid() const -> uint32_t;
+	virtual auto get_parent_xid() const -> uint32_t;
 	virtual rect get_window_position() const;
 	virtual void queue_redraw();
 

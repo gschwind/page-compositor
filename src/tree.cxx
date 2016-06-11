@@ -188,22 +188,14 @@ void tree_t::activate(shared_ptr<tree_t> t) {
 	move_back(_children, t);
 }
 
-bool tree_t::button_press(xcb_button_press_event_t const * ev) {
+bool tree_t::button(uint32_t time, uint32_t button, uint32_t state)
+{
 	return false;
 }
-bool tree_t::button_release(xcb_button_release_event_t const * ev) {
+
+bool tree_t::motion(uint32_t time, weston_pointer_motion_event * event)
+{
 	return false;
-}
-bool tree_t::button_motion(xcb_motion_notify_event_t const * ev) {
-	return false;
-}
-bool tree_t::leave(xcb_leave_notify_event_t const * ev) {
-	return false;
-}
-bool tree_t::enter(xcb_enter_notify_event_t const * ev) {
-	return false;
-}
-void tree_t::expose(xcb_expose_event_t const * ev) {
 }
 
 void tree_t::trigger_redraw() {
@@ -212,15 +204,15 @@ void tree_t::trigger_redraw() {
 /**
  * return the root top level xid or XCB_WINDOW_NONE if not applicable.
  **/
-xcb_window_t tree_t::get_xid() const {
-	return XCB_WINDOW_NONE;
+uint32_t tree_t::get_xid() const {
+	return 0;
 }
 
-xcb_window_t tree_t::get_parent_xid() const {
+uint32_t tree_t::get_parent_xid() const {
 	if (_parent != nullptr)
 		return _parent->get_parent_xid();
 	else
-		return XCB_WINDOW_NONE;
+		return 0;
 }
 
 rect tree_t::get_window_position() const {
@@ -299,28 +291,12 @@ void tree_t::broadcast_trigger_redraw() {
 	_broadcast_deep_first(&tree_t::trigger_redraw);
 }
 
-bool tree_t::broadcast_button_press(xcb_button_press_event_t const * ev) {
-	return _broadcast_deep_first(&tree_t::button_press, ev);
+bool tree_t::broadcast_button(uint32_t time, uint32_t button, uint32_t state) {
+	return _broadcast_deep_first(&tree_t::button, time, button, state);
 }
 
-bool tree_t::broadcast_button_release(xcb_button_release_event_t const * ev) {
-	return _broadcast_deep_first(&tree_t::button_release, ev);
-}
-
-bool tree_t::broadcast_button_motion(xcb_motion_notify_event_t const * ev) {
-	return _broadcast_deep_first(&tree_t::button_motion, ev);
-}
-
-bool tree_t::broadcast_leave(xcb_leave_notify_event_t const * ev) {
-	return _broadcast_deep_first(&tree_t::leave, ev);
-}
-
-bool tree_t::broadcast_enter(xcb_enter_notify_event_t const * ev) {
-	return _broadcast_deep_first(&tree_t::enter, ev);
-}
-
-void tree_t::broadcast_expose(xcb_expose_event_t const * ev) {
-	_broadcast_deep_first(&tree_t::expose, ev);
+bool tree_t::broadcast_motion(uint32_t time, weston_pointer_motion_event * event) {
+	return _broadcast_deep_first(&tree_t::motion, time, event);
 }
 
 void tree_t::broadcast_update_layout(time64_t const time) {

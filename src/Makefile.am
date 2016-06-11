@@ -20,6 +20,8 @@ page_compositor_SOURCES = \
 	pointer-grab-handler.hxx \
 	keyboard-grab-handler.cxx \
 	keyboard-grab-handler.hxx \
+	tree.cxx \
+	tree.hxx \
 	page.cxx \
 	page.hxx \
 	page-context.hxx \
@@ -31,8 +33,6 @@ page_compositor_SOURCES = \
 	client_not_managed.hxx \
 	display-compositor.cxx \
 	display-compositor.hxx \
-	tree.cxx \
-	tree.hxx \
 	utils.cxx \
 	pixmap.cxx \
 	grab_handlers.cxx \
