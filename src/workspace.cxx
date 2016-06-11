@@ -53,32 +53,32 @@ string workspace_t::get_node_name() const {
 void workspace_t::update_layout(time64_t const time) {
 	if(not _is_visible)
 		return;
-
-	if (_switch_renderable != nullptr and time < (_switch_start_time + _switch_duration)) {
-		double ratio = (static_cast<double>(time - _switch_start_time) / static_cast<double const>(_switch_duration));
-		ratio = ratio*1.05 - 0.025;
-		ratio = min(1.0, max(0.0, ratio));
-		int new_x = _ctx->left_most_border();
-		if(_switch_direction == WORKSPACE_SWITCH_LEFT) {
-			new_x += ratio*_switch_screenshot->witdh();
-		} else {
-			new_x -= ratio*_switch_screenshot->witdh();
-		}
-		_switch_renderable->move(new_x, _ctx->top_most_border());
-	} else if (_switch_renderable != nullptr) {
-		for(auto x: get_viewports()) {
-			_ctx->add_global_damage(x->raw_area());
-		}
-
-		remove(_switch_renderable);
-		_switch_screenshot = nullptr;
-		_switch_renderable = nullptr;
-	}
+//
+//	if (_switch_renderable != nullptr and time < (_switch_start_time + _switch_duration)) {
+//		double ratio = (static_cast<double>(time - _switch_start_time) / static_cast<double const>(_switch_duration));
+//		ratio = ratio*1.05 - 0.025;
+//		ratio = min(1.0, max(0.0, ratio));
+//		int new_x = _ctx->left_most_border();
+//		if(_switch_direction == WORKSPACE_SWITCH_LEFT) {
+//			new_x += ratio*_switch_screenshot->witdh();
+//		} else {
+//			new_x -= ratio*_switch_screenshot->witdh();
+//		}
+//		_switch_renderable->move(new_x, _ctx->top_most_border());
+//	} else if (_switch_renderable != nullptr) {
+////		for(auto x: get_viewports()) {
+////			_ctx->add_global_damage(x->raw_area());
+////		}
+//
+//		remove(_switch_renderable);
+//		_switch_screenshot = nullptr;
+//		_switch_renderable = nullptr;
+//	}
 
 }
 
 void workspace_t::activate() {
-	_ctx->switch_to_desktop(id());
+	//_ctx->switch_to_desktop(id());
 }
 
 void workspace_t::activate(shared_ptr<tree_t> t) {
@@ -192,7 +192,7 @@ void workspace_t::start_switch(workspace_switch_direction_e direction) {
 	_switch_direction = direction;
 	_switch_start_time.update_to_current_time();
 	_switch_screenshot = nullptr; //TODO _ctx->cmp()->create_screenshot();
-	_switch_renderable = make_shared<renderable_pixmap_t>(_ctx, _switch_screenshot, _ctx->left_most_border(), _ctx->top_most_border());
+	//_switch_renderable = make_shared<renderable_pixmap_t>(_ctx, _switch_screenshot, _ctx->left_most_border(), _ctx->top_most_border());
 	push_back(_switch_renderable);
 	_switch_renderable->show();
 }

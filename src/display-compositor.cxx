@@ -26,6 +26,14 @@ using namespace std;
 
 display_compositor_t * dc{nullptr};
 
+display_compositor_t::display_compositor_t() {
+
+}
+
+display_compositor_t::~display_compositor_t() {
+
+}
+
 static void xdg_shell_destroy(wl_client * client, wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);

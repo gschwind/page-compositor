@@ -24,6 +24,8 @@ page_compositor_SOURCES = \
 	tree.hxx \
 	page.cxx \
 	page.hxx \
+	client.cxx \
+	client.hxx \
 	page-context.hxx \
 	client_base.cxx \
 	client_base.hxx \
@@ -41,7 +43,6 @@ page_compositor_SOURCES = \
 	viewport.cxx \
 	workspace.cxx \
 	page_root.cxx \
-	display.cxx \
 	simple2_theme.cxx \
 	tiny_theme.cxx \
 	config_handler.cxx \
@@ -57,7 +58,6 @@ page_compositor_SOURCES = \
 	split.hxx \
 	viewport.hxx \
 	grab_handlers.hxx \
-	display.hxx \
 	mainloop.hxx \
 	page.hxx \
 	utils.hxx \

@@ -21,7 +21,7 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area) :
 		_raw_aera{area},
 		_effective_area{area},
 		_is_durty{true},
-		_win{XCB_NONE},
+		//_win{XCB_NONE},
 		_back_surf{nullptr},
 		_exposed{false},
 		_subtree{nullptr}
@@ -32,14 +32,13 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area) :
 	_subtree = make_shared<notebook_t>(_ctx);
 	_subtree->set_parent(this);
 	_subtree->set_allocation(_page_area);
-	_subtree->set_around_me(this, nullptr);
 
 }
 
 viewport_t::~viewport_t() {
 	destroy_renderable();
 	//xcb_destroy_window(_ctx->dpy()->xcb(), _win);
-	_win = XCB_NONE;
+	//_win = XCB_NONE;
 }
 
 void viewport_t::replace(shared_ptr<page_component_t> src, shared_ptr<page_component_t> by) {
@@ -50,7 +49,6 @@ void viewport_t::replace(shared_ptr<page_component_t> src, shared_ptr<page_compo
 		_subtree = by;
 		_subtree->set_parent(this);
 		_subtree->set_allocation(_page_area);
-		_subtree->set_around_me(this, nullptr);
 	} else {
 		throw std::runtime_error("viewport: bad child replacement!");
 	}
@@ -250,13 +248,13 @@ region viewport_t::get_damaged() {
 	return _damaged;
 }
 
-xcb_window_t viewport_t::get_parent_xid() const {
-	return _win;
-}
-
-xcb_window_t viewport_t::get_xid() const {
-	return _win;
-}
+//xcb_window_t viewport_t::get_parent_xid() const {
+//	return _win;
+//}
+//
+//xcb_window_t viewport_t::get_xid() const {
+//	return _win;
+//}
 
 void viewport_t::paint_expose() {
 	if(not _is_visible)
@@ -277,11 +275,11 @@ rect viewport_t::get_window_position() const {
 	return _effective_area;
 }
 
-void viewport_t::expose(xcb_expose_event_t const * e) {
-	if(e->window == _win) {
-		_exposed = true;
-	}
-}
+//void viewport_t::expose(xcb_expose_event_t const * e) {
+//	if(e->window == _win) {
+//		_exposed = true;
+//	}
+//}
 
 auto viewport_t::get_visible_region() -> region {
 	return region{_effective_area};

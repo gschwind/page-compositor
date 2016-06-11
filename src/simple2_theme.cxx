@@ -1561,188 +1561,188 @@ void simple2_theme_t::update() {
 
 void simple2_theme_t::create_background_img() {
 
-	if (has_background and false) {
-
-		cairo_surface_t * tmp = cairo_image_surface_create_from_png(
-				background_file.c_str());
-
-		//xcb_get_geometry_cookie_t ck = xcb_get_geometry(_cnx->xcb(), _cnx->root());
-		xcb_get_geometry_reply_t * geometry = nullptr; //xcb_get_geometry_reply(_cnx->xcb(), ck, 0);
-
-		cairo_surface_t * image_background_s = nullptr; //cairo_image_surface_create(CAIRO_FORMAT_RGB24, geometry->width, geometry->height);
-
-		/**
-		 * WARNING: transform order and set_source_surface have huge
-		 * Consequence.
-		 **/
-
-		double src_width = cairo_image_surface_get_width(tmp);
-		double src_height = cairo_image_surface_get_height(tmp);
-
-		if (src_width > 0 and src_height > 0) {
-
-			if (scale_mode == "stretch") {
-
-				cairo_t * cr = cairo_create(image_background_s);
-
-				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
-				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
-				CHECK_CAIRO(cairo_fill(cr));
-
-				double x_ratio = geometry->width / src_width;
-				double y_ratio = geometry->height / src_height;
-				CHECK_CAIRO(cairo_scale(cr, x_ratio, y_ratio));
-				CHECK_CAIRO(cairo_set_source_surface(cr, tmp, 0, 0));
-				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, src_width, src_height));
-				CHECK_CAIRO(cairo_fill(cr));
-
-				warn(cairo_get_reference_count(cr) == 1);
-				cairo_destroy(cr);
-
-			} else if (scale_mode == "zoom") {
-
-				cairo_t * cr = cairo_create(image_background_s);
-
-				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
-				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
-				CHECK_CAIRO(cairo_fill(cr));
-
-				double x_ratio = geometry->width / (double)src_width;
-				double y_ratio = geometry->height / (double)src_height;
-
-				double x_offset;
-				double y_offset;
-
-				if (x_ratio > y_ratio) {
-
-					double yp = geometry->height / x_ratio;
-
-					x_offset = 0;
-					y_offset = (yp - src_height) / 2.0;
-
-					CHECK_CAIRO(cairo_scale(cr, x_ratio, x_ratio));
-					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
-					CHECK_CAIRO(cairo_rectangle(cr, 0, 0, src_width, yp));
-					CHECK_CAIRO(cairo_fill(cr));
-
-				} else {
-
-					double xp = geometry->width / y_ratio;
-
-					x_offset = (xp - src_width) / 2.0;
-					y_offset = 0;
-
-					CHECK_CAIRO(cairo_scale(cr, y_ratio, y_ratio));
-					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
-					CHECK_CAIRO(cairo_rectangle(cr, 0, 0, xp, src_height));
-					CHECK_CAIRO(cairo_fill(cr));
-				}
-
-				warn(cairo_get_reference_count(cr) == 1);
-				cairo_destroy(cr);
-
-			} else if (scale_mode == "center") {
-
-				cairo_t * cr = cairo_create(image_background_s);
-
-				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
-				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
-				CHECK_CAIRO(cairo_fill(cr));
-
-				double x_offset = (geometry->width - src_width) / 2.0;
-				double y_offset = (geometry->height - src_height) / 2.0;
-
-				CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
-				CHECK_CAIRO(cairo_rectangle(cr, max<double>(0.0, x_offset),
-						max<double>(0.0, y_offset),
-						min<double>(src_width, geometry->width),
-						min<double>(src_height, geometry->height)));
-				CHECK_CAIRO(cairo_fill(cr));
-
-				warn(cairo_get_reference_count(cr) == 1);
-				cairo_destroy(cr);
-
-			} else if (scale_mode == "scale" || scale_mode == "span") {
-
-				cairo_t * cr = cairo_create(image_background_s);
-
-				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
-				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
-				CHECK_CAIRO(cairo_fill(cr));
-
-				double x_ratio = geometry->width / src_width;
-				double y_ratio = geometry->height / src_height;
-
-				double x_offset, y_offset;
-
-				if (x_ratio < y_ratio) {
-
-					double yp = geometry->height / x_ratio;
-
-					x_offset = 0;
-					y_offset = (yp - src_height) / 2.0;
-
-					CHECK_CAIRO(cairo_scale(cr, x_ratio, x_ratio));
-					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
-					CHECK_CAIRO(cairo_rectangle(cr, x_offset, y_offset, src_width, src_height));
-					CHECK_CAIRO(cairo_fill(cr));
-
-				} else {
-					double xp = geometry->width / y_ratio;
-
-					y_offset = 0;
-					x_offset = (xp - src_width) / 2.0;
-
-					CHECK_CAIRO(cairo_scale(cr, y_ratio, y_ratio));
-					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
-					CHECK_CAIRO(cairo_rectangle(cr, x_offset, y_offset, src_width, src_height));
-					CHECK_CAIRO(cairo_fill(cr));
-				}
-
-				warn(cairo_get_reference_count(cr) == 1);
-				cairo_destroy(cr);
-
-			} else if (scale_mode == "tile") {
-
-				cairo_t * cr = cairo_create(image_background_s);
-				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
-				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
-				CHECK_CAIRO(cairo_fill(cr));
-
-				for (double x = 0; x < geometry->width; x += src_width) {
-					for (double y = 0; y < geometry->height; y += src_height) {
-						CHECK_CAIRO(cairo_identity_matrix(cr));
-						CHECK_CAIRO(cairo_translate(cr, x, y));
-						CHECK_CAIRO(cairo_set_source_surface(cr, tmp, 0, 0));
-						CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
-						CHECK_CAIRO(cairo_fill(cr));
-					}
-				}
-
-				warn(cairo_get_reference_count(cr) == 1);
-				cairo_destroy(cr);
-
-			}
-
-		}
-
-		warn(cairo_surface_get_reference_count(tmp) == 1);
-		cairo_surface_destroy(tmp);
-
-		/* copy background to pixmap */
-		backgroun_px = nullptr; //make_shared<pixmap_t>(_cnx, PIXMAP_RGB, geometry->width, geometry->height);
-
-		cairo_t * cr = cairo_create(backgroun_px->get_cairo_surface());
-		cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-		cairo_set_source_surface(cr, image_background_s, 0.0, 0.0);
-		cairo_paint(cr);
-		cairo_destroy(cr);
-
-		cairo_surface_destroy(image_background_s);
-
-		free(geometry);
-
-	}
+//	if (has_background and false) {
+//
+//		cairo_surface_t * tmp = cairo_image_surface_create_from_png(
+//				background_file.c_str());
+//
+//		//xcb_get_geometry_cookie_t ck = xcb_get_geometry(_cnx->xcb(), _cnx->root());
+//		void * geometry = nullptr; //xcb_get_geometry_reply(_cnx->xcb(), ck, 0);
+//
+//		cairo_surface_t * image_background_s = nullptr; //cairo_image_surface_create(CAIRO_FORMAT_RGB24, geometry->width, geometry->height);
+//
+//		/**
+//		 * WARNING: transform order and set_source_surface have huge
+//		 * Consequence.
+//		 **/
+//
+//		double src_width = cairo_image_surface_get_width(tmp);
+//		double src_height = cairo_image_surface_get_height(tmp);
+//
+//		if (src_width > 0 and src_height > 0) {
+//
+//			if (scale_mode == "stretch") {
+//
+//				cairo_t * cr = cairo_create(image_background_s);
+//
+//				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
+//				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
+//				CHECK_CAIRO(cairo_fill(cr));
+//
+//				double x_ratio = geometry->width / src_width;
+//				double y_ratio = geometry->height / src_height;
+//				CHECK_CAIRO(cairo_scale(cr, x_ratio, y_ratio));
+//				CHECK_CAIRO(cairo_set_source_surface(cr, tmp, 0, 0));
+//				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, src_width, src_height));
+//				CHECK_CAIRO(cairo_fill(cr));
+//
+//				warn(cairo_get_reference_count(cr) == 1);
+//				cairo_destroy(cr);
+//
+//			} else if (scale_mode == "zoom") {
+//
+//				cairo_t * cr = cairo_create(image_background_s);
+//
+//				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
+//				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
+//				CHECK_CAIRO(cairo_fill(cr));
+//
+//				double x_ratio = geometry->width / (double)src_width;
+//				double y_ratio = geometry->height / (double)src_height;
+//
+//				double x_offset;
+//				double y_offset;
+//
+//				if (x_ratio > y_ratio) {
+//
+//					double yp = geometry->height / x_ratio;
+//
+//					x_offset = 0;
+//					y_offset = (yp - src_height) / 2.0;
+//
+//					CHECK_CAIRO(cairo_scale(cr, x_ratio, x_ratio));
+//					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
+//					CHECK_CAIRO(cairo_rectangle(cr, 0, 0, src_width, yp));
+//					CHECK_CAIRO(cairo_fill(cr));
+//
+//				} else {
+//
+//					double xp = geometry->width / y_ratio;
+//
+//					x_offset = (xp - src_width) / 2.0;
+//					y_offset = 0;
+//
+//					CHECK_CAIRO(cairo_scale(cr, y_ratio, y_ratio));
+//					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
+//					CHECK_CAIRO(cairo_rectangle(cr, 0, 0, xp, src_height));
+//					CHECK_CAIRO(cairo_fill(cr));
+//				}
+//
+//				warn(cairo_get_reference_count(cr) == 1);
+//				cairo_destroy(cr);
+//
+//			} else if (scale_mode == "center") {
+//
+//				cairo_t * cr = cairo_create(image_background_s);
+//
+//				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
+//				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
+//				CHECK_CAIRO(cairo_fill(cr));
+//
+//				double x_offset = (geometry->width - src_width) / 2.0;
+//				double y_offset = (geometry->height - src_height) / 2.0;
+//
+//				CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
+//				CHECK_CAIRO(cairo_rectangle(cr, max<double>(0.0, x_offset),
+//						max<double>(0.0, y_offset),
+//						min<double>(src_width, geometry->width),
+//						min<double>(src_height, geometry->height)));
+//				CHECK_CAIRO(cairo_fill(cr));
+//
+//				warn(cairo_get_reference_count(cr) == 1);
+//				cairo_destroy(cr);
+//
+//			} else if (scale_mode == "scale" || scale_mode == "span") {
+//
+//				cairo_t * cr = cairo_create(image_background_s);
+//
+//				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
+//				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
+//				CHECK_CAIRO(cairo_fill(cr));
+//
+//				double x_ratio = geometry->width / src_width;
+//				double y_ratio = geometry->height / src_height;
+//
+//				double x_offset, y_offset;
+//
+//				if (x_ratio < y_ratio) {
+//
+//					double yp = geometry->height / x_ratio;
+//
+//					x_offset = 0;
+//					y_offset = (yp - src_height) / 2.0;
+//
+//					CHECK_CAIRO(cairo_scale(cr, x_ratio, x_ratio));
+//					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
+//					CHECK_CAIRO(cairo_rectangle(cr, x_offset, y_offset, src_width, src_height));
+//					CHECK_CAIRO(cairo_fill(cr));
+//
+//				} else {
+//					double xp = geometry->width / y_ratio;
+//
+//					y_offset = 0;
+//					x_offset = (xp - src_width) / 2.0;
+//
+//					CHECK_CAIRO(cairo_scale(cr, y_ratio, y_ratio));
+//					CHECK_CAIRO(cairo_set_source_surface(cr, tmp, x_offset, y_offset));
+//					CHECK_CAIRO(cairo_rectangle(cr, x_offset, y_offset, src_width, src_height));
+//					CHECK_CAIRO(cairo_fill(cr));
+//				}
+//
+//				warn(cairo_get_reference_count(cr) == 1);
+//				cairo_destroy(cr);
+//
+//			} else if (scale_mode == "tile") {
+//
+//				cairo_t * cr = cairo_create(image_background_s);
+//				CHECK_CAIRO(::cairo_set_source_rgb(cr, 0.5, 0.5, 0.5));
+//				CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
+//				CHECK_CAIRO(cairo_fill(cr));
+//
+//				for (double x = 0; x < geometry->width; x += src_width) {
+//					for (double y = 0; y < geometry->height; y += src_height) {
+//						CHECK_CAIRO(cairo_identity_matrix(cr));
+//						CHECK_CAIRO(cairo_translate(cr, x, y));
+//						CHECK_CAIRO(cairo_set_source_surface(cr, tmp, 0, 0));
+//						CHECK_CAIRO(cairo_rectangle(cr, 0, 0, geometry->width, geometry->height));
+//						CHECK_CAIRO(cairo_fill(cr));
+//					}
+//				}
+//
+//				warn(cairo_get_reference_count(cr) == 1);
+//				cairo_destroy(cr);
+//
+//			}
+//
+//		}
+//
+//		warn(cairo_surface_get_reference_count(tmp) == 1);
+//		cairo_surface_destroy(tmp);
+//
+//		/* copy background to pixmap */
+//		backgroun_px = nullptr; //make_shared<pixmap_t>(_cnx, PIXMAP_RGB, geometry->width, geometry->height);
+//
+//		cairo_t * cr = cairo_create(backgroun_px->get_cairo_surface());
+//		cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+//		cairo_set_source_surface(cr, image_background_s, 0.0, 0.0);
+//		cairo_paint(cr);
+//		cairo_destroy(cr);
+//
+//		cairo_surface_destroy(image_background_s);
+//
+//		free(geometry);
+//
+//	}
 
 }
 

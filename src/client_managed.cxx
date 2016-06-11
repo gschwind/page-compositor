@@ -309,15 +309,7 @@ void xdg_surface_toplevel_t::show() {
 	if(!_default_view) {
 		_default_view = create_view();
 		reconfigure();
-
-		auto view_below_me = find_view_bellow();
-		if(view_below_me) {
-			weston_layer_entry_insert(&view_below_me->layer_link,
-					&_default_view->layer_link);
-		} else {
-			weston_layer_entry_insert(&page::dc->default_layer.view_list,
-					&_default_view->layer_link);
-		}
+		_ctx->sync_tree_view();
 	}
 
 	for(auto x: _children) {

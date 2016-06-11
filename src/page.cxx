@@ -3483,6 +3483,13 @@ void page_t::configure_surface(shared_ptr<xdg_surface_toplevel_t> xdg_surface,
 
 }
 
+auto page_t::dpy() const -> display_compositor_t * {
+	return const_cast<page_t*>(this);
+}
+
+auto page_t::cmp() const -> display_compositor_t * {
+	return const_cast<page_t*>(this);
+}
 
 /**
  * the xdg-surface

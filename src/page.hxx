@@ -339,8 +339,8 @@ struct page_t : public page_context_t, public display_compositor_t {
 //
 	virtual auto conf() const -> page_configuration_t const &;
 	virtual auto theme() const -> theme_t const *;
-//	virtual auto dpy() const -> display_compositor_t *;
-//	virtual auto cmp() const -> display_compositor_t *;
+	virtual auto dpy() const -> display_compositor_t *;
+	virtual auto cmp() const -> display_compositor_t *;
 //	virtual void overlay_add(shared_ptr<tree_t> x);
 //	virtual void add_global_damage(region const & r);
 	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t>;

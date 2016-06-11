@@ -334,5 +334,8 @@ auto tree_t::get_damaged() -> region
 	return region{};
 }
 
+auto tree_t::get_default_view() const -> weston_view * {
+	return nullptr;
+}
 
 }

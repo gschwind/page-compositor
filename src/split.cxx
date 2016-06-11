@@ -21,8 +21,8 @@ split_t::split_t(page_context_t * ctx, split_type_e type) :
 		_ctx{ctx},
 		_type{type},
 		_ratio{0.5},
-		_has_mouse_over{false},
-		_wid{XCB_WINDOW_NONE}
+		_has_mouse_over{false}
+		//_wid{XCB_WINDOW_NONE}
 {
 	update_allocation();
 
@@ -185,11 +185,6 @@ void split_t::set_pack0(shared_ptr<page_component_t> x) {
 	_pack0 = x;
 	if (_pack0 != nullptr) {
 		_pack0->set_parent(this);
-		if(!_children.empty())
-			x->set_around_me(_children.back().get(), nullptr);
-		else
-			x->set_around_me(this, nullptr);
-
 		_children.push_back(_pack0);
 		update_allocation();
 	}
@@ -203,11 +198,6 @@ void split_t::set_pack1(shared_ptr<page_component_t> x) {
 	_pack1 = x;
 	if (_pack1 != nullptr) {
 		_pack1->set_parent(this);
-		if(!_children.empty())
-			x->set_around_me(_children.back().get(), nullptr);
-		else
-			x->set_around_me(this, nullptr);
-
 		_children.push_back(_pack1);
 		update_allocation();
 	}
@@ -273,18 +263,18 @@ rect split_t::compute_split_bar_location() const {
 void split_t::append_children(vector<shared_ptr<tree_t>> & out) const {
 	out.insert(out.end(), _children.begin(), _children.end());
 }
-
-bool split_t::button_press(xcb_button_press_event_t const * e) {
-	if (e->event == get_parent_xid()
-			and e->child == _wid
-			and e->detail == XCB_BUTTON_INDEX_1
-			and _split_bar_area.is_inside(e->event_x, e->event_y)) {
-		_ctx->grab_start(new grab_split_t { _ctx, shared_from_this() });
-		return true;
-	} else {
-		return false;
-	}
-}
+//
+//bool split_t::button_press(xcb_button_press_event_t const * e) {
+//	if (e->event == get_parent_xid()
+//			and e->child == _wid
+//			and e->detail == XCB_BUTTON_INDEX_1
+//			and _split_bar_area.is_inside(e->event_x, e->event_y)) {
+//		_ctx->grab_start(new grab_split_t { _ctx, shared_from_this() });
+//		return true;
+//	} else {
+//		return false;
+//	}
+//}
 
 shared_ptr<split_t> split_t::shared_from_this() {
 	return dynamic_pointer_cast<split_t>(tree_t::shared_from_this());
@@ -378,49 +368,49 @@ void split_t::compute_children_root_allocation(double split, rect & bpack0, rect
 	bpack1 = to_root_position(bpack1);
 }
 
-bool split_t::button_motion(xcb_motion_notify_event_t const * ev) {
-	if(ev->event != get_parent_xid()) {
-		if(_has_mouse_over) {
-			_has_mouse_over = false;
-			queue_redraw();
-		}
-		return false;
-	}
+//bool split_t::button_motion(xcb_motion_notify_event_t const * ev) {
+//	if(ev->event != get_parent_xid()) {
+//		if(_has_mouse_over) {
+//			_has_mouse_over = false;
+//			queue_redraw();
+//		}
+//		return false;
+//	}
+//
+//	if(ev->child != _wid) {
+//		if(_has_mouse_over) {
+//			_has_mouse_over = false;
+//			queue_redraw();
+//		}
+//		return false;
+//	}
+//
+//	if(_split_bar_area.is_inside(ev->event_x, ev->event_y)) {
+//		if(not _has_mouse_over) {
+//			_has_mouse_over = true;
+//			queue_redraw();
+//		}
+//	} else {
+//		if(_has_mouse_over) {
+//			_has_mouse_over = false;
+//			queue_redraw();
+//		}
+//	}
+//
+//	return false;
+//
+//}
 
-	if(ev->child != _wid) {
-		if(_has_mouse_over) {
-			_has_mouse_over = false;
-			queue_redraw();
-		}
-		return false;
-	}
 
-	if(_split_bar_area.is_inside(ev->event_x, ev->event_y)) {
-		if(not _has_mouse_over) {
-			_has_mouse_over = true;
-			queue_redraw();
-		}
-	} else {
-		if(_has_mouse_over) {
-			_has_mouse_over = false;
-			queue_redraw();
-		}
-	}
-
-	return false;
-
-}
-
-
-bool split_t::leave(xcb_leave_notify_event_t const * ev) {
-	if(ev->event == get_parent_xid()) {
-		if(_has_mouse_over) {
-			_has_mouse_over = false;
-			queue_redraw();
-		}
-	}
-	return false;
-}
+//bool split_t::leave(xcb_leave_notify_event_t const * ev) {
+//	if(ev->event == get_parent_xid()) {
+//		if(_has_mouse_over) {
+//			_has_mouse_over = false;
+//			queue_redraw();
+//		}
+//	}
+//	return false;
+//}
 
 
 }
