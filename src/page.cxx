@@ -1477,65 +1477,65 @@ void page_t::split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_top
 	split->show();
 }
 
-//void page_t::notebook_close(shared_ptr<notebook_t> nbk) {
-//	/**
-//	 * Closing notebook mean destroying the split base of this
-//	 * notebook, plus this notebook.
-//	 **/
-//
-//	assert(nbk->parent() != nullptr);
-//
-//	auto splt = dynamic_pointer_cast<split_t>(nbk->parent()->shared_from_this());
-//
-//	/* if parent is viewport then we cannot close current notebook */
-//	if(splt == nullptr)
-//		return;
-//
-//	assert(nbk == splt->get_pack0() or nbk == splt->get_pack1());
-//
-//	/* find the sibling branch of note that we want close */
-//	auto dst = dynamic_pointer_cast<page_component_t>((nbk == splt->get_pack0()) ? splt->get_pack1() : splt->get_pack0());
-//
-//	assert(dst != nullptr);
-//
-//	/* remove this split from tree  and replace it by sibling branch */
-//	detach(dst);
-//	dynamic_pointer_cast<page_component_t>(splt->parent()->shared_from_this())->replace(splt, dst);
-//
-//	/**
-//	 * if notebook that we want destroy was the default_pop, select
-//	 * a new one.
-//	 **/
-//	if (get_current_workspace()->default_pop() == nbk) {
-//		get_current_workspace()->update_default_pop();
-//		/* damage the new default pop to show the notebook mark properly */
-//	}
-//
-//	/* move all client from destroyed notebook to new default pop */
-//	auto clients = filter_class<xdg_surface_toplevel_t>(nbk->children());
-//	bool notebook_has_focus = false;
-//	for(auto i : clients) {
-//		if(i->has_focus())
-//			notebook_has_focus = true;
-//		nbk->remove(i);
-//		insert_window_in_notebook(i, nullptr, false);
-//	}
-//
-//	/**
-//	 * if a fullscreen client want revert to this notebook,
-//	 * change it to default_window_pop
-//	 **/
-//	for (auto & i : _fullscreen_client_to_viewport) {
-//		if (i.second.revert_notebook.lock() == nbk) {
-//			i.second.revert_notebook = _root->_desktop_list[_root->_current_desktop]->default_pop();
-//		}
-//	}
-//
+void page_t::notebook_close(shared_ptr<notebook_t> nbk) {
+	/**
+	 * Closing notebook mean destroying the split base of this
+	 * notebook, plus this notebook.
+	 **/
+
+	assert(nbk->parent() != nullptr);
+
+	auto splt = dynamic_pointer_cast<split_t>(nbk->parent()->shared_from_this());
+
+	/* if parent is viewport then we cannot close current notebook */
+	if(splt == nullptr)
+		return;
+
+	assert(nbk == splt->get_pack0() or nbk == splt->get_pack1());
+
+	/* find the sibling branch of note that we want close */
+	auto dst = dynamic_pointer_cast<page_component_t>((nbk == splt->get_pack0()) ? splt->get_pack1() : splt->get_pack0());
+
+	assert(dst != nullptr);
+
+	/* remove this split from tree  and replace it by sibling branch */
+	detach(dst);
+	dynamic_pointer_cast<page_component_t>(splt->parent()->shared_from_this())->replace(splt, dst);
+
+	/**
+	 * if notebook that we want destroy was the default_pop, select
+	 * a new one.
+	 **/
+	if (get_current_workspace()->default_pop() == nbk) {
+		get_current_workspace()->update_default_pop();
+		/* damage the new default pop to show the notebook mark properly */
+	}
+
+	/* move all client from destroyed notebook to new default pop */
+	auto clients = filter_class<xdg_surface_toplevel_t>(nbk->children());
+	bool notebook_has_focus = false;
+	for(auto i : clients) {
+		if(i->has_focus())
+			notebook_has_focus = true;
+		nbk->remove(i);
+		insert_window_in_notebook(i, nullptr, false);
+	}
+
+	/**
+	 * if a fullscreen client want revert to this notebook,
+	 * change it to default_window_pop
+	 **/
+	for (auto & i : _fullscreen_client_to_viewport) {
+		if (i.second.revert_notebook.lock() == nbk) {
+			i.second.revert_notebook = _root->_desktop_list[_root->_current_desktop]->default_pop();
+		}
+	}
+
 //	if(notebook_has_focus) {
 //		set_focus(nullptr, XCB_CURRENT_TIME);
 //	}
-//
-//}
+
+}
 
 ///*
 // * Compute the usable desktop area and dock allocation.
@@ -3660,6 +3660,10 @@ void page_t::sync_tree_view() {
 		weston_view_unmap(v);
 		weston_layer_entry_insert(&default_layer.view_list, &v->layer_link);
 	}
+
+}
+
+void page_t::xdg_popup_destroy(wl_client * client, wl_resource * resource) {
 
 }
 

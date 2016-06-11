@@ -105,74 +105,74 @@ public:
 	/**
 	 * the xdg-shell
 	 **/
-	virtual void xdg_shell_destroy(wl_client * client, wl_resource * resource);
+	virtual void xdg_shell_destroy(wl_client * client, wl_resource * resource) = 0;
 
 	virtual void xdg_shell_use_unstable_version(wl_client * client,
-			wl_resource * resource, int32_t version);
+			wl_resource * resource, int32_t version) = 0;
 
 	virtual void xdg_shell_get_xdg_surface(wl_client * client,
-			wl_resource * resource, uint32_t id, wl_resource * surface_resource);
+			wl_resource * resource, uint32_t id, wl_resource * surface_resource) = 0;
 
 	virtual void xdg_shell_get_xdg_popup(wl_client * client,
 			wl_resource * resource, uint32_t id, wl_resource * surface,
 			wl_resource * parent, wl_resource* seat_resource, uint32_t serial,
-			int32_t x, int32_t y);
+			int32_t x, int32_t y) = 0;
 
 	virtual void xdg_shell_pong(wl_client * client, wl_resource * resource,
-			uint32_t serial);
+			uint32_t serial) = 0;
 
 	/**
 	 * the xdg-surface
 	 **/
 
-	virtual void xdg_surface_destroy(wl_client * client, wl_resource * resource);
+	virtual void xdg_surface_destroy(wl_client * client, wl_resource * resource) = 0;
 
 	virtual void xdg_surface_set_parent(wl_client * client,
-			wl_resource * resource, wl_resource * parent_resource);
+			wl_resource * resource, wl_resource * parent_resource) = 0;
 
 	virtual void xdg_surface_set_app_id(wl_client * client,
-			wl_resource * resource, const char * app_id);
+			wl_resource * resource, const char * app_id) = 0;
 
 	virtual void xdg_surface_show_window_menu(wl_client * client,
 			wl_resource * surface_resource, wl_resource * seat_resource,
-			uint32_t serial, int32_t x, int32_t y);
+			uint32_t serial, int32_t x, int32_t y) = 0;
 
 	virtual void xdg_surface_set_title(wl_client * client, wl_resource * resource,
-			const char * title);
+			const char * title) = 0;
 
 	virtual void xdg_surface_move(wl_client * client, wl_resource * resource,
-			wl_resource* seat_resource, uint32_t serial);
+			wl_resource* seat_resource, uint32_t serial) = 0;
 
 	virtual void xdg_surface_resize(wl_client* client, wl_resource * resource,
-			wl_resource * seat_resource, uint32_t serial, uint32_t edges);
+			wl_resource * seat_resource, uint32_t serial, uint32_t edges) = 0;
 
 	virtual void xdg_surface_ack_configure(wl_client * client,
-			wl_resource * resource, uint32_t serial);
+			wl_resource * resource, uint32_t serial) = 0;
 
 	virtual void xdg_surface_set_window_geometry(wl_client * client,
 			wl_resource * resource, int32_t x, int32_t y, int32_t width,
-			int32_t height);
+			int32_t height) = 0;
 
 	virtual void xdg_surface_set_maximized(wl_client * client,
-			wl_resource * resource);
+			wl_resource * resource) = 0;
 
 	virtual void xdg_surface_unset_maximized(wl_client* client,
-			wl_resource* resource);
+			wl_resource* resource) = 0;
 
 	virtual void xdg_surface_set_fullscreen(wl_client * client,
-			wl_resource * resource, wl_resource * output_resource);
+			wl_resource * resource, wl_resource * output_resource) = 0;
 
 	virtual void xdg_surface_unset_fullscreen(wl_client * client,
-			wl_resource * resource);
+			wl_resource * resource) = 0;
 
 	virtual void xdg_surface_set_minimized(wl_client * client,
-			wl_resource * resource);
+			wl_resource * resource) = 0;
 
 	/**
 	 * xdg-popup
 	 **/
-
-	virtual void xdg_popup_destroy(wl_client * client, wl_resource * resource);
+	virtual void xdg_popup_destroy(wl_client * client,
+			wl_resource * resource) = 0;
 
 };
 

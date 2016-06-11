@@ -96,8 +96,8 @@ public:
 	//virtual void expose(xcb_expose_event_t const * ev);
 	//virtual void trigger_redraw();
 
-	virtual bool button(uint32_t time, uint32_t button, uint32_t state);
-	virtual bool motion(uint32_t time, weston_pointer_motion_event * event);
+//	virtual bool button(uint32_t time, uint32_t button, uint32_t state);
+//	virtual bool motion(uint32_t time, weston_pointer_motion_event * event);
 
 	//virtual auto get_xid() const -> xcb_window_t;
 	//virtual auto get_parent_xid() const -> xcb_window_t;

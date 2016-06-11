@@ -259,7 +259,7 @@ rect const & xdg_surface_toplevel_t::get_floating_wished_position() {
 string xdg_surface_toplevel_t::get_node_name() const {
 	string s = _get_node_name<'M'>();
 	ostringstream oss;
-	oss << s << " " << orig() << " " << title();
+	oss << s << " " << (void*)nullptr << " " << title();
 	return oss.str();
 }
 

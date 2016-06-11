@@ -198,9 +198,9 @@ public:
 	 * client base API
 	 **/
 
-	virtual bool has_window(uint32_t w) const;
-	virtual auto base() const -> uint32_t;
-	virtual auto orig() const -> uint32_t;
+//	virtual bool has_window(uint32_t w) const;
+//	virtual auto base() const -> uint32_t;
+//	virtual auto orig() const -> uint32_t;
 	virtual auto base_position() const -> rect const &;
 	virtual auto orig_position() const -> rect const &;
 	//virtual void on_property_notify(xcb_property_notify_event_t const * e);

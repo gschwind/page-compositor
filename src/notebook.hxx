@@ -215,8 +215,8 @@ public:
 	virtual void activate();
 	virtual void activate(shared_ptr<tree_t> t);
 
-	virtual bool button(uint32_t time, uint32_t button, uint32_t state);
-	virtual bool motion(uint32_t time, weston_pointer_motion_event * event);
+//	virtual bool button(uint32_t time, uint32_t button, uint32_t state);
+//	virtual bool motion(uint32_t time, weston_pointer_motion_event * event);
 //	virtual bool button_press(xcb_button_press_event_t const * ev);
 //	virtual bool button_motion(xcb_motion_notify_event_t const * ev);
 //	virtual bool leave(xcb_leave_notify_event_t const * ev);

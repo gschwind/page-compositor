@@ -421,6 +421,12 @@ struct page_t : public page_context_t, public display_compositor_t {
 	virtual void xdg_surface_set_minimized(wl_client * client,
 			wl_resource * resource) override;
 
+	/**
+	 * the xdg-popup
+	 **/
+	virtual void xdg_popup_destroy(wl_client * client, wl_resource * resource);
+
+
 };
 
 

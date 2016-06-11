@@ -114,8 +114,8 @@ public:
 	// virtual void expose(xcb_expose_event_t const * ev);
 	// virtual void trigger_redraw();
 
-	virtual auto get_xid() const -> uint32_t;
-	virtual auto get_parent_xid() const -> uint32_t;
+//	virtual auto get_xid() const -> uint32_t;
+//	virtual auto get_parent_xid() const -> uint32_t;
 	// virtual rect get_window_position() const;
 	// virtual void queue_redraw();
 
@@ -123,9 +123,9 @@ public:
 	 * client base API
 	 **/
 
-	virtual bool has_window(uint32_t w) const = 0;
-	virtual auto base() const -> uint32_t = 0;
-	virtual auto orig() const -> uint32_t = 0;
+//	virtual bool has_window(uint32_t w) const = 0;
+//	virtual auto base() const -> uint32_t = 0;
+//	virtual auto orig() const -> uint32_t = 0;
 	virtual auto base_position() const -> rect const & = 0;
 	virtual auto orig_position() const -> rect const & = 0;
 
