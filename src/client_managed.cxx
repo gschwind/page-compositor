@@ -169,7 +169,8 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_is_iconic{true},
 	_demands_attention{false},
 	_default_view{nullptr},
-	_pending{}
+	_pending{},
+	_ack_serial{0}
 {
 
 	rect pos{0,0,surface->width, surface->height};
@@ -301,6 +302,18 @@ void xdg_surface_toplevel_t::reconfigure() {
 		weston_view_set_position(_default_view, _base_position.x, _base_position.y);
 		weston_view_geometry_dirty(_default_view);
 	}
+
+	_ack_serial = weston_compositor_get_time();
+
+	wl_array array;
+	wl_array_init(&array);
+	wl_array_add(&array, sizeof(uint32_t)*2);
+	((uint32_t*)array.data)[0] = XDG_SURFACE_STATE_MAXIMIZED;
+	((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
+	xdg_surface_send_configure(_xdg_surface_resource, _base_position.w,
+			_base_position.h, &array, _ack_serial);
+	wl_array_release(&array);
+
 
 }
 
@@ -544,12 +557,17 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 	weston_log("typeInfo %p\n", es->configure_private);
 	weston_log("typeInfo %s\n", typeid(es->configure_private).name());
 
+	/* configuration is invalid */
+	if(_ack_serial != 0)
+		return;
+
 	auto ptr = shared_from_this();
 
 	if(is(MANAGED_UNDEFINED)) {
 		_ctx->manage_client(ptr);
 	} else {
 		/* TODO: update the state if necessary */
+		weston_view_schedule_repaint(_default_view);
 	}
 
 	/* once configure is finished apply pending states */
@@ -690,9 +708,9 @@ void xdg_surface_toplevel_t::xdg_surface_ack_configure(wl_client *client,
 		wl_resource * resource,
 		uint32_t serial)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
 
-	//weston_layer_entry_insert(&cmp->default_layer.view_list, &xdg_surface->view->layer_link);
+	if(serial == _ack_serial)
+		_ack_serial = 0;
 
 }
 

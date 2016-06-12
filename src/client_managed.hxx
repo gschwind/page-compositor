@@ -60,6 +60,9 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 
 	} _pending;
 
+	/* 0 if ack by client, otherwise the last serial sent */
+	uint32_t _ack_serial;
+
 	weston_view * _default_view;
 
 	/** hold floating position **/

@@ -2282,6 +2282,7 @@ void page_t::update_viewport_layout() {
 
 	}
 
+	_root->broadcast_update_layout(time64_t::now());
 	sync_tree_view();
 
 }
