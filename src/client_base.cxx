@@ -17,7 +17,8 @@ xdg_surface_base_t::xdg_surface_base_t(page_context_t * ctx, wl_client * client,
 	tree_t{},
 	_ctx{ctx},
 	_resource{nullptr},
-	_client{client}
+	_client{client},
+	_surface{surface}
 {
 
 }

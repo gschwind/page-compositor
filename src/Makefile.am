@@ -4,11 +4,11 @@ AM_CXXFLAGS =  \
 	-std=c++11 \
 	-rdynamic \
 	@LTO@ \
+	@WAYLAND_CFLAGS@ \
+	@WESTON_CFLAGS@ \
 	@PIXMAN_CFLAGS@ \
 	@CAIRO_CFLAGS@ \
 	@PANGO_CFLAGS@ \
-	@WAYLAND_CFLAGS@ \
-	@WESTON_CFLAGS@ \
 	@GLIB_CFLAGS@ \
 	-fno-strict-aliasing
 

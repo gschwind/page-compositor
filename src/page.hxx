@@ -49,6 +49,7 @@
 
 #include "page_event.hxx"
 
+#include "utils.hxx"
 #include "mainloop.hxx"
 #include "page_root.hxx"
 
@@ -94,6 +95,10 @@ struct page_t : public page_context_t, public display_compositor_t {
 	page_configuration_t configuration;
 	config_handler_t _conf;
 
+	list<signal_handler_t> _slots;
+
+
+	list<weston_output *> _outputs;
 
 	/**
 	 * Store data to allow proper revert fullscreen window to
@@ -136,8 +141,8 @@ struct page_t : public page_context_t, public display_compositor_t {
 	list<weak_ptr<xdg_surface_toplevel_t>> _net_client_list;
 	list<weak_ptr<xdg_surface_toplevel_t>> _global_focus_history;
 
-	int _left_most_border;
-	int _top_most_border;
+//	int _left_most_border;
+//	int _top_most_border;
 
 	/* do no allow copy */
 	page_t(page_t const &) = delete;
@@ -254,8 +259,8 @@ struct page_t : public page_context_t, public display_compositor_t {
 	static shared_ptr<workspace_t> find_desktop_of(shared_ptr<tree_t> n);
 //	void set_window_cursor(xcb_window_t w, xcb_cursor_t c);
 	void update_windows_stack();
-//	void update_viewport_layout();
-//	void remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v);
+	void update_viewport_layout();
+	void remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v);
 //	void onmap(xcb_window_t w);
 //	void create_managed_window(xcb_window_t w, xcb_atom_t type);
 	void manage_client(shared_ptr<xdg_surface_toplevel_t> mw);

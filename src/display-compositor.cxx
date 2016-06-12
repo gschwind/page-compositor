@@ -27,6 +27,8 @@ using namespace std;
 display_compositor_t * dc{nullptr};
 
 display_compositor_t::display_compositor_t() {
+	_dpy = nullptr;
+	ec = nullptr;
 
 }
 
@@ -178,10 +180,14 @@ static void xdg_surface_set_minimized(wl_client * client,
 }
 
 struct xdg_surface_interface display_compositor_t::xdg_surface_implementation = {
-	page::xdg_surface_destroy, page::xdg_surface_set_parent,
-	page::xdg_surface_set_title, page::xdg_surface_set_app_id,
-	page::xdg_surface_show_window_menu, page::xdg_surface_move,
-	page::xdg_surface_resize, page::xdg_surface_ack_configure,
+	page::xdg_surface_destroy,
+	page::xdg_surface_set_parent,
+	page::xdg_surface_set_title,
+	page::xdg_surface_set_app_id,
+	page::xdg_surface_show_window_menu,
+	page::xdg_surface_move,
+	page::xdg_surface_resize,
+	page::xdg_surface_ack_configure,
 	page::xdg_surface_set_window_geometry,
 	page::xdg_surface_set_maximized,
 	page::xdg_surface_unset_maximized,

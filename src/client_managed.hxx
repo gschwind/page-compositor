@@ -39,13 +39,23 @@ class xdg_surface_toplevel_t : public xdg_surface_base_t {
 
 	friend class page::page_t;
 
-	struct {
-		string title;
+	struct _state {
+		std::string title;
 		bool fullscreen;
 		bool maximize;
 		bool minimize;
 		xdg_surface_toplevel_t * transient_for;
 		rect geometry;
+
+		_state() {
+			fullscreen = false;
+			maximize = false;
+			minimize = false;
+			title = "";
+			transient_for = nullptr;
+			geometry = rect{0,0,0,0};
+		}
+
 	} _pending;
 
 	weston_view * _default_view;
@@ -112,6 +122,8 @@ public:
 	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_title_change;
 	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_focus_change;
 	signal_t<shared_ptr<xdg_surface_toplevel_t>, int32_t, int32_t> on_configure;
+
+	auto resource() const -> wl_resource *;
 
 	bool is(managed_window_type_e type);
 	auto title() const -> string const &;

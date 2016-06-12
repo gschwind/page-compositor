@@ -40,7 +40,8 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(page_context_t * ctx, wl_client *
 				_has_focus{false},
 				_is_iconic{true},
 				_demands_attention{false},
-				_default_view{nullptr}
+				_default_view{nullptr},
+				_pending{}
 {
 
 	rect pos{0,0,surface->width, surface->height};
@@ -362,7 +363,12 @@ void xdg_surface_toplevel_t::trigger_redraw() {
 
 void xdg_surface_toplevel_t::set_title(char const * title) {
 	_has_change = true;
-	_pending.title = string{title};
+	weston_log("%p title: %s\n", this, title);
+	if(title) {
+		_pending.title = title;
+	} else {
+		_pending.title = "";
+	}
 }
 
 shared_ptr<icon16> xdg_surface_toplevel_t::icon() const {
@@ -393,6 +399,8 @@ void xdg_surface_toplevel_t::_weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)
 {
 	auto ths = reinterpret_cast<xdg_surface_toplevel_t *>(es->configure_private);
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	ths->on_configure.signal(ths->shared_from_this(), sx, sy);
 
@@ -436,6 +444,10 @@ void xdg_surface_toplevel_t::set_minimized() {
 
 void xdg_surface_toplevel_t::set_window_geometry(int32_t x, int32_t y, int32_t w, int32_t h) {
 	_pending.geometry = rect(x, y, w, h);
+}
+
+auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
+	return _resource;
 }
 
 }

@@ -2,7 +2,7 @@ AC_INIT([page-compositor], [0.0.1])
 AC_CONFIG_MACRO_DIR([m4])
 
 AM_INIT_AUTOMAKE([-Wall])
-AC_CONFIG_SRCDIR([src/compositor.cxx])
+AC_CONFIG_SRCDIR([src/main.cxx])
 AC_CONFIG_HEADERS([src/config.hxx])
 
 CHECK_GNU_MAKE

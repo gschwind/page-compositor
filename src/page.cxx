@@ -128,8 +128,8 @@ page_t::page_t(int argc, char ** argv)
 	page_base_dir = _conf.get_string("default", "theme_dir");
 	_theme_engine = _conf.get_string("default", "theme_engine");
 
-	_left_most_border = std::numeric_limits<int>::max();
-	_top_most_border = std::numeric_limits<int>::max();
+//	_left_most_border = std::numeric_limits<int>::max();
+//	_top_most_border = std::numeric_limits<int>::max();
 
 	_theme = nullptr;
 
@@ -207,6 +207,8 @@ page_t::~page_t() {
 
 void page_t::run() {
 
+	page::dc = this;
+
 	/** initialize the empty desktop **/
 	_root = make_shared<page_root_t>(this);
 
@@ -236,7 +238,7 @@ void page_t::run() {
 	 * listen RRCrtcChangeNotifyMask for possible change in screen layout.
 	 **/
 	/** TODO: define a handler for input/output creation **/
-	//update_viewport_layout();
+	update_viewport_layout();
 
 
 	//update_keymap();
@@ -299,22 +301,6 @@ void page_t::run() {
 	};
 	weston_compositor_set_xkb_rule_names(ec, &names);
 	load_x11_backend(ec);
-
-
-	/** create the solid color background **/
-	auto background = weston_surface_create(ec);
-	weston_surface_set_color(background, 0.5, 0.5, 0.5, 1.0);
-    weston_surface_set_size(background, 800, 600);
-    pixman_region32_fini(&background->opaque);
-    pixman_region32_init_rect(&background->opaque, 0, 0, 800, 600);
-    weston_surface_damage(background);
-    //pixman_region32_fini(&s->input);
-    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
-
-    auto bview = weston_view_create(background);
-	weston_view_set_position(bview, 0, 0);
-	background->timeline.force_refresh = 1;
-	//weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
 	weston_compositor_wake(ec);
     wl_display_run(_dpy);
@@ -2179,27 +2165,30 @@ void page_t::update_windows_stack() {
  * rule is that the first output get the area first, the last one is cut in
  * sub-rectangle that do not overlap previous allocated area.
  **/
-//void page_t::update_viewport_layout() {
+void page_t::update_viewport_layout() {
 
 	/* TODO: based on output list */
-
+//
 //	_left_most_border = std::numeric_limits<int>::max();
 //	_top_most_border = std::numeric_limits<int>::max();
-//
-//	/** update root size infos **/
-//	xcb_get_geometry_cookie_t ck0 = xcb_get_geometry(_dpy->xcb(), _dpy->root());
-//	xcb_randr_get_screen_resources_cookie_t ck1 = xcb_randr_get_screen_resources(_dpy->xcb(), _dpy->root());
-//
-//	xcb_get_geometry_reply_t * geometry = xcb_get_geometry_reply(_dpy->xcb(), ck0, nullptr);
-//	xcb_randr_get_screen_resources_reply_t * randr_resources = xcb_randr_get_screen_resources_reply(_dpy->xcb(), ck1, 0);
-//
-//	if(geometry == nullptr or randr_resources == nullptr) {
-//		throw exception_t("FATAL: cannot read root window attributes");
-//	}
-//
-//	_root->_root_position = rect{geometry->x, geometry->y, geometry->width, geometry->height};
-//	set_desktop_geometry(_root->_root_position.w, _root->_root_position.h);
-//
+
+
+	/* compute the extends of all outputs */
+	rect outputs_extends{numeric_limits<int>::max(), numeric_limits<int>::max(),
+		numeric_limits<int>::min(), numeric_limits<int>::min()};
+
+	for(auto o: _outputs) {
+		outputs_extends.x = std::min(outputs_extends.x, o->x);
+		outputs_extends.y = std::min(outputs_extends.y, o->y);
+		outputs_extends.w = std::max(outputs_extends.w, o->x+o->width);
+		outputs_extends.h = std::max(outputs_extends.h, o->y+o->height);
+	}
+
+	outputs_extends.w -= outputs_extends.x;
+	outputs_extends.h -= outputs_extends.y;
+
+	_root->_root_position = outputs_extends;
+
 //	map<xcb_randr_crtc_t, xcb_randr_get_crtc_info_reply_t *> crtc_info;
 //
 //	vector<xcb_randr_get_crtc_info_cookie_t> ckx(xcb_randr_get_screen_resources_crtcs_length(randr_resources));
@@ -2224,71 +2213,63 @@ void page_t::update_windows_stack() {
 //		}
 //
 //	}
-//
-//	// compute all viewport  that does not overlap and cover the full area of
-//	// crts
-//	region already_allocated;
-//	vector<rect> viewport_allocation;
-//	for(auto crtc: crtc_info) {
-//		if(crtc.second->num_outputs <= 0)
-//			continue;
-//
-//		/* the location of crts */
-//		region location{crtc.second->x, crtc.second->y, crtc.second->width,
-//			crtc.second->height};
-//		location -= already_allocated;
-//		for(auto & b: location.rects()) {
-//			viewport_allocation.push_back(b);
-//		}
-//		already_allocated += location;
-//	}
-//
-//	for(auto d: _root->_desktop_list) {
-//		//d->set_allocation(_root->_root_position);
-//		/** get old layout to recycle old viewport, and keep unchanged outputs **/
-//		vector<shared_ptr<viewport_t>> old_layout = d->get_viewport_map();
-//		/** store the newer layout, to be able to cleanup obsolete viewports **/
-//		vector<shared_ptr<viewport_t>> new_layout;
-//		/** for each not overlaped rectangle **/
-//		for(unsigned i = 0; i < viewport_allocation.size(); ++i) {
-//			printf("%d: found viewport (%d,%d,%d,%d)\n", d->id(),
-//					viewport_allocation[i].x, viewport_allocation[i].y,
-//					viewport_allocation[i].w, viewport_allocation[i].h);
-//			shared_ptr<viewport_t> vp;
-//			if(i < old_layout.size()) {
-//				vp = old_layout[i];
-//				vp->set_raw_area(viewport_allocation[i]);
-//			} else {
-//				vp = make_shared<viewport_t>(this, viewport_allocation[i]);
-//			}
-//			compute_viewport_allocation(d, vp);
-//			new_layout.push_back(vp);
-//		}
-//
-//		/** if no layout is found fallback to on screen **/
-//		if(new_layout.size() < 1) {
-//			rect area{_root->_root_position};
-//			shared_ptr<viewport_t> vp;
-//			if(0 < old_layout.size()) {
-//				vp = old_layout[0];
-//				vp->set_raw_area(area);
-//			} else {
-//				vp = make_shared<viewport_t>(this, area);
-//			}
-//			compute_viewport_allocation(d, vp);
-//			new_layout.push_back(vp);
-//		}
-//
-//		d->set_layout(new_layout);
-//		d->update_default_pop();
-//
-//		/** clean up obsolete layout **/
-//		for (unsigned i = new_layout.size(); i < old_layout.size(); ++i) {
-//			/** destroy this viewport **/
-//			remove_viewport(d, old_layout[i]);
-//			old_layout[i] = nullptr;
-//		}
-//
+
+	/* compute all viewport  that does not overlap and cover the full area of
+	 * outputs */
+
+	/* list of future viewport locations */
+	vector<rect> viewport_allocation;
+
+	/* start with not allocated area */
+	region already_allocated;
+	for(auto crtc: _outputs) {
+		/* the location of outputs */
+		region location{crtc->x, crtc->y, crtc->width, crtc->height};
+		/* remove overlapped areas */
+		location -= already_allocated;
+		/* for remaining rectangles, allocate a viewport */
+		for(auto & b: location.rects()) {
+			viewport_allocation.push_back(b);
+		}
+		already_allocated += location;
+	}
+
+	/* for each desktop we update the list of viewports, without destroying
+	 * existing is not nessesary */
+	for(auto d: _root->_desktop_list) {
+		//d->set_allocation(_root->_root_position);
+		/** get old layout to recycle old viewport, and keep unchanged outputs **/
+		vector<shared_ptr<viewport_t>> old_layout = d->get_viewport_map();
+		/** store the newer layout, to be able to cleanup obsolete viewports **/
+		vector<shared_ptr<viewport_t>> new_layout;
+		/** for each not overlaped rectangle **/
+		for(unsigned i = 0; i < viewport_allocation.size(); ++i) {
+			printf("%d: found viewport (%d,%d,%d,%d)\n", d->id(),
+					viewport_allocation[i].x, viewport_allocation[i].y,
+					viewport_allocation[i].w, viewport_allocation[i].h);
+			shared_ptr<viewport_t> vp;
+			if(i < old_layout.size()) {
+				vp = old_layout[i];
+				vp->set_raw_area(viewport_allocation[i]);
+			} else {
+				vp = make_shared<viewport_t>(this, viewport_allocation[i]);
+			}
+			new_layout.push_back(vp);
+		}
+
+		d->set_layout(new_layout);
+		d->update_default_pop();
+
+		/** clean up obsolete layout **/
+		for (unsigned i = new_layout.size(); i < old_layout.size(); ++i) {
+			/** destroy this viewport **/
+			remove_viewport(d, old_layout[i]);
+			old_layout[i] = nullptr;
+		}
+
+		/* TODO: ensure floating client to be visible after output
+		 * reconfiguration */
+
 //		if(new_layout.size() > 0) {
 //			// update position of floating managed clients to avoid offscreen
 //			// floating window
@@ -2304,58 +2285,33 @@ void page_t::update_windows_stack() {
 //				}
 //			}
 //		}
-//
-//	}
-//
-//	for(auto i: crtc_info) {
-//		if(i.second != nullptr)
-//			free(i.second);
-//	}
-//
-//	if(geometry != nullptr) {
-//		free(geometry);
-//	}
-//
-//	if(randr_resources != nullptr) {
-//		free(randr_resources);
-//	}
-//
-//	update_desktop_visibility();
-//
-//	/* set viewport */
-//	std::vector<uint32_t> viewport(_root->_desktop_list.size()*2);
-//	std::fill_n(viewport.begin(), _root->_desktop_list.size()*2, 0);
-//	_dpy->change_property(_dpy->root(), _NET_DESKTOP_VIEWPORT,
-//			CARDINAL, 32, &viewport[0], _root->_desktop_list.size()*2);
-//
-//	/* define desktop geometry */
-//	set_desktop_geometry(_root->_root_position.w, _root->_root_position.h);
-//
-//	update_workarea();
-//	reconfigure_docks(_root->_desktop_list[_root->_current_desktop]);
 
-//}
+	}
 
-//void page_t::remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v) {
-//
-//	/* TODO: on output */
-//
-////	/* remove fullscreened clients if needed */
-////	for (auto &x : _fullscreen_client_to_viewport) {
-////		if (x.second.viewport.lock() == v) {
-////			unfullscreen(x.second.client.lock());
-////			break;
-////		}
-////	}
-////
-////	/* Transfer clients to a valid notebook */
-////	for (auto nbk : filter_class<notebook_t>(v->get_all_children())) {
-////		for (auto c : filter_class<client_managed_t>(nbk->children())) {
-////			d->default_pop()->add_client(c, false);
-////		}
-////	}
-//
-//}
+	sync_tree_view();
+
+}
+
+void page_t::remove_viewport(shared_ptr<workspace_t> d, shared_ptr<viewport_t> v) {
+
+	/* TODO: on output */
+
+	/* remove fullscreened clients if needed */
+//	for (auto &x : _fullscreen_client_to_viewport) {
+//		if (x.second.viewport.lock() == v) {
+//			unfullscreen(x.second.client.lock());
+//			break;
+//		}
+//	}
+
+	/* Transfer clients to a valid notebook */
+	for (auto nbk : filter_class<notebook_t>(v->get_all_children())) {
+		for (auto c : filter_class<xdg_surface_toplevel_t>(nbk->children())) {
+			d->default_pop()->add_client(c, false);
+		}
+	}
+
+}
 
 
 
@@ -2371,6 +2327,7 @@ void page_t::update_windows_stack() {
 //}
 
 void page_t::manage_client(shared_ptr<xdg_surface_toplevel_t> mw) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 //	if (mw->_pending.fullscreen) {
 //		/**
@@ -2407,6 +2364,8 @@ void page_t::manage_client(shared_ptr<xdg_surface_toplevel_t> mw) {
 //		mw->reconfigure();
 //		//_need_restack = true;
 //	}
+
+	mw->show();
 
 //	auto view = xdg_surface->create_view();
 //	weston_view_set_position(view, 0, 0);
@@ -3293,8 +3252,6 @@ auto page_t::conf() const -> page_configuration_t const & {
 
 using backend_init_func =
 		int (*)(struct weston_compositor *c,
-	    int *argc, char *argv[],
-	    struct weston_config *config,
 	    struct weston_backend_config *config_base);
 
 void page_t::load_x11_backend(weston_compositor* ec) {
@@ -3321,7 +3278,7 @@ void page_t::load_x11_backend(weston_compositor* ec) {
 	if (!backend_init)
 		return;
 
-	backend_init(ec, NULL, NULL, NULL, &config.base);
+	backend_init(ec, &config.base);
 
 	free(default_output.name);
 
@@ -3368,21 +3325,21 @@ void page_t::connect_all() {
 void page_t::on_output_created(weston_output * output) {
 	weston_log("compositor::output_created\n");
 
-	auto stest = weston_surface_create(ec);
-	weston_surface_set_size(stest, output->width, output->height);
-    pixman_region32_fini(&stest->opaque);
-    pixman_region32_init_rect(&stest->opaque, 0, 0, output->width,
-    		output->height);
-    weston_surface_damage(stest);
-
-    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, output->width,
-    		output->height);
-
-    auto cr = cairo_create(surf);
-    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
-    cairo_paint(cr);
-    cairo_destroy(cr);
+//	auto stest = weston_surface_create(ec);
+//	weston_surface_set_size(stest, output->width, output->height);
+//    pixman_region32_fini(&stest->opaque);
+//    pixman_region32_init_rect(&stest->opaque, 0, 0, output->width,
+//    		output->height);
+//    weston_surface_damage(stest);
+//
+//    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, output->width,
+//    		output->height);
+//
+//    auto cr = cairo_create(surf);
+//    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+//    cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
+//    cairo_paint(cr);
+//    cairo_destroy(cr);
 
 //    auto sbuffer = weston_buffer_from_memory(output->width, output->height,
 //    		cairo_image_surface_get_stride(surf), WL_SHM_FORMAT_ARGB8888, cairo_image_surface_get_data(surf));
@@ -3394,6 +3351,25 @@ void page_t::on_output_created(weston_output * output) {
 //	stest->timeline.force_refresh = 1;
 //	weston_layer_entry_insert(&default_layer.view_list, &sview->layer_link);
 //    weston_surface_commit(stest);
+
+
+	/** create the solid color background **/
+	auto background = weston_surface_create(ec);
+	weston_surface_set_color(background, 0.5, 0.5, 0.5, 1.0);
+    weston_surface_set_size(background, output->width, output->height);
+    pixman_region32_fini(&background->opaque);
+    pixman_region32_init_rect(&background->opaque, output->x, output->y, output->width, output->width);
+    weston_surface_damage(background);
+    //pixman_region32_fini(&s->input);
+    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
+
+    auto bview = weston_view_create(background);
+	weston_view_set_position(bview, 0, 0);
+	background->timeline.force_refresh = 1;
+	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
+
+	_outputs.push_back(output);
+	update_viewport_layout();
 
 }
 
@@ -3418,25 +3394,24 @@ void page_t::xdg_shell_get_xdg_surface(wl_client * client,
 	auto xdg_surface = make_shared<xdg_surface_toplevel_t>(this, client, surface, id);
 	c->xdg_shell_surfaces.push_back(xdg_surface);
 
-	resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
-	wl_resource_set_implementation(resource,
+	wl_resource_set_implementation(xdg_surface->resource(),
 			&display_compositor_t::xdg_surface_implementation,
-			this, &xdg_surface_toplevel_t::xdg_surface_delete);
+			xdg_surface.get(), &xdg_surface_toplevel_t::xdg_surface_delete);
+
+	printf("create (%p)\n", xdg_surface.get());
 
 	/* tell weston how to use this data */
 	if (weston_surface_set_role(surface, "xdg_surface",
 				    resource, XDG_SHELL_ERROR_ROLE) < 0)
 		throw "TODO";
 
-
-
 	auto s = xdg_surface->on_configure.connect(this, &page_t::configure_surface);
-
+	_slots.push_back(s);
 
 	/* the first output */
-	weston_output* output = wl_container_of(ec->output_list.next,
-		    output, link);
-	surface->output = output;
+//	weston_output* output = wl_container_of(ec->output_list.next,
+//		    output, link);
+//	surface->output = output;
 
 
 	weston_log("exit %s\n", __PRETTY_FUNCTION__);
