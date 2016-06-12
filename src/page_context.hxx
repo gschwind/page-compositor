@@ -90,6 +90,7 @@ public:
 //	virtual void make_surface_stats(int & size, int & count) = 0;
 //	virtual auto mainloop() -> mainloop_t * = 0;
 	virtual void sync_tree_view() = 0;
+	virtual void manage_client(shared_ptr<xdg_surface_toplevel_t> mw) = 0;
 
 };
 

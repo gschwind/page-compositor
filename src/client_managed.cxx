@@ -536,7 +536,11 @@ void xdg_surface_toplevel_t::_weston_configure(struct weston_surface * es,
 	weston_log("typeInfo %p\n", es->configure_private);
 	weston_log("typeInfo %s\n", typeid(es->configure_private).name());
 
-	ths->on_configure.signal(ptr, sx, sy);
+	if(ptr->is(MANAGED_UNDEFINED)) {
+		ptr->_ctx->manage_client(ptr);
+	} else {
+		/* TODO: update the state if necessary */
+	}
 
 	/* once configure is finished apply pending states */
 	ths->_title = ths->_pending.title;
