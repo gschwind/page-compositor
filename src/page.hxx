@@ -88,7 +88,7 @@ struct key_bind_cmd_t {
 	string cmd;
 };
 
-struct page_t : public page_context_t, public display_compositor_t {
+struct page_t : public page_context_t {
 	shared_ptr<page_root_t> _root;
 	weston_layer default_layer;
 	theme_t * _theme;
@@ -108,6 +108,28 @@ struct page_t : public page_context_t, public display_compositor_t {
 
 	string page_base_dir;
 	string _theme_engine;
+
+	wl_listener destroy;
+
+	/* surface signals */
+	wl_listener create_surface;
+	wl_listener activate;
+	wl_listener transform;
+
+	wl_listener kill;
+	wl_listener idle;
+	wl_listener wake;
+
+	wl_listener show_input_panel;
+	wl_listener hide_input_panel;
+	wl_listener update_input_panel;
+
+	wl_listener seat_created;
+	listener_t<weston_output> output_created;
+	wl_listener output_destroyed;
+	wl_listener output_moved;
+
+	wl_listener session;
 
 //	key_desc_t bind_page_quit;
 //	key_desc_t bind_toggle_fullscreen;
@@ -132,7 +154,7 @@ struct page_t : public page_context_t, public display_compositor_t {
 //
 //	array<key_bind_cmd_t, 10> bind_cmd;
 
-	list<shared_ptr<client_t>> clients;
+	list<shared_ptr<client_shell_t>> clients;
 
 	//xcb_timestamp_t _last_focus_time;
 	//xcb_timestamp_t _last_button_press;
@@ -335,6 +357,8 @@ struct page_t : public page_context_t, public display_compositor_t {
 	void load_x11_backend(weston_compositor* ec);
 	static void bind_xdg_shell(wl_client * client, void * data,
 					      uint32_t version, uint32_t id);
+	static void print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
+			  uint32_t key, void *data);
 	void configure_surface(shared_ptr<xdg_surface_toplevel_t>,
 			int32_t sx, int32_t sy);
 
@@ -344,8 +368,6 @@ struct page_t : public page_context_t, public display_compositor_t {
 //
 	virtual auto conf() const -> page_configuration_t const &;
 	virtual auto theme() const -> theme_t const *;
-	virtual auto dpy() const -> display_compositor_t *;
-	virtual auto cmp() const -> display_compositor_t *;
 //	virtual void overlay_add(shared_ptr<tree_t> x);
 //	virtual void add_global_damage(region const & r);
 	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t>;
@@ -374,57 +396,6 @@ struct page_t : public page_context_t, public display_compositor_t {
 //	virtual void make_surface_stats(int & size, int & count);
 //	virtual auto mainloop() -> mainloop_t *;
 	virtual void sync_tree_view();
-
-	/**
-	 * the xdg-shell
-	 **/
-	virtual void xdg_shell_destroy(wl_client * client, wl_resource * resource) override;
-	virtual void xdg_shell_use_unstable_version(wl_client * client,
-			wl_resource * resource, int32_t version) override;
-	virtual void xdg_shell_get_xdg_surface(wl_client * client,
-			wl_resource * resource, uint32_t id,
-			wl_resource * surface_resource) override;
-	virtual void xdg_shell_get_xdg_popup(wl_client * client,
-			wl_resource * resource, uint32_t id, wl_resource * surface,
-			wl_resource * parent, wl_resource* seat_resource, uint32_t serial,
-			int32_t x, int32_t y) override;
-	virtual void xdg_shell_pong(wl_client * client, wl_resource * resource,
-			uint32_t serial) override;
-
-
-	/**
-	 * the xdg-surface
-	 **/
-
-	virtual void xdg_surface_destroy(wl_client * client, wl_resource * resource) override;
-	virtual void xdg_surface_set_parent(wl_client * client,
-			wl_resource * resource, wl_resource * parent_resource) override;
-	virtual void xdg_surface_set_app_id(wl_client * client,
-			wl_resource * resource, const char * app_id) override;
-	virtual void xdg_surface_show_window_menu(wl_client * client,
-			wl_resource * surface_resource, wl_resource * seat_resource,
-			uint32_t serial, int32_t x, int32_t y) override;
-	virtual void xdg_surface_set_title(wl_client * client, wl_resource * resource,
-			const char * title) override;
-	virtual void xdg_surface_move(wl_client * client, wl_resource * resource,
-			wl_resource* seat_resource, uint32_t serial) override;
-	virtual void xdg_surface_resize(wl_client* client, wl_resource * resource,
-			wl_resource * seat_resource, uint32_t serial, uint32_t edges) override;
-	virtual void xdg_surface_ack_configure(wl_client * client,
-			wl_resource * resource, uint32_t serial) override;
-	virtual void xdg_surface_set_window_geometry(wl_client * client,
-			wl_resource * resource, int32_t x, int32_t y, int32_t width,
-			int32_t height) override;
-	virtual void xdg_surface_set_maximized(wl_client * client,
-			wl_resource * resource) override;
-	virtual void xdg_surface_unset_maximized(wl_client* client,
-			wl_resource* resource) override;
-	virtual void xdg_surface_set_fullscreen(wl_client * client,
-			wl_resource * resource, wl_resource * output_resource) override;
-	virtual void xdg_surface_unset_fullscreen(wl_client * client,
-			wl_resource * resource) override;
-	virtual void xdg_surface_set_minimized(wl_client * client,
-			wl_resource * resource) override;
 
 	/**
 	 * the xdg-popup

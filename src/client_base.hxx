@@ -47,7 +47,7 @@ protected:
 	wl_client * _client;
 
 	/* the wayland resource create for this xdg_surface */
-	wl_resource * _resource;
+	wl_resource * _xdg_surface_resource;
 
 	/* weston view related to this xdg_surface */
 	list<weston_view *> _views;
@@ -71,8 +71,6 @@ public:
 
 	void print_window_attributes();
 	void print_properties();
-
-	auto cnx() const -> display_compositor_t *;
 
 //	auto wa() const -> xcb_get_window_attributes_reply_t const * ;
 //	auto geometry() const -> xcb_get_geometry_reply_t const *;
@@ -128,6 +126,8 @@ public:
 //	virtual auto orig() const -> uint32_t = 0;
 	virtual auto base_position() const -> rect const & = 0;
 	virtual auto orig_position() const -> rect const & = 0;
+
+	virtual void set_output(weston_output * output);
 
 };
 

@@ -24,7 +24,7 @@ public:
 	virtual rect allocation() const = 0;
 	virtual void replace(shared_ptr<page_component_t> src, shared_ptr<page_component_t> by) = 0;
 	virtual void get_min_allocation(int & width, int & height) const = 0;
-
+	virtual auto get_output() const -> weston_output * = 0;
 };
 
 }

@@ -47,8 +47,12 @@ class viewport_t: public page_component_t {
 
 	shared_ptr<page_component_t> _subtree;
 
-	viewport_t(viewport_t const & v);
-	viewport_t & operator= (viewport_t const &);
+	weston_output * _output;
+	weston_surface * _backbround_surface;
+	weston_view * _default_view;
+
+	viewport_t(viewport_t const & v) = delete;
+	viewport_t & operator= (viewport_t const &) = delete;
 
 	auto get_nearest_notebook() -> shared_ptr<notebook_t>;
 	void set_effective_area(rect const & area);
@@ -62,7 +66,7 @@ class viewport_t: public page_component_t {
 
 public:
 
-	viewport_t(page_context_t * ctx, rect const & area);
+	viewport_t(page_context_t * ctx, rect const & area, weston_output * output);
 	virtual ~viewport_t();
 
 	auto raw_area() const -> rect const &;
@@ -101,6 +105,8 @@ public:
 	virtual rect get_window_position() const;
 	virtual void queue_redraw();
 
+	virtual auto get_default_view() const -> weston_view *;
+
 	/**
 	 * page_component_t virtual API
 	 **/
@@ -109,6 +115,7 @@ public:
 	virtual rect allocation() const;
 	virtual void replace(shared_ptr<page_component_t> src, shared_ptr<page_component_t> by);
 	virtual void get_min_allocation(int & width, int & height) const;
+	virtual auto get_output() const -> weston_output *;
 
 };
 

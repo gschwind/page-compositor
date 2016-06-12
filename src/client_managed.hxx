@@ -12,14 +12,16 @@
 
 #include <string>
 #include <vector>
+#include <typeinfo>
 
-#include "display-compositor.hxx"
+#include "xdg-surface-interface.hxx"
 #include "icon_handler.hxx"
 #include "theme.hxx"
 
 #include "floating_event.hxx"
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_pixmap.hxx"
+
 
 namespace page {
 
@@ -35,7 +37,7 @@ enum managed_window_type_e {
 	MANAGED_DOCK
 };
 
-class xdg_surface_toplevel_t : public xdg_surface_base_t {
+class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_base_t {
 
 	friend class page::page_t;
 
@@ -102,7 +104,6 @@ class xdg_surface_toplevel_t : public xdg_surface_base_t {
 
 	void set_theme(theme_t const * theme);
 
-	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
 
 	static void xdg_surface_delete(wl_resource *resource);
 
@@ -111,6 +112,9 @@ class xdg_surface_toplevel_t : public xdg_surface_base_t {
 
 
 public:
+
+	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
+
 
 	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
 
@@ -216,6 +220,43 @@ public:
 	virtual auto base_position() const -> rect const &;
 	virtual auto orig_position() const -> rect const &;
 	//virtual void on_property_notify(xcb_property_notify_event_t const * e);
+
+	virtual auto get_default_view() const -> weston_view *;
+
+	/**
+	 * xdg-surface-interface
+	 **/
+	virtual void xdg_surface_destroy(wl_client * client, wl_resource * resource)
+			override;
+	virtual void xdg_surface_set_parent(wl_client * client,
+			wl_resource * resource, wl_resource * parent_resource) override;
+	virtual void xdg_surface_set_app_id(wl_client * client,
+			wl_resource * resource, const char * app_id) override;
+	virtual void xdg_surface_show_window_menu(wl_client * client,
+			wl_resource * surface_resource, wl_resource * seat_resource,
+			uint32_t serial, int32_t x, int32_t y) override;
+	virtual void xdg_surface_set_title(wl_client * client,
+			wl_resource * resource, const char * title) override;
+	virtual void xdg_surface_move(wl_client * client, wl_resource * resource,
+			wl_resource* seat_resource, uint32_t serial) override;
+	virtual void xdg_surface_resize(wl_client* client, wl_resource * resource,
+			wl_resource * seat_resource, uint32_t serial, uint32_t edges)
+					override;
+	virtual void xdg_surface_ack_configure(wl_client * client,
+			wl_resource * resource, uint32_t serial) override;
+	virtual void xdg_surface_set_window_geometry(wl_client * client,
+			wl_resource * resource, int32_t x, int32_t y, int32_t width,
+			int32_t height) override;
+	virtual void xdg_surface_set_maximized(wl_client * client,
+			wl_resource * resource) override;
+	virtual void xdg_surface_unset_maximized(wl_client* client,
+			wl_resource* resource) override;
+	virtual void xdg_surface_set_fullscreen(wl_client * client,
+			wl_resource * resource, wl_resource * output_resource) override;
+	virtual void xdg_surface_unset_fullscreen(wl_client * client,
+			wl_resource * resource) override;
+	virtual void xdg_surface_set_minimized(wl_client * client,
+			wl_resource * resource) override;
 
 };
 

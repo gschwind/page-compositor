@@ -16,7 +16,8 @@ namespace page {
 
 using namespace std;
 
-viewport_t::viewport_t(page_context_t * ctx, rect const & area) :
+viewport_t::viewport_t(page_context_t * ctx, rect const & area,
+		weston_output * output) :
 		_ctx{ctx},
 		_raw_aera{area},
 		_effective_area{area},
@@ -24,7 +25,8 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area) :
 		//_win{XCB_NONE},
 		_back_surf{nullptr},
 		_exposed{false},
-		_subtree{nullptr}
+		_subtree{nullptr},
+		_output{output}
 {
 	_page_area = rect{0, 0, _effective_area.w, _effective_area.h};
 	create_window();
@@ -32,6 +34,23 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area) :
 	_subtree = make_shared<notebook_t>(_ctx);
 	_subtree->set_parent(this);
 	_subtree->set_allocation(_page_area);
+
+
+	/** create the solid color background **/
+	_backbround_surface = weston_surface_create(ctx->ec);
+	weston_surface_set_color(_backbround_surface, 1.0f, 0.0f, 0.0f, 0.1f);
+    weston_surface_set_size(_backbround_surface, area.w, area.h);
+    pixman_region32_fini(&_backbround_surface->opaque);
+    pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0, area.w,
+    		area.h);
+    weston_surface_damage(_backbround_surface);
+    //pixman_region32_fini(&_backbround_surface->input);
+    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
+
+	_backbround_surface->timeline.force_refresh = 1;
+    _default_view = weston_view_create(_backbround_surface);
+	weston_view_set_position(_default_view, area.x, area.y);
+	weston_view_geometry_dirty(_default_view);
 
 }
 
@@ -142,9 +161,9 @@ void viewport_t::destroy_renderable() {
 }
 
 void viewport_t::update_renderable() {
-	if(_ctx->cmp() != nullptr) {
-		_back_surf = make_shared<pixmap_t>(PIXMAP_RGB, _page_area.w, _page_area.h);
-	}
+//	if(_ctx->cmp() != nullptr) {
+//		_back_surf = make_shared<pixmap_t>(PIXMAP_RGB, _page_area.w, _page_area.h);
+//	}
 	//_ctx->dpy()->move_resize(_win, _effective_area);
 }
 
@@ -232,10 +251,10 @@ void viewport_t::trigger_redraw() {
 	tree_t::trigger_redraw();
 	_redraw_back_buffer();
 
-	if(_exposed and _ctx->cmp() == nullptr) {
-		_exposed = false;
-		paint_expose();
-	}
+//	if(_exposed and _ctx->cmp() == nullptr) {
+//		_exposed = false;
+//		paint_expose();
+//	}
 
 }
 
@@ -317,6 +336,15 @@ void viewport_t::get_min_allocation(int & width, int & height) const {
 		_subtree->get_min_allocation(width, height);
 	}
 
+}
+
+auto viewport_t::get_output() const -> weston_output * {
+	weston_log("xxxx %p\n", _output);
+	return _output;
+}
+
+auto viewport_t::get_default_view() const -> weston_view * {
+	return _default_view;
 }
 
 }

@@ -9,12 +9,12 @@
 
 #include "leak_checker.hxx"
 
+#include <typeinfo>
+
 #include <cairo.h>
 
-#include "display-compositor.hxx"
-
-#include "renderable_floating_outer_gradien.hxx"
 #include "client_managed.hxx"
+#include "renderable_floating_outer_gradien.hxx"
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
@@ -23,25 +23,145 @@ namespace page {
 
 using namespace std;
 
+static void _xdg_surface_destroy(wl_client * client, wl_resource * resource)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_destroy(client, resource);
+}
+
+static void _xdg_surface_set_parent(wl_client * client, wl_resource * resource,
+		wl_resource * parent_resource)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_parent(client, resource, parent_resource);
+}
+
+static void _xdg_surface_set_app_id(wl_client * client, wl_resource * resource,
+		const char* app_id)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_app_id(client, resource, app_id);
+}
+
+static void _xdg_surface_show_window_menu(wl_client * client,
+		wl_resource * surface_resource, wl_resource * seat_resource,
+		uint32_t serial, int32_t x, int32_t y)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(surface_resource)->xdg_surface_show_window_menu(client, surface_resource, seat_resource,
+			serial, x, y);
+}
+
+static void _xdg_surface_set_title(wl_client * client, wl_resource * resource,
+		char const * title)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_title(client, resource, title);
+}
+
+static void _xdg_surface_move(wl_client * client, wl_resource * resource,
+		wl_resource * seat_resource, uint32_t serial)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_move(client, resource, seat_resource, serial);
+}
+
+static void _xdg_surface_resize(wl_client * client, wl_resource * resource,
+		wl_resource * seat_resource, uint32_t serial, uint32_t edges)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_resize(client, resource, seat_resource, serial, edges);
+}
+
+static void _xdg_surface_ack_configure(wl_client * client,
+		wl_resource * resource, uint32_t serial)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_ack_configure(client, resource, serial);
+}
+
+static void _xdg_surface_set_window_geometry(wl_client * client,
+		wl_resource * resource, int32_t x, int32_t y, int32_t width,
+		int32_t height)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_window_geometry(client, resource, x, y, width, height);
+}
+
+static void _xdg_surface_set_maximized(wl_client * client,
+		wl_resource * resource)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_maximized(client, resource);
+}
+
+static void _xdg_surface_unset_maximized(wl_client * client,
+		wl_resource * resource)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_unset_maximized(client, resource);
+}
+
+static void _xdg_surface_set_fullscreen(wl_client * client,
+		wl_resource * resource, wl_resource * output_resource)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_fullscreen(client, resource, output_resource);
+}
+
+static void _xdg_surface_unset_fullscreen(wl_client * client,
+		wl_resource * resource)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_unset_fullscreen(client, resource);
+}
+
+static void _xdg_surface_set_minimized(wl_client * client,
+		wl_resource * resource)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_minimized(client, resource);
+}
+
+static struct ::xdg_surface_interface _xdg_surface_implementation = {
+	page::_xdg_surface_destroy,
+	page::_xdg_surface_set_parent,
+	page::_xdg_surface_set_title,
+	page::_xdg_surface_set_app_id,
+	page::_xdg_surface_show_window_menu,
+	page::_xdg_surface_move,
+	page::_xdg_surface_resize,
+	page::_xdg_surface_ack_configure,
+	page::_xdg_surface_set_window_geometry,
+	page::_xdg_surface_set_maximized,
+	page::_xdg_surface_unset_maximized,
+	page::_xdg_surface_set_fullscreen,
+	page::_xdg_surface_unset_fullscreen,
+	page::_xdg_surface_set_minimized
+};
+
+
+
 void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
 	/* TODO */
 }
 
-xdg_surface_toplevel_t::xdg_surface_toplevel_t(page_context_t * ctx, wl_client * client,
+xdg_surface_toplevel_t::xdg_surface_toplevel_t(
+		page_context_t * ctx, wl_client * client,
 		weston_surface * surface, uint32_t id) :
-				xdg_surface_base_t{ctx, client, surface, id},
-				_floating_wished_position{},
-				_notebook_wished_position{},
-				_wished_position{},
-				_orig_position{},
-				_base_position{},
-				_surf{nullptr},
-				_icon(nullptr),
-				_has_focus{false},
-				_is_iconic{true},
-				_demands_attention{false},
-				_default_view{nullptr},
-				_pending{}
+	xdg_surface_base_t{ctx, client, surface, id},
+	_floating_wished_position{},
+	_notebook_wished_position{},
+	_wished_position{},
+	_orig_position{},
+	_base_position{},
+	_surf{nullptr},
+	_icon(nullptr),
+	_has_focus{false},
+	_is_iconic{true},
+	_demands_attention{false},
+	_default_view{nullptr},
+	_pending{}
 {
 
 	rect pos{0,0,surface->width, surface->height};
@@ -55,11 +175,22 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(page_context_t * ctx, wl_client *
 	_base_position = pos;
 	_orig_position = pos;
 
-	_resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
-	wl_resource_set_user_data(_resource, this);
+	_xdg_surface_resource = wl_resource_create(client, &::xdg_surface_interface, 1, id);
+
+	wl_resource_set_implementation(_xdg_surface_resource,
+			&_xdg_surface_implementation,
+			this, &xdg_surface_delete);
 
 	surface->configure = &xdg_surface_toplevel_t::_weston_configure;
 	surface->configure_private = this;
+
+	weston_log("bbbb %p\n", surface->configure_private);
+	weston_log("bbbX %p\n", _ctx);
+
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(surface, "xdg_surface",
+			_xdg_surface_resource, XDG_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
 
 //	/** if x == 0 then place window at center of the screen **/
 //	if (_floating_wished_position.x == 0 and not is(MANAGED_DOCK)) {
@@ -307,9 +438,10 @@ void xdg_surface_toplevel_t::hide() {
 void xdg_surface_toplevel_t::show() {
 	_is_visible = true;
 
-	if(!_default_view) {
-		_default_view = create_view();
+	if(not _default_view) {
+		_default_view = weston_view_create(_surface);
 		reconfigure();
+		weston_log("bbXX %p\n", _surface->compositor);
 		_ctx->sync_tree_view();
 	}
 
@@ -399,10 +531,12 @@ void xdg_surface_toplevel_t::_weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)
 {
 	auto ths = reinterpret_cast<xdg_surface_toplevel_t *>(es->configure_private);
-
+	auto ptr = ths->shared_from_this();
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	weston_log("typeInfo %p\n", es->configure_private);
+	weston_log("typeInfo %s\n", typeid(es->configure_private).name());
 
-	ths->on_configure.signal(ths->shared_from_this(), sx, sy);
+	ths->on_configure.signal(ptr, sx, sy);
 
 	/* once configure is finished apply pending states */
 	ths->_title = ths->_pending.title;
@@ -447,7 +581,152 @@ void xdg_surface_toplevel_t::set_window_geometry(int32_t x, int32_t y, int32_t w
 }
 
 auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
-	return _resource;
+	return _xdg_surface_resource;
+}
+
+auto xdg_surface_toplevel_t::get_default_view() const -> weston_view * {
+	return _default_view;
+}
+
+void xdg_surface_toplevel_t::xdg_surface_destroy(struct wl_client *client,
+		struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	wl_resource_destroy(resource);
+}
+
+void xdg_surface_toplevel_t::xdg_surface_set_parent(wl_client * client,
+		wl_resource * resource, wl_resource * parent_resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+
+	if(parent_resource) {
+		auto parent = reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(resource));
+		xdg_surface->set_transient_for(parent);
+	} else {
+		xdg_surface->set_transient_for(nullptr);
+	}
+
+}
+
+void xdg_surface_toplevel_t::xdg_surface_set_app_id(struct wl_client *client,
+		       struct wl_resource *resource,
+		       const char *app_id)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+
+}
+
+void xdg_surface_toplevel_t::xdg_surface_show_window_menu(wl_client *client,
+			     wl_resource *surface_resource,
+			     wl_resource *seat_resource,
+			     uint32_t serial,
+			     int32_t x,
+			     int32_t y)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(surface_resource);
+
+}
+
+void xdg_surface_toplevel_t::xdg_surface_set_title(wl_client *client,
+			wl_resource *resource, const char *title)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_title(title);
+}
+
+void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct wl_resource *resource,
+		 struct wl_resource *seat_resource, uint32_t serial)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//
+//	auto seat = reinterpret_cast<weston_seat*>(wl_resource_get_user_data(seat_resource));
+//	auto xdg_surface = xdg_surface_t::get(resource);
+//	auto pointer = weston_seat_get_pointer(seat);
+//
+//	weston_pointer_grab_move_t * grab_data =
+//			reinterpret_cast<weston_pointer_grab_move_t *>(malloc(sizeof *grab_data));
+//	/** TODO: memory error **/
+//
+//	grab_data->base.interface = &move_grab_interface;
+//	grab_data->base.pointer = nullptr;
+//
+//	/* relative client position from the cursor */
+//	grab_data->origin_x = xdg_surface->view->geometry.x - wl_fixed_to_double(pointer->grab_x);
+//	grab_data->origin_y = xdg_surface->view->geometry.y - wl_fixed_to_double(pointer->grab_y);
+//
+//	wl_list_remove(&(xdg_surface->view->layer_link.link));
+//	wl_list_insert(&(cmp->default_layer.view_list.link),
+//			&(xdg_surface->view->layer_link.link));
+//
+//	weston_pointer_start_grab(seat->pointer_state, &grab_data->base);
+
+}
+
+void xdg_surface_toplevel_t::xdg_surface_resize(struct wl_client *client, struct wl_resource *resource,
+		   struct wl_resource *seat_resource, uint32_t serial,
+		   uint32_t edges)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+void xdg_surface_toplevel_t::xdg_surface_ack_configure(wl_client *client,
+		wl_resource * resource,
+		uint32_t serial)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+
+	//weston_layer_entry_insert(&cmp->default_layer.view_list, &xdg_surface->view->layer_link);
+
+}
+
+void xdg_surface_toplevel_t::xdg_surface_set_window_geometry(struct wl_client *client,
+				struct wl_resource *resource,
+				int32_t x,
+				int32_t y,
+				int32_t width,
+				int32_t height)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_window_geometry(x, y, width, height);
+}
+
+void xdg_surface_toplevel_t::xdg_surface_set_maximized(struct wl_client *client,
+			  struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_maximized();
+}
+
+void xdg_surface_toplevel_t::xdg_surface_unset_maximized(struct wl_client *client,
+			    struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->unset_maximized();
+}
+
+void xdg_surface_toplevel_t::xdg_surface_set_fullscreen(struct wl_client *client,
+			   struct wl_resource *resource,
+			   struct wl_resource *output_resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_fullscreen();
+}
+
+void xdg_surface_toplevel_t::xdg_surface_unset_fullscreen(struct wl_client *client,
+			     struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->unset_fullscreen();
+}
+
+void xdg_surface_toplevel_t::xdg_surface_set_minimized(struct wl_client *client,
+			    struct wl_resource *resource)
+{
+	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	xdg_surface->set_minimized();
 }
 
 }

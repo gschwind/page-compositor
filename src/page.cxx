@@ -27,7 +27,9 @@
 #include <vector>
 #include <typeinfo>
 #include <memory>
+#include <utility>
 
+#include <linux/input.h>
 #include <libweston-0/compositor.h>
 #include <libweston-0/compositor-x11.h>
 #include "xdg-shell-server-protocol.h"
@@ -66,20 +68,17 @@ void page_t::bind_xdg_shell(struct wl_client * client, void * data,
 	page_t * ths = reinterpret_cast<page_t *>(data);
 
 	/* TODO */
-	//new xdg_shell_t{client, id};
 
-	auto c = make_shared<client_t>(client, id);
-
-	/**
-	 * Define the implementation of the resource and the user_data,
-	 * i.e. callbacks that must be used for this resource.
-	 **/
-	wl_resource_set_implementation(c->xdg_shell_resource,
-			&display_compositor_t::xdg_shell_implementation, ths,
-			&client_t::xdg_shell_delete);
-
+	auto c = make_shared<client_shell_t>(ths, client, id);
 	ths->clients.push_back(c);
 
+}
+
+void page_t::print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
+		  uint32_t key, void *data) {
+	page_t * ths = reinterpret_cast<page_t *>(data);
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	ths->_root->print_tree(0);
 }
 
 
@@ -207,8 +206,6 @@ page_t::~page_t() {
 
 void page_t::run() {
 
-	page::dc = this;
-
 	/** initialize the empty desktop **/
 	_root = make_shared<page_root_t>(this);
 
@@ -238,7 +235,6 @@ void page_t::run() {
 	 * listen RRCrtcChangeNotifyMask for possible change in screen layout.
 	 **/
 	/** TODO: define a handler for input/output creation **/
-	update_viewport_layout();
 
 
 	//update_keymap();
@@ -285,6 +281,8 @@ void page_t::run() {
 	 *
 	 */
 	ec = weston_compositor_create(_dpy, nullptr);
+	weston_log("weston_compositor = %p\n", ec);
+
 	weston_layer_init(&default_layer, &ec->cursor_layer.link);
 
 	wl_global_create(_dpy, &xdg_shell_interface, 1, this, &page_t::bind_xdg_shell);
@@ -300,7 +298,15 @@ void page_t::run() {
 			""					/*option*/
 	};
 	weston_compositor_set_xkb_rule_names(ec, &names);
+
+	weston_compositor_add_key_binding(ec, KEY_7,
+				          (enum weston_keyboard_modifier)((int)MODIFIER_CTRL | (int)MODIFIER_ALT),
+				          print_tree_binding, this);
+
 	load_x11_backend(ec);
+
+	update_viewport_layout();
+
 
 	weston_compositor_wake(ec);
     wl_display_run(_dpy);
@@ -2143,19 +2149,7 @@ shared_ptr<workspace_t> page_t::find_desktop_of(shared_ptr<tree_t> n) {
 }
 
 void page_t::update_windows_stack() {
-
-	list<weston_view *> lv;
-	for(auto x: _root->get_all_children()) {
-		auto v = x->get_default_view();
-		if(v)
-			lv.push_back(v);
-	}
-
-	for(auto v: lv) {
-		weston_view_unmap(v);
-		weston_layer_entry_insert(&default_layer.view_list, &v->layer_link);
-	}
-
+	sync_tree_view();
 }
 
 /**
@@ -2218,18 +2212,18 @@ void page_t::update_viewport_layout() {
 	 * outputs */
 
 	/* list of future viewport locations */
-	vector<rect> viewport_allocation;
+	vector<pair<weston_output *, rect>> viewport_allocation;
 
 	/* start with not allocated area */
 	region already_allocated;
-	for(auto crtc: _outputs) {
+	for(auto o: _outputs) {
 		/* the location of outputs */
-		region location{crtc->x, crtc->y, crtc->width, crtc->height};
+		region location{o->x, o->y, o->width, o->height};
 		/* remove overlapped areas */
 		location -= already_allocated;
 		/* for remaining rectangles, allocate a viewport */
 		for(auto & b: location.rects()) {
-			viewport_allocation.push_back(b);
+			viewport_allocation.push_back(make_pair(o, b));
 		}
 		already_allocated += location;
 	}
@@ -2245,14 +2239,14 @@ void page_t::update_viewport_layout() {
 		/** for each not overlaped rectangle **/
 		for(unsigned i = 0; i < viewport_allocation.size(); ++i) {
 			printf("%d: found viewport (%d,%d,%d,%d)\n", d->id(),
-					viewport_allocation[i].x, viewport_allocation[i].y,
-					viewport_allocation[i].w, viewport_allocation[i].h);
+					viewport_allocation[i].second.x, viewport_allocation[i].second.y,
+					viewport_allocation[i].second.w, viewport_allocation[i].second.h);
 			shared_ptr<viewport_t> vp;
 			if(i < old_layout.size()) {
 				vp = old_layout[i];
-				vp->set_raw_area(viewport_allocation[i]);
+				vp->set_raw_area(viewport_allocation[i].second);
 			} else {
-				vp = make_shared<viewport_t>(this, viewport_allocation[i]);
+				vp = make_shared<viewport_t>(this, viewport_allocation[i].second, viewport_allocation[i].first);
 			}
 			new_layout.push_back(vp);
 		}
@@ -2365,7 +2359,7 @@ void page_t::manage_client(shared_ptr<xdg_surface_toplevel_t> mw) {
 //		//_need_restack = true;
 //	}
 
-	mw->show();
+//	mw->show();
 
 //	auto view = xdg_surface->create_view();
 //	weston_view_set_position(view, 0, 0);
@@ -3354,101 +3348,103 @@ void page_t::on_output_created(weston_output * output) {
 
 
 	/** create the solid color background **/
-	auto background = weston_surface_create(ec);
-	weston_surface_set_color(background, 0.5, 0.5, 0.5, 1.0);
-    weston_surface_set_size(background, output->width, output->height);
-    pixman_region32_fini(&background->opaque);
-    pixman_region32_init_rect(&background->opaque, output->x, output->y, output->width, output->width);
-    weston_surface_damage(background);
-    //pixman_region32_fini(&s->input);
-    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
-
-    auto bview = weston_view_create(background);
-	weston_view_set_position(bview, 0, 0);
-	background->timeline.force_refresh = 1;
-	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
+//	auto background = weston_surface_create(ec);
+//	weston_surface_set_color(background, 0.5, 0.5, 0.5, 1.0);
+//    weston_surface_set_size(background, output->width, output->height);
+//    pixman_region32_fini(&background->opaque);
+//    pixman_region32_init_rect(&background->opaque, output->x, output->y, output->width, output->width);
+//    weston_surface_damage(background);
+//    //pixman_region32_fini(&s->input);
+//    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
+//
+//    auto bview = weston_view_create(background);
+//	weston_view_set_position(bview, 0, 0);
+//	background->timeline.force_refresh = 1;
+//	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
 	_outputs.push_back(output);
 	update_viewport_layout();
 
 }
-
-void page_t::xdg_shell_destroy(wl_client * client,
-		  wl_resource * resource) {
-	/* TODO */
-}
-
-void page_t::xdg_shell_use_unstable_version(wl_client * client, wl_resource * resource, int32_t version) {
-	/* TODO */
-}
-
-void page_t::xdg_shell_get_xdg_surface(wl_client * client,
-		    wl_resource * resource,
-		    uint32_t id,
-		    wl_resource * surface_resource) {
-
-	auto surface =
-		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
-	auto c = client_t::get(resource);
-
-	auto xdg_surface = make_shared<xdg_surface_toplevel_t>(this, client, surface, id);
-	c->xdg_shell_surfaces.push_back(xdg_surface);
-
-	wl_resource_set_implementation(xdg_surface->resource(),
-			&display_compositor_t::xdg_surface_implementation,
-			xdg_surface.get(), &xdg_surface_toplevel_t::xdg_surface_delete);
-
-	printf("create (%p)\n", xdg_surface.get());
-
-	/* tell weston how to use this data */
-	if (weston_surface_set_role(surface, "xdg_surface",
-				    resource, XDG_SHELL_ERROR_ROLE) < 0)
-		throw "TODO";
-
-	auto s = xdg_surface->on_configure.connect(this, &page_t::configure_surface);
-	_slots.push_back(s);
-
-	/* the first output */
-//	weston_output* output = wl_container_of(ec->output_list.next,
-//		    output, link);
-//	surface->output = output;
-
-
-	weston_log("exit %s\n", __PRETTY_FUNCTION__);
-
-}
-
-void
-page_t::xdg_shell_get_xdg_popup(wl_client * client,
-		  wl_resource * resource,
-		  uint32_t id,
-		  wl_resource * surface_resource,
-		  wl_resource * parent_resource,
-		  wl_resource * seat_resource,
-		  uint32_t serial,
-		  int32_t x, int32_t y) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-//	/* In our case nullptr */
+//
+//void page_t::xdg_shell_destroy(wl_client * client,
+//		  wl_resource * resource) {
+//	/* TODO */
+//}
+//
+//void page_t::xdg_shell_use_unstable_version(wl_client * client, wl_resource * resource, int32_t version) {
+//	/* TODO */
+//}
+//
+//void page_t::xdg_shell_get_xdg_surface(wl_client * client,
+//		    wl_resource * resource,
+//		    uint32_t id,
+//		    wl_resource * surface_resource) {
+//
 //	auto surface =
 //		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
-//	auto shell = xdg_shell_t::get(resource);
+//	auto c = client_shell_t::get(resource);
 //
-//	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
+//	auto xdg_surface = make_shared<xdg_surface_toplevel_t>(dynamic_cast<page_context_t*>(this), client, surface, id);
+//	c->xdg_shell_surfaces.push_back(xdg_surface);
 //
-//	auto xdg_popup = new xdg_popup_t(client, id, surface, x, y);
-
-}
-
-void
-page_t::xdg_shell_pong(struct wl_client *client,
-	 struct wl_resource *resource, uint32_t serial)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-}
+//	wl_resource_set_implementation(xdg_surface->resource(),
+//			&display_compositor_t::xdg_surface_implementation,
+//			xdg_surface.get(), &xdg_surface_toplevel_t::xdg_surface_delete);
+//
+//	printf("create (%p)\n", xdg_surface.get());
+//
+//	/* tell weston how to use this data */
+//	if (weston_surface_set_role(surface, "xdg_surface",
+//				    resource, XDG_SHELL_ERROR_ROLE) < 0)
+//		throw "TODO";
+//
+//	auto s = xdg_surface->on_configure.connect(this, &page_t::configure_surface);
+//	_slots.push_back(s);
+//
+//	/* the first output */
+////	weston_output* output = wl_container_of(ec->output_list.next,
+////		    output, link);
+////	surface->output = output;
+//
+//
+//	weston_log("exit %s\n", __PRETTY_FUNCTION__);
+//
+//}
+//
+//void
+//page_t::xdg_shell_get_xdg_popup(wl_client * client,
+//		  wl_resource * resource,
+//		  uint32_t id,
+//		  wl_resource * surface_resource,
+//		  wl_resource * parent_resource,
+//		  wl_resource * seat_resource,
+//		  uint32_t serial,
+//		  int32_t x, int32_t y) {
+//	weston_log("call %s\n", __PRETTY_FUNCTION__);
+////	/* In our case nullptr */
+////	auto surface =
+////		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
+////	auto shell = xdg_shell_t::get(resource);
+////
+////	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
+////
+////	auto xdg_popup = new xdg_popup_t(client, id, surface, x, y);
+//
+//}
+//
+//void
+//page_t::xdg_shell_pong(struct wl_client *client,
+//	 struct wl_resource *resource, uint32_t serial)
+//{
+//	weston_log("call %s\n", __PRETTY_FUNCTION__);
+//}
 
 
 void page_t::configure_surface(shared_ptr<xdg_surface_toplevel_t> xdg_surface,
 			int32_t sx, int32_t sy) {
+
+	weston_log("ccc %p\n", xdg_surface.get());
 
 	if(xdg_surface->is(MANAGED_UNDEFINED)) {
 		manage_client(xdg_surface);
@@ -3458,183 +3454,195 @@ void page_t::configure_surface(shared_ptr<xdg_surface_toplevel_t> xdg_surface,
 
 }
 
-auto page_t::dpy() const -> display_compositor_t * {
-	return const_cast<page_t*>(this);
-}
-
-auto page_t::cmp() const -> display_compositor_t * {
-	return const_cast<page_t*>(this);
-}
-
-/**
- * the xdg-surface
- **/
-
-void page_t::xdg_surface_destroy(struct wl_client *client,
-		struct wl_resource *resource)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	wl_resource_destroy(resource);
-}
-
-void page_t::xdg_surface_set_parent(wl_client * client,
-		wl_resource * resource, wl_resource * parent_resource)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-
-	if(parent_resource) {
-		auto parent = reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(resource));
-		xdg_surface->set_transient_for(parent);
-	} else {
-		xdg_surface->set_transient_for(nullptr);
-	}
-
-}
-
-void
-page_t::xdg_surface_set_app_id(struct wl_client *client,
-		       struct wl_resource *resource,
-		       const char *app_id)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-
-}
-
-void
-page_t::xdg_surface_show_window_menu(wl_client *client,
-			     wl_resource *surface_resource,
-			     wl_resource *seat_resource,
-			     uint32_t serial,
-			     int32_t x,
-			     int32_t y)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(surface_resource);
-
-}
-
-void
-page_t::xdg_surface_set_title(wl_client *client,
-			wl_resource *resource, const char *title)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_title(title);
-}
-
-void
-page_t::xdg_surface_move(struct wl_client *client, struct wl_resource *resource,
-		 struct wl_resource *seat_resource, uint32_t serial)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-
+///**
+// * the xdg-surface
+// **/
+//
+//void page_t::xdg_surface_destroy(struct wl_client *client,
+//		struct wl_resource *resource)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	wl_resource_destroy(resource);
+//}
+//
+//void page_t::xdg_surface_set_parent(wl_client * client,
+//		wl_resource * resource, wl_resource * parent_resource)
+//{
 //	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
 //
-//	auto seat = reinterpret_cast<weston_seat*>(wl_resource_get_user_data(seat_resource));
-//	auto xdg_surface = xdg_surface_t::get(resource);
-//	auto pointer = weston_seat_get_pointer(seat);
+//	if(parent_resource) {
+//		auto parent = reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(resource));
+//		xdg_surface->set_transient_for(parent);
+//	} else {
+//		xdg_surface->set_transient_for(nullptr);
+//	}
 //
-//	weston_pointer_grab_move_t * grab_data =
-//			reinterpret_cast<weston_pointer_grab_move_t *>(malloc(sizeof *grab_data));
-//	/** TODO: memory error **/
+//}
 //
-//	grab_data->base.interface = &move_grab_interface;
-//	grab_data->base.pointer = nullptr;
+//void
+//page_t::xdg_surface_set_app_id(struct wl_client *client,
+//		       struct wl_resource *resource,
+//		       const char *app_id)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
 //
-//	/* relative client position from the cursor */
-//	grab_data->origin_x = xdg_surface->view->geometry.x - wl_fixed_to_double(pointer->grab_x);
-//	grab_data->origin_y = xdg_surface->view->geometry.y - wl_fixed_to_double(pointer->grab_y);
+//}
 //
-//	wl_list_remove(&(xdg_surface->view->layer_link.link));
-//	wl_list_insert(&(cmp->default_layer.view_list.link),
-//			&(xdg_surface->view->layer_link.link));
+//void
+//page_t::xdg_surface_show_window_menu(wl_client *client,
+//			     wl_resource *surface_resource,
+//			     wl_resource *seat_resource,
+//			     uint32_t serial,
+//			     int32_t x,
+//			     int32_t y)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(surface_resource);
 //
-//	weston_pointer_start_grab(seat->pointer_state, &grab_data->base);
-
-}
-
-void
-page_t::xdg_surface_resize(struct wl_client *client, struct wl_resource *resource,
-		   struct wl_resource *seat_resource, uint32_t serial,
-		   uint32_t edges)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-}
-
-void page_t::xdg_surface_ack_configure(wl_client *client,
-		wl_resource * resource,
-		uint32_t serial)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-
-	//weston_layer_entry_insert(&cmp->default_layer.view_list, &xdg_surface->view->layer_link);
-
-}
-
-void
-page_t::xdg_surface_set_window_geometry(struct wl_client *client,
-				struct wl_resource *resource,
-				int32_t x,
-				int32_t y,
-				int32_t width,
-				int32_t height)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_window_geometry(x, y, width, height);
-}
-
-void
-page_t::xdg_surface_set_maximized(struct wl_client *client,
-			  struct wl_resource *resource)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_maximized();
-}
-
-void
-page_t::xdg_surface_unset_maximized(struct wl_client *client,
-			    struct wl_resource *resource)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->unset_maximized();
-}
-
-void
-page_t::xdg_surface_set_fullscreen(struct wl_client *client,
-			   struct wl_resource *resource,
-			   struct wl_resource *output_resource)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_fullscreen();
-}
-
-void
-page_t::xdg_surface_unset_fullscreen(struct wl_client *client,
-			     struct wl_resource *resource)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->unset_fullscreen();
-}
-
-void
-page_t::xdg_surface_set_minimized(struct wl_client *client,
-			    struct wl_resource *resource)
-{
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_minimized();
-}
+//}
+//
+//void
+//page_t::xdg_surface_set_title(wl_client *client,
+//			wl_resource *resource, const char *title)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	xdg_surface->set_title(title);
+//}
+//
+//void
+//page_t::xdg_surface_move(struct wl_client *client, struct wl_resource *resource,
+//		 struct wl_resource *seat_resource, uint32_t serial)
+//{
+//	weston_log("call %s\n", __PRETTY_FUNCTION__);
+//
+////	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+////
+////	auto seat = reinterpret_cast<weston_seat*>(wl_resource_get_user_data(seat_resource));
+////	auto xdg_surface = xdg_surface_t::get(resource);
+////	auto pointer = weston_seat_get_pointer(seat);
+////
+////	weston_pointer_grab_move_t * grab_data =
+////			reinterpret_cast<weston_pointer_grab_move_t *>(malloc(sizeof *grab_data));
+////	/** TODO: memory error **/
+////
+////	grab_data->base.interface = &move_grab_interface;
+////	grab_data->base.pointer = nullptr;
+////
+////	/* relative client position from the cursor */
+////	grab_data->origin_x = xdg_surface->view->geometry.x - wl_fixed_to_double(pointer->grab_x);
+////	grab_data->origin_y = xdg_surface->view->geometry.y - wl_fixed_to_double(pointer->grab_y);
+////
+////	wl_list_remove(&(xdg_surface->view->layer_link.link));
+////	wl_list_insert(&(cmp->default_layer.view_list.link),
+////			&(xdg_surface->view->layer_link.link));
+////
+////	weston_pointer_start_grab(seat->pointer_state, &grab_data->base);
+//
+//}
+//
+//void
+//page_t::xdg_surface_resize(struct wl_client *client, struct wl_resource *resource,
+//		   struct wl_resource *seat_resource, uint32_t serial,
+//		   uint32_t edges)
+//{
+//	weston_log("call %s\n", __PRETTY_FUNCTION__);
+//}
+//
+//void page_t::xdg_surface_ack_configure(wl_client *client,
+//		wl_resource * resource,
+//		uint32_t serial)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//
+//	//weston_layer_entry_insert(&cmp->default_layer.view_list, &xdg_surface->view->layer_link);
+//
+//}
+//
+//void
+//page_t::xdg_surface_set_window_geometry(struct wl_client *client,
+//				struct wl_resource *resource,
+//				int32_t x,
+//				int32_t y,
+//				int32_t width,
+//				int32_t height)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	xdg_surface->set_window_geometry(x, y, width, height);
+//}
+//
+//void
+//page_t::xdg_surface_set_maximized(struct wl_client *client,
+//			  struct wl_resource *resource)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	xdg_surface->set_maximized();
+//}
+//
+//void
+//page_t::xdg_surface_unset_maximized(struct wl_client *client,
+//			    struct wl_resource *resource)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	xdg_surface->unset_maximized();
+//}
+//
+//void
+//page_t::xdg_surface_set_fullscreen(struct wl_client *client,
+//			   struct wl_resource *resource,
+//			   struct wl_resource *output_resource)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	xdg_surface->set_fullscreen();
+//}
+//
+//void
+//page_t::xdg_surface_unset_fullscreen(struct wl_client *client,
+//			     struct wl_resource *resource)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	xdg_surface->unset_fullscreen();
+//}
+//
+//void
+//page_t::xdg_surface_set_minimized(struct wl_client *client,
+//			    struct wl_resource *resource)
+//{
+//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+//	xdg_surface->set_minimized();
+//}
 
 void page_t::sync_tree_view() {
 
 	list<weston_view *> lv;
-	for(auto x: _root->get_all_children()) {
+	auto children = _root->get_all_children();
+	weston_log("found %lu children\n", children.size());
+	for(auto x: children) {
 		auto v = x->get_default_view();
 		if(v)
 			lv.push_back(v);
 	}
 
-	for(auto v: lv) {
+	weston_log("found %lu views\n", lv.size());
+
+	/* remove all existing views */
+	weston_layer_entry * nxt;
+	weston_layer_entry * cur;
+	wl_list_for_each_safe(cur, nxt, &default_layer.view_list.link, link) {
+		weston_view * v = wl_container_of(cur, v, layer_link);
 		weston_view_unmap(v);
-		weston_layer_entry_insert(&default_layer.view_list, &v->layer_link);
 	}
+
+	for(auto v: lv) {
+		weston_layer_entry_insert(&default_layer.view_list, &v->layer_link);
+		weston_view_geometry_dirty(v);
+		weston_view_update_transform(v);
+	}
+
+	wl_list_for_each_safe(cur, nxt, &default_layer.view_list.link, link) {
+		weston_view * v = wl_container_of(cur, v, layer_link);
+		weston_log("aaaa %p\n", v->output);
+	}
+
+	weston_compositor_damage_all(ec);
 
 }
 

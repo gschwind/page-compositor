@@ -48,7 +48,10 @@ struct page_configuration_t {
 class page_context_t {
 
 public:
-	page_context_t() { }
+	wl_display * _dpy;
+	weston_compositor * ec;
+
+	page_context_t() : _dpy{nullptr}, ec{nullptr} { }
 
 	virtual ~page_context_t() { }
 
@@ -58,8 +61,6 @@ public:
 
 	virtual auto conf() const -> page_configuration_t const & = 0;
 	virtual auto theme() const -> theme_t const * = 0;
-	virtual auto dpy() const -> display_compositor_t * = 0;
-	virtual auto cmp() const -> display_compositor_t * = 0;
 //	virtual void overlay_add(shared_ptr<tree_t> x) = 0;
 //	virtual void add_global_damage(region const & r) = 0;
 	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t> = 0;

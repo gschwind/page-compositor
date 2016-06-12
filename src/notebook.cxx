@@ -73,7 +73,7 @@ bool notebook_t::add_client(client_managed_p x, bool prefer_activate) {
 		x->hide();
 	}
 
-	_layout_is_durty = true;
+	_ctx->sync_tree_view();
 	return true;
 }
 
@@ -745,87 +745,87 @@ void notebook_t::_start_fading() {
 }
 
 void notebook_t::start_exposay() {
-	if(_ctx->cmp() == nullptr)
-		return;
-
-	if(_selected != nullptr) {
-		iconify_client(_selected);
-		_selected = nullptr;
-	}
-
-	_exposay = true;
-	queue_redraw();
+//	if(_ctx->cmp() == nullptr)
+//		return;
+//
+//	if(_selected != nullptr) {
+//		iconify_client(_selected);
+//		_selected = nullptr;
+//	}
+//
+//	_exposay = true;
+//	queue_redraw();
 }
 
 void notebook_t::_update_exposay() {
-	_exposay_buttons.clear();
-	//_exposay_thumbnail.clear();
-	_exposay_mouse_over = nullptr;
-
-	_theme_notebook.button_mouse_over = NOTEBOOK_BUTTON_NONE;
-	_mouse_over.tab = nullptr;
-	_mouse_over.exposay = nullptr;
-
-	if(_ctx->cmp() == nullptr)
-		return;
-
-	if(not _exposay)
-		return;
-
-	if(_clients_tab_order.size() <= 0)
-		return;
-
-	unsigned clients_counts = _clients_tab_order.size();
-
-	/*
-	 * n is the number of column and m is the number of line of exposay.
-	 * Since most window are the size of client_area, we known that n*m will produce n = m
-	 * thus use square root to get n
-	 */
-	int n = static_cast<int>(ceil(sqrt(static_cast<double>(clients_counts))));
-	/* the square root may produce to much line (or column depend on the point of view
-	 * We choose to remove the exide of line, but we could prefer to remove column,
-	 * maybe later we will choose to select this on client_area.h/client_area.w ratio
-	 *
-	 *
-	 * /!\ This equation use the properties of integer division.
-	 *
-	 * we want :
-	 *  if client_counts == Q*n => m = Q
-	 *  if client_counts == Q*n+R with R != 0 => m = Q + 1
-	 *
-	 *  within the equation :
-	 *   when client_counts == Q*n => (client_counts - 1)/n + 1 == (Q - 1) + 1 == Q
-	 *   when client_counts == Q*n + R => (client_counts - 1)/n + 1 == (Q*n+R-1)/n + 1
-	 *     => when R == 1: (Q*n+R-1)/n + 1 == Q*n/n+1 = Q + 1
-	 *     => when 1 < R <= n-1 => (Q*n+R-1)/n + 1 == Q*n/n + (R-1)/n + 1 with (R-1)/n always == 0
-	 *        then (client_counts - 1)/n + 1 == Q + 1
-	 *
-	 */
-	int m = ((clients_counts - 1) / n) + 1;
-
-	unsigned width = _client_area.w/n;
-	unsigned heigth = _client_area.h/m;
-	unsigned xoffset = (_client_area.w-width*n)/2.0 + _client_area.x;
-	unsigned yoffset = (_client_area.h-heigth*m)/2.0 + _client_area.y;
-
-	auto it = _clients_tab_order.begin();
-	for(int i = 0; i < _clients_tab_order.size(); ++i) {
-		unsigned y = i / n;
-		unsigned x = i % n;
-
-		if(y == m-1)
-			xoffset = (_client_area.w-width*n)/2.0 + _client_area.x
-				+ (n*m - _clients_tab_order.size())*width/2.0;
-
-		rect pdst(x*width+1.0+xoffset+8, y*heigth+1.0+yoffset+8, width-2.0-16, heigth-2.0-16);
-		_exposay_buttons.push_back(make_tuple(pdst, client_managed_w{it->client}, i));
-		pdst = to_root_position(pdst);
-//		auto thumbnail = make_shared<renderable_thumbnail_t>(_ctx, it->client, pdst, ANCHOR_CENTER);
-//		_exposay_thumbnail.push_back(thumbnail);
-//		thumbnail->show();
-		++it;
-	}
+//	_exposay_buttons.clear();
+//	//_exposay_thumbnail.clear();
+//	_exposay_mouse_over = nullptr;
+//
+//	_theme_notebook.button_mouse_over = NOTEBOOK_BUTTON_NONE;
+//	_mouse_over.tab = nullptr;
+//	_mouse_over.exposay = nullptr;
+//
+//	if(_ctx->cmp() == nullptr)
+//		return;
+//
+//	if(not _exposay)
+//		return;
+//
+//	if(_clients_tab_order.size() <= 0)
+//		return;
+//
+//	unsigned clients_counts = _clients_tab_order.size();
+//
+//	/*
+//	 * n is the number of column and m is the number of line of exposay.
+//	 * Since most window are the size of client_area, we known that n*m will produce n = m
+//	 * thus use square root to get n
+//	 */
+//	int n = static_cast<int>(ceil(sqrt(static_cast<double>(clients_counts))));
+//	/* the square root may produce to much line (or column depend on the point of view
+//	 * We choose to remove the exide of line, but we could prefer to remove column,
+//	 * maybe later we will choose to select this on client_area.h/client_area.w ratio
+//	 *
+//	 *
+//	 * /!\ This equation use the properties of integer division.
+//	 *
+//	 * we want :
+//	 *  if client_counts == Q*n => m = Q
+//	 *  if client_counts == Q*n+R with R != 0 => m = Q + 1
+//	 *
+//	 *  within the equation :
+//	 *   when client_counts == Q*n => (client_counts - 1)/n + 1 == (Q - 1) + 1 == Q
+//	 *   when client_counts == Q*n + R => (client_counts - 1)/n + 1 == (Q*n+R-1)/n + 1
+//	 *     => when R == 1: (Q*n+R-1)/n + 1 == Q*n/n+1 = Q + 1
+//	 *     => when 1 < R <= n-1 => (Q*n+R-1)/n + 1 == Q*n/n + (R-1)/n + 1 with (R-1)/n always == 0
+//	 *        then (client_counts - 1)/n + 1 == Q + 1
+//	 *
+//	 */
+//	int m = ((clients_counts - 1) / n) + 1;
+//
+//	unsigned width = _client_area.w/n;
+//	unsigned heigth = _client_area.h/m;
+//	unsigned xoffset = (_client_area.w-width*n)/2.0 + _client_area.x;
+//	unsigned yoffset = (_client_area.h-heigth*m)/2.0 + _client_area.y;
+//
+//	auto it = _clients_tab_order.begin();
+//	for(int i = 0; i < _clients_tab_order.size(); ++i) {
+//		unsigned y = i / n;
+//		unsigned x = i % n;
+//
+//		if(y == m-1)
+//			xoffset = (_client_area.w-width*n)/2.0 + _client_area.x
+//				+ (n*m - _clients_tab_order.size())*width/2.0;
+//
+//		rect pdst(x*width+1.0+xoffset+8, y*heigth+1.0+yoffset+8, width-2.0-16, heigth-2.0-16);
+//		_exposay_buttons.push_back(make_tuple(pdst, client_managed_w{it->client}, i));
+//		pdst = to_root_position(pdst);
+////		auto thumbnail = make_shared<renderable_thumbnail_t>(_ctx, it->client, pdst, ANCHOR_CENTER);
+////		_exposay_thumbnail.push_back(thumbnail);
+////		thumbnail->show();
+//		++it;
+//	}
 
 }
 
@@ -1252,6 +1252,11 @@ void notebook_t::get_min_allocation(int & width, int & height) const {
 			+ _ctx->theme()->notebook.mark_width
 			+ _ctx->theme()->notebook.menu_button_width
 			+ _ctx->theme()->notebook.iconic_tab_width * 4;
+}
+
+auto notebook_t::get_output() const -> weston_output * {
+	weston_log("????\n");
+	return dynamic_cast<page_component_t const *>(_parent)->get_output();
 }
 
 void  notebook_t::_scroll_right(int x) {

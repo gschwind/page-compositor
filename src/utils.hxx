@@ -20,6 +20,8 @@
 #include <sstream>
 #include <iostream>
 
+#include <libweston-0/compositor.h>
+
 #include "color.hxx"
 #include "box.hxx"
 #include "exception.hxx"
@@ -909,6 +911,11 @@ struct link_t {
 	}
 
 };
+
+template<typename T>
+T * resource_get(wl_resource * r) {
+	return reinterpret_cast<T *>(wl_resource_get_user_data(r));
+}
 
 }
 

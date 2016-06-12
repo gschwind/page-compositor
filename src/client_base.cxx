@@ -16,7 +16,7 @@ xdg_surface_base_t::xdg_surface_base_t(page_context_t * ctx, wl_client * client,
 		weston_surface * surface, uint32_t id) :
 	tree_t{},
 	_ctx{ctx},
-	_resource{nullptr},
+	_xdg_surface_resource{nullptr},
 	_client{client},
 	_surface{surface}
 {
@@ -24,8 +24,8 @@ xdg_surface_base_t::xdg_surface_base_t(page_context_t * ctx, wl_client * client,
 }
 
 xdg_surface_base_t::~xdg_surface_base_t() {
-	if(_resource)
-		wl_resource_destroy(_resource);
+	if(_xdg_surface_resource)
+		wl_resource_destroy(_xdg_surface_resource);
 }
 
 bool xdg_surface_base_t::has_motif_border() {
@@ -44,7 +44,7 @@ void xdg_surface_base_t::add_subclient(shared_ptr<xdg_surface_base_t> s) {
 }
 
 bool xdg_surface_base_t::is_window(wl_client * client, uint32_t w) {
-	return _client == client and wl_resource_get_id(_resource) == w;
+	return _client == client and wl_resource_get_id(_xdg_surface_resource) == w;
 }
 
 string xdg_surface_base_t::get_node_name() const {
@@ -62,10 +62,6 @@ void xdg_surface_base_t::print_window_attributes() {
 void xdg_surface_base_t::print_properties() {
 	/* TODO */
 }
-
-
-auto xdg_surface_base_t::cnx() const -> display_compositor_t * { return nullptr; }
-
 
 void xdg_surface_base_t::remove(shared_ptr<tree_t> t) {
 	if(t == nullptr)
@@ -174,6 +170,10 @@ weston_view * xdg_surface_base_t::create_view() {
 	auto view = weston_view_create(_surface);
 	_views.push_back(view);
 	return view;
+}
+
+void xdg_surface_base_t::set_output(weston_output * output) {
+	_surface->output = output;
 }
 
 }

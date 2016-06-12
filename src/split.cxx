@@ -342,6 +342,10 @@ void split_t::get_min_allocation(int & width, int & height) const {
 	}
 }
 
+auto split_t::get_output() const -> weston_output * {
+	return dynamic_cast<page_component_t const *>(_parent)->get_output();
+}
+
 double split_t::compute_split_constaint(double split) {
 	rect bpack0;
 	rect bpack1;
