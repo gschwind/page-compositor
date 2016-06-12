@@ -11,7 +11,6 @@
 #include <typeinfo>
 
 #include "tree.hxx"
-#include "display-compositor.hxx"
 #include "theme_split.hxx"
 #include "keymap.hxx"
 #include "pointer-grab-handler.hxx"

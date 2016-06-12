@@ -6,6 +6,7 @@
  */
 
 #include "client.hxx"
+#include "xdg-shell-server-protocol.h"
 
 namespace page {
 
@@ -49,7 +50,7 @@ static void _xdg_shell_pong(wl_client * client, wl_resource * resource,
 	client_shell_t::get(resource)->xdg_shell_pong(client, resource, serial);
 }
 
-static struct ::xdg_shell_interface _xdg_shell_implementation = {
+static struct xdg_shell_interface _xdg_shell_implementation = {
 	page::_xdg_shell_destroy,
 	page::_xdg_shell_use_unstable_version,
 	page::_xdg_shell_get_xdg_surface,

@@ -18,6 +18,7 @@
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
+#include "xdg-shell-server-protocol.h"
 
 namespace page {
 

@@ -20,7 +20,6 @@
 #include "config.hxx"
 
 #include "time.hxx"
-#include "display-compositor.hxx"
 
 #include "config_handler.hxx"
 
@@ -52,6 +51,7 @@
 #include "utils.hxx"
 #include "mainloop.hxx"
 #include "page_root.hxx"
+#include "listener.hxx"
 
 namespace page {
 

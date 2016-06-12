@@ -33,8 +33,6 @@ page_compositor_SOURCES = \
 	client_managed.hxx \
 	client_not_managed.cxx \
 	client_not_managed.hxx \
-	display-compositor.cxx \
-	display-compositor.hxx \
 	utils.cxx \
 	pixmap.cxx \
 	grab_handlers.cxx \
