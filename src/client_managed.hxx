@@ -107,13 +107,12 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 
 	static void xdg_surface_delete(wl_resource *resource);
 
-	/** called on surface commit */
-	static void _weston_configure(struct weston_surface *es, int32_t sx, int32_t sy);
-
+	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
 
 public:
 
-	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
+	/** called on surface commit */
+	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
 
 	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;

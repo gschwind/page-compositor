@@ -146,6 +146,13 @@ void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
 	/* TODO */
 }
 
+static void _weston_configure(struct weston_surface * es,
+		int32_t sx, int32_t sy)
+{
+	auto ths = reinterpret_cast<xdg_surface_toplevel_t *>(es->configure_private);
+	ths->weston_configure(es, sx, sy);
+}
+
 xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 		page_context_t * ctx, wl_client * client,
 		weston_surface * surface, uint32_t id) :
@@ -181,7 +188,7 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 			&_xdg_surface_implementation,
 			this, &xdg_surface_delete);
 
-	surface->configure = &xdg_surface_toplevel_t::_weston_configure;
+	surface->configure = &_weston_configure;
 	surface->configure_private = this;
 
 	weston_log("bbbb %p\n", surface->configure_private);
@@ -527,24 +534,26 @@ string const & xdg_surface_toplevel_t::title() const {
 	return _title;
 }
 
-void xdg_surface_toplevel_t::_weston_configure(struct weston_surface * es,
+
+
+void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)
 {
-	auto ths = reinterpret_cast<xdg_surface_toplevel_t *>(es->configure_private);
-	auto ptr = ths->shared_from_this();
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	weston_log("typeInfo %p\n", es->configure_private);
 	weston_log("typeInfo %s\n", typeid(es->configure_private).name());
 
-	if(ptr->is(MANAGED_UNDEFINED)) {
-		ptr->_ctx->manage_client(ptr);
+	auto ptr = shared_from_this();
+
+	if(is(MANAGED_UNDEFINED)) {
+		_ctx->manage_client(ptr);
 	} else {
 		/* TODO: update the state if necessary */
 	}
 
 	/* once configure is finished apply pending states */
-	ths->_title = ths->_pending.title;
-	ths->_transient_for = ths->_pending.transient_for;
+	_title = _pending.title;
+	_transient_for = _pending.transient_for;
 
 }
 
