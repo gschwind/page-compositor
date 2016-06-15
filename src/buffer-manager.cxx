@@ -213,17 +213,22 @@ static void zzz_buffer_manager_get_buffer(void *data,
 
 	buffer_manager_t * bm = reinterpret_cast<buffer_manager_t*>(data);
 
-	struct buffer_t * buffer;
+
+	struct buffer_t * buffer = new buffer_t;
 	int ret = 0;
 
-	if (!buffer->buffer) {
-		ret = create_shm_buffer(bm, buffer,
+	ret = create_shm_buffer(bm, buffer,
 					width, height, WL_SHM_FORMAT_XRGB8888);
-
-		/* paint the padding */
-		memset(buffer->shm_data, 0xff, width * height * 4);
+	if(ret) {
+		weston_log("cannot create buffer\n");
 	}
 
+	/* paint the padding */
+	memset(buffer->shm_data, 0xff, width * height * 4);
+
+	bm->buffers[serial] = buffer;
+
+	weston_log("send zzz_buffer_manager_ack_buffer\n");
 	zzz_buffer_manager_ack_buffer(bm->buffer_namager, serial, buffer->buffer);
 
 }

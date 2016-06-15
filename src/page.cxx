@@ -67,6 +67,32 @@
 
 namespace page {
 
+static void ack_buffer(struct wl_client *client,
+		   struct wl_resource *resource,
+		   uint32_t serial,
+		   struct wl_resource *buffer) {
+	auto ths = reinterpret_cast<page_t*>(wl_resource_get_user_data(resource));
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(has_key(ths->buffers, serial)) {
+		ths->buffers[serial] = buffer;
+	} else {
+		throw exception_t{"invalid ack_buffer"};
+	}
+
+
+}
+
+static void xx_buffer_delete(wl_resource * r) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	/* TODO */
+}
+
+static const struct zzz_buffer_manager_interface _zzz_buffer_manager_interface = {
+		ack_buffer
+};
+
 //time64_t const page_t::default_wait{1000000000L / 120L};
 
 void page_t::bind_xdg_shell(struct wl_client * client, void * data,
@@ -83,6 +109,31 @@ void page_t::bind_xdg_shell(struct wl_client * client, void * data,
 void page_t::bind_zzz_buffer_manager(struct wl_client * client, void * data,
 	      uint32_t version, uint32_t id) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	page_t * ths = reinterpret_cast<page_t *>(data);
+
+	if(ths->_buffer_manager_resource)
+		throw exception_t{"only one buffer manager is allowed"};
+
+	/* ONLY one those client */
+	ths->_buffer_manager_resource = wl_resource_create(client, &::zzz_buffer_manager_interface, 1,
+			id);
+
+	/**
+	 * Define the implementation of the resource and the user_data,
+	 * i.e. callbacks that must be used for this resource.
+	 **/
+	wl_resource_set_implementation(ths->_buffer_manager_resource,
+			&_zzz_buffer_manager_interface, ths, &xx_buffer_delete);
+
+
+	/* test create buffer */
+	uint32_t serial = wl_display_next_serial(ths->_dpy);
+
+	ths->buffers[serial] = nullptr;
+	zzz_buffer_manager_send_get_buffer(ths->_buffer_manager_resource, serial,
+			100, 100);
+	wl_display_flush_clients(ths->_dpy);
+
 }
 
 void page_t::print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
@@ -141,6 +192,8 @@ page_t::page_t(int argc, char ** argv)
 //	_top_most_border = std::numeric_limits<int>::max();
 
 	_theme = nullptr;
+
+	_buffer_manager_resource = nullptr;
 
 //	bind_page_quit           = _conf.get_string("default", "bind_page_quit");
 //	bind_close               = _conf.get_string("default", "bind_close");
@@ -333,6 +386,7 @@ void page_t::run() {
 
 
 	weston_compositor_wake(ec);
+
     wl_display_run(_dpy);
 
 

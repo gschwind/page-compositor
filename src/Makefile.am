@@ -88,3 +88,10 @@ page_compositor_LDADD = \
 %-client-protocol.h : $(top_srcdir)/protocol/%.xml
 	@wayland_scanner@ client-header < $< > $@
 
+clean-local:
+	rm -f xdg-shell-protocol.c
+	rm -f xdg-shell-server-protocol.h
+	rm -f buffer-manager-protocol.c
+	rm -f buffer-manager-server-protocol.h
+	rm -f buffer-manager-client-protocol.h
+

@@ -136,6 +136,9 @@ struct page_t : public page_context_t {
 
 	wl_listener session;
 
+	wl_resource * _buffer_manager_resource;
+	map<uint32_t, wl_resource *> buffers;
+
 //	key_desc_t bind_page_quit;
 //	key_desc_t bind_toggle_fullscreen;
 //	key_desc_t bind_toggle_compositor;
