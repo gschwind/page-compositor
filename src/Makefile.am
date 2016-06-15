@@ -4,7 +4,8 @@ AM_CXXFLAGS =  \
 	-std=c++11 \
 	-rdynamic \
 	@LTO@ \
-	@WAYLAND_CFLAGS@ \
+	@WLS_CFLAGS@ \
+	@WLC_CFLAGS@ \
 	@WESTON_CFLAGS@ \
 	@PIXMAN_CFLAGS@ \
 	@CAIRO_CFLAGS@ \
@@ -60,12 +61,18 @@ page_compositor_SOURCES = \
 	page.hxx \
 	utils.hxx \
 	xdg-shell-protocol.c \
-	xdg-shell-server-protocol.h
+	xdg-shell-server-protocol.h \
+	buffer-manager.cxx \
+	buffer-manager.hxx \
+	buffer-manager-protocol.c \
+	buffer-manager-server-protocol.h \
+	buffer-manager-client-protocol.h 
 
 page_compositor_LDADD = \
 	@LTO@ \
 	@PIXMAN_LIBS@ \
-	@WAYLAND_LIBS@ \
+	@WLS_LIBS@ \
+	@WLC_LIBS@ \
 	@WESTON_LIBS@ \
 	@CAIRO_LIBS@ \
 	@PANGO_LIBS@ \

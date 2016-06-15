@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="zzz_buffer_manager_protocol">
+
+  <copyright>
+    Copyright © 2016 Benoit Gschwind
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice (including the next
+    paragraph) shall be included in all copies or substantial portions of the
+    Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+  </copyright>
+
+  <interface name="zzz_buffer_manager" version="1">
+    <description summary="buffer manager">
+		allow to create buffer.
+    </description>
+
+    <enum name="version">
+      <description summary="latest protocol version">
+	The 'current' member of this enum gives the version of the
+	protocol.  Implementations can compare this to the version
+	they implement using static_assert to ensure the protocol and
+	implementation versions match.
+      </description>
+      <entry name="current" value="1" summary="Always the latest version"/>
+    </enum>
+
+    <enum name="error">
+      <entry name="bad_error" value="0" summary="something bad happened"/>
+    </enum>
+
+    <request name="ack_buffer">
+      <description summary="tell to the compositor that a buffer is ready">
+		TODO
+      </description>
+      <arg name="serial" type="uint" summary="the serial of the user event"/>
+      <arg name="buffer" type="object" interface="wl_buffer" summary="the create buffer"/>
+    </request>
+
+    <event name="get_buffer">
+      <description summary="check if the client is alive">
+		TODO
+      </description>
+      <arg name="serial" type="uint" summary="pass this to the pong request"/>
+      <arg name="width" type="uint" summary="pass this to the pong request"/>
+      <arg name="height" type="uint" summary="pass this to the pong request"/>
+    </event>
+  </interface>
+</protocol>

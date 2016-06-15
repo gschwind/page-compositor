@@ -16,8 +16,11 @@
 #include <string>
 #include <map>
 #include <array>
+#include <thread>
 
 #include "config.hxx"
+
+#include "buffer-manager.hxx"
 
 #include "time.hxx"
 
@@ -99,6 +102,8 @@ struct page_t : public page_context_t {
 
 
 	list<weston_output *> _outputs;
+
+	thread _buffer_manager;
 
 	/**
 	 * Store data to allow proper revert fullscreen window to
@@ -356,6 +361,8 @@ struct page_t : public page_context_t {
 	void load_x11_backend(weston_compositor* ec);
 	static void bind_xdg_shell(wl_client * client, void * data,
 					      uint32_t version, uint32_t id);
+	static void bind_zzz_buffer_manager(struct wl_client * client, void * data,
+		      uint32_t version, uint32_t id);
 	static void print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
 			  uint32_t key, void *data);
 	void configure_surface(shared_ptr<xdg_surface_toplevel_t>,

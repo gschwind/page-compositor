@@ -29,10 +29,16 @@
 #include <memory>
 #include <utility>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <linux/input.h>
 #include <libweston-0/compositor.h>
 #include <libweston-0/compositor-x11.h>
+#include <wayland-client-protocol.h>
 #include "xdg-shell-server-protocol.h"
+#include "buffer-manager-server-protocol.h"
+#include "buffer-manager-client-protocol.h"
 
 #include "utils.hxx"
 
@@ -74,13 +80,17 @@ void page_t::bind_xdg_shell(struct wl_client * client, void * data,
 
 }
 
+void page_t::bind_zzz_buffer_manager(struct wl_client * client, void * data,
+	      uint32_t version, uint32_t id) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
 void page_t::print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
 		  uint32_t key, void *data) {
 	page_t * ths = reinterpret_cast<page_t *>(data);
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	ths->_root->print_tree(0);
 }
-
 
 page_t::page_t(int argc, char ** argv)
 {
@@ -267,6 +277,16 @@ void page_t::run() {
 	/* set the environment for children */
 	setenv("WAYLAND_DISPLAY", sock_name, 1);
 
+	int xxx[2];
+
+	socketpair(AF_UNIX, SOCK_STREAM, 0, xxx);
+
+	/* create the client to one hand */
+	_buffer_manager = std::thread{buffer_manager_main, xxx[1]};
+
+	/* connect to the serveur the other hand */
+	auto client = wl_client_create(_dpy, xxx[0]);
+
 	/*
 	 * Weston compositor will create all core globals:
 	 *  - wl_compositor
@@ -285,7 +305,11 @@ void page_t::run() {
 
 	weston_layer_init(&default_layer, &ec->cursor_layer.link);
 
-	wl_global_create(_dpy, &xdg_shell_interface, 1, this, &page_t::bind_xdg_shell);
+	wl_global_create(_dpy, &xdg_shell_interface, 1, this,
+			&page_t::bind_xdg_shell);
+	wl_global_create(_dpy, &zzz_buffer_manager_interface, 1, this,
+			&page_t::bind_zzz_buffer_manager);
+
 
 	connect_all();
 
