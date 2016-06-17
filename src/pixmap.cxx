@@ -72,6 +72,8 @@ void pixmap_t::ack_buffer(wl_client * client, wl_resource * resource,
 			CAIRO_FORMAT_ARGB32, wl_shm_buffer_get_width(b),
 			wl_shm_buffer_get_height(b), wl_shm_buffer_get_stride(b));
 
+	on_ack_buffer.signal(this);
+
 }
 
 }

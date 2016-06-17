@@ -74,6 +74,7 @@ bool notebook_t::add_client(client_managed_p x, bool prefer_activate) {
 	}
 
 	update_client_position(_selected);
+	queue_redraw();
 	_ctx->sync_tree_view();
 	return true;
 }

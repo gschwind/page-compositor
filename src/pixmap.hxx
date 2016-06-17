@@ -12,6 +12,8 @@
 #include <cairo/cairo.h>
 #include <memory>
 
+#include "utils.hxx"
+
 namespace page {
 
 using namespace std;
@@ -40,6 +42,8 @@ class pixmap_t {
 	pixmap_t(pixmap_t const & x) = delete;
 	pixmap_t & operator=(pixmap_t const & x) = delete;
 public:
+
+	signal_t<pixmap_t *> on_ack_buffer;
 
 	pixmap_t(page_t * ctx, pixmap_format_e format, unsigned width, unsigned height);
 	~pixmap_t();

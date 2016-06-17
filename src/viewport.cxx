@@ -55,6 +55,8 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area,
 //	weston_view_geometry_dirty(_default_view);
 
 	_pix = _ctx->create_pixmap(area.w, area.h);
+	_pix_on_ack_buffer = _pix->on_ack_buffer.connect(this,
+			&viewport_t::_on_ack_buffer);
 
 }
 
@@ -256,35 +258,7 @@ void viewport_t::_redraw_back_buffer() {
 void viewport_t::trigger_redraw() {
 	/** redraw all child **/
 	tree_t::trigger_redraw();
-
-	if(_pix->get_cairo_surface() != nullptr) {
-
-		if(_default_view == nullptr) {
-			_backbround_surface = _pix->wsurface();
-			pixman_region32_fini(&_backbround_surface->opaque);
-			pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0, _effective_area.w,
-					_effective_area.h);
-			weston_surface_damage(_backbround_surface);
-
-			_backbround_surface->timeline.force_refresh = 1;
-			_default_view = weston_view_create(_backbround_surface);
-			weston_view_set_position(_default_view, _effective_area.x, _effective_area.y);
-			weston_view_geometry_dirty(_default_view);
-
-			_ctx->sync_tree_view();
-
-		}
-
-		_redraw_back_buffer();
-
-//		weston_surface_state_set_buffer(&_backbround_surface->pending, _pix->wbuffer());
-//
-//		_backbround_surface->pending.sx = 0;
-//		_backbround_surface->pending.sy = 0;
-//		_backbround_surface->pending.newly_attached = 1;
-//	    weston_surface_damage(_backbround_surface);
-
-	}
+	_redraw_back_buffer();
 
 //	if(_exposed and _ctx->cmp() == nullptr) {
 //		_exposed = false;
@@ -380,6 +354,28 @@ auto viewport_t::get_output() const -> weston_output * {
 
 auto viewport_t::get_default_view() const -> weston_view * {
 	return _default_view;
+}
+
+void viewport_t::_on_ack_buffer(pixmap_t * p) {
+	assert(_pix.get() == p);
+
+	_backbround_surface = _pix->wsurface();
+	pixman_region32_fini(&_backbround_surface->opaque);
+	pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0, _effective_area.w,
+			_effective_area.h);
+	weston_surface_damage(_backbround_surface);
+
+	_backbround_surface->timeline.force_refresh = 1;
+	_default_view = weston_view_create(_backbround_surface);
+	weston_view_set_position(_default_view, _effective_area.x, _effective_area.y);
+	weston_view_geometry_dirty(_default_view);
+
+	_is_durty = true;
+	_redraw_back_buffer();
+
+	_ctx->sync_tree_view();
+
+
 }
 
 }

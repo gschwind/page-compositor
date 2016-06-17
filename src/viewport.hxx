@@ -39,6 +39,7 @@ class viewport_t: public page_component_t {
 	cairo_surface_t * _back_surf;
 
 	pixmap_p _pix;
+	signal_handler_t _pix_on_ack_buffer;
 
 	/** area without considering dock windows **/
 	rect _raw_aera;
@@ -46,6 +47,7 @@ class viewport_t: public page_component_t {
 	/** area considering dock windows **/
 	rect _effective_area;
 	rect _page_area;
+
 
 	shared_ptr<page_component_t> _subtree;
 
@@ -65,6 +67,8 @@ class viewport_t: public page_component_t {
 	void create_window();
 	void _redraw_back_buffer();
 	void paint_expose();
+
+	void _on_ack_buffer(pixmap_t * p);
 
 public:
 
