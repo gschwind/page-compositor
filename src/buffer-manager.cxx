@@ -196,6 +196,24 @@ create_shm_buffer(buffer_manager_t * bm, buffer_t *buffer,
 	return 0;
 }
 
+
+static void xx_surface_enter(void *data,
+	      struct wl_surface *wl_surface,
+	      struct wl_output *output) {
+
+}
+
+static void xx_surface_leave(void *data,
+	      struct wl_surface *wl_surface,
+	      struct wl_output *output) {
+
+}
+
+struct wl_surface_listener surface_listener = {
+		xx_surface_enter,
+		xx_surface_leave
+};
+
 static void
 buffer_manager_shm_format(void *data, struct wl_shm *wl_shm, uint32_t format)
 {
@@ -238,8 +256,15 @@ static void zzz_buffer_manager_get_buffer(void *data,
 
 	bm->buffers[serial] = buffer;
 
+	buffer->surface = wl_compositor_create_surface(bm->compositor);
+	wl_surface_attach(buffer->surface, buffer->buffer, 0, 0);
+	wl_surface_commit(buffer->surface);
+
+	wl_surface_add_listener(buffer->surface, &surface_listener, bm);
+
 	weston_log("send zzz_buffer_manager_ack_buffer %p %p\n",bm->buffer_manager, buffer->buffer);
-	zzz_buffer_manager_ack_buffer(bm->buffer_manager, serial, buffer->buffer);
+	zzz_buffer_manager_ack_buffer(bm->buffer_manager, serial, buffer->surface, buffer->buffer);
+	//wl_display_flush(bm->display);
 
 }
 
@@ -267,6 +292,10 @@ buffer_manager_global(void *data, struct wl_registry *registry, uint32_t id,
     	bm->shm = reinterpret_cast<wl_shm*>(wl_registry_bind(registry,
 					  id, &wl_shm_interface, 1));
 		wl_shm_add_listener(bm->shm, &buffer_manager_shm_listener, bm);
+	} else 	if (strcmp(interface, "wl_compositor") == 0) {
+		bm->compositor =
+				reinterpret_cast<wl_compositor*>(wl_registry_bind(registry,
+					 id, &wl_compositor_interface, 1));
 	}
 
 }

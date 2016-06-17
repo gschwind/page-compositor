@@ -31,6 +31,7 @@ struct buffer_t {
 	wl_buffer * buffer;
 	void *shm_data;
 	int busy;
+	wl_surface * surface;
 };
 
 struct buffer_manager_t {

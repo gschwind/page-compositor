@@ -33,6 +33,7 @@ class pixmap_t {
 	cairo_surface_t * _surf;
 	unsigned _w, _h;
 	weston_buffer * _wbuffer;
+	weston_surface * _wsurface;
 
 	void _request_buffer();
 
@@ -49,10 +50,11 @@ public:
 
 	void bind_buffer_manager();
 	void ack_buffer(wl_client * client, wl_resource * resource,
-			uint32_t serial, wl_resource * buffer);
+			uint32_t serial, wl_resource * surface, wl_resource * buffer);
 
 	uint32_t serial() const { return _serial; }
 	weston_buffer * wbuffer() { return _wbuffer; }
+	weston_surface * wsurface() { return _wsurface; };
 
 };
 

@@ -83,9 +83,10 @@ int page_t::page_repaint(struct weston_output *output_base,
 }
 
 static void ack_buffer(struct wl_client *client,
-		   struct wl_resource *resource,
+		   wl_resource * resource,
 		   uint32_t serial,
-		   struct wl_resource *buffer) {
+		   wl_resource * surface,
+		   wl_resource * buffer) {
 	auto ths = reinterpret_cast<page_t*>(wl_resource_get_user_data(resource));
 
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
@@ -96,7 +97,7 @@ static void ack_buffer(struct wl_client *client,
 			});
 
 	if(x != ths->pixmap_list.end())
-		(*x)->ack_buffer(client, resource, serial, buffer);
+		(*x)->ack_buffer(client, resource, serial, surface, buffer);
 
 }
 

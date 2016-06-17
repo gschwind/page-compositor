@@ -60,12 +60,13 @@ void pixmap_t::bind_buffer_manager() {
 }
 
 void pixmap_t::ack_buffer(wl_client * client, wl_resource * resource,
-		uint32_t serial, wl_resource * buffer) {
+		uint32_t serial, wl_resource * surface, wl_resource * buffer) {
 	wl_shm_buffer * b = wl_shm_buffer_get(buffer);
 	resource = buffer;
 
 	_resource = buffer;
 	_wbuffer = weston_buffer_from_resource(buffer);
+	_wsurface = reinterpret_cast<weston_surface*>(wl_resource_get_user_data(surface));
 
 	_surf = cairo_image_surface_create_for_data((uint8_t*)wl_shm_buffer_get_data(b),
 			CAIRO_FORMAT_ARGB32, wl_shm_buffer_get_width(b),

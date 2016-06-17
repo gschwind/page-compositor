@@ -48,7 +48,8 @@
 		TODO
       </description>
       <arg name="serial" type="uint" summary="the serial of the user event"/>
-      <arg name="buffer" type="object" interface="wl_buffer" summary="the create buffer"/>
+      <arg name="surface" type="object" interface="wl_surface" summary="the created surface"/>
+      <arg name="buffer" type="object" interface="wl_buffer" summary="the created buffer"/>
     </request>
 
     <event name="get_buffer">
