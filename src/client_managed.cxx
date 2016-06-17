@@ -567,7 +567,8 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 		_ctx->manage_client(ptr);
 	} else {
 		/* TODO: update the state if necessary */
-		weston_view_schedule_repaint(_default_view);
+		if(_default_view)
+			weston_view_schedule_repaint(_default_view);
 	}
 
 	/* once configure is finished apply pending states */

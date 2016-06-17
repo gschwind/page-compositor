@@ -223,14 +223,25 @@ void viewport_t::create_window() {
 }
 
 void viewport_t::_redraw_back_buffer() {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
 	if(_pix->get_cairo_surface() == nullptr)
 		return;
 
-	if(not _is_durty)
-		return;
+	//if(not _is_durty)
+	//	return;
 
 	cairo_t * cr = cairo_create(_pix->get_cairo_surface());
+	if(cairo_status(cr)) {
+		weston_log("XXX %s\n", cairo_status_to_string(cairo_status(cr)));
+	}
 	cairo_identity_matrix(cr);
+	if(cairo_status(cr)) {
+		weston_log("XXX %s\n", cairo_status_to_string(cairo_status(cr)));
+	}
+
+	cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
+	cairo_paint(cr);
 
 	auto splits = filter_class<split_t>(get_all_children());
 	for (auto x : splits) {
@@ -251,6 +262,7 @@ void viewport_t::_redraw_back_buffer() {
 	_damaged += _effective_area;
 
 	weston_surface_damage(_pix->wsurface());
+	(*_ctx->ec->renderer->attach)(_backbround_surface, _pix->wbuffer());
 	(*_ctx->ec->renderer->flush_damage)(_backbround_surface);
 
 }
@@ -270,6 +282,8 @@ void viewport_t::trigger_redraw() {
 /* mark renderable_page for redraw */
 void viewport_t::queue_redraw() {
 	_is_durty = true;
+	if(_pix->get_cairo_surface())
+		weston_surface_damage(_pix->wsurface());
 }
 
 region viewport_t::get_damaged() {

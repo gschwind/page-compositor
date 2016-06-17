@@ -1561,6 +1561,7 @@ void simple2_theme_t::update() {
 
 void simple2_theme_t::create_background_img() {
 
+	has_background = false;
 	backgroun_px = nullptr;
 
 //	if (has_background and false) {

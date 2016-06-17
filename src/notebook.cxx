@@ -74,7 +74,7 @@ bool notebook_t::add_client(client_managed_p x, bool prefer_activate) {
 	}
 
 	update_client_position(_selected);
-	queue_redraw();
+	_update_layout();
 	_ctx->sync_tree_view();
 	return true;
 }
@@ -139,6 +139,7 @@ void notebook_t::_remove_client(shared_ptr<xdg_surface_toplevel_t> x) {
 	}
 
 	_layout_is_durty = true;
+	_ctx->sync_tree_view();
 
 }
 
@@ -368,6 +369,7 @@ string notebook_t::get_node_name() const {
 }
 
 void notebook_t::render_legacy(cairo_t * cr) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	_ctx->theme()->render_notebook(cr, &_theme_notebook);
 
 	if(_theme_client_tabs.size() > 0) {

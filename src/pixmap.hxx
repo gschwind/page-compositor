@@ -57,8 +57,8 @@ public:
 			uint32_t serial, wl_resource * surface, wl_resource * buffer);
 
 	uint32_t serial() const { return _serial; }
-	weston_buffer * wbuffer() { return _wbuffer; }
-	weston_surface * wsurface() { return _wsurface; };
+	weston_buffer * wbuffer() const { return _wbuffer; }
+	weston_surface * wsurface() const { return _wsurface; };
 
 };
 

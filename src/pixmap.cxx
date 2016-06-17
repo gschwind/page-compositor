@@ -27,7 +27,8 @@ pixmap_t(page_t * ctx, pixmap_format_e format, unsigned width, unsigned height) 
 	_w{width},
 	_h{height},
 	_resource{nullptr},
-	_serial{0}
+	_serial{0},
+	_surf{nullptr}
 {
 
 	if(not _ctx->_buffer_manager_resource) {
