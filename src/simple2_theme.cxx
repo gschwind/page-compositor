@@ -1561,6 +1561,8 @@ void simple2_theme_t::update() {
 
 void simple2_theme_t::create_background_img() {
 
+	backgroun_px = nullptr;
+
 //	if (has_background and false) {
 //
 //		cairo_surface_t * tmp = cairo_image_surface_create_from_png(

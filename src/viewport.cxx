@@ -35,22 +35,24 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area,
 	_subtree->set_parent(this);
 	_subtree->set_allocation(_page_area);
 
+	_backbround_surface = nullptr;
+	_default_view = nullptr;
 
 	/** create the solid color background **/
-	_backbround_surface = weston_surface_create(ctx->ec);
-	weston_surface_set_color(_backbround_surface, 1.0f, 0.0f, 0.0f, 0.1f);
-    weston_surface_set_size(_backbround_surface, area.w, area.h);
-    pixman_region32_fini(&_backbround_surface->opaque);
-    pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0, area.w,
-    		area.h);
-    weston_surface_damage(_backbround_surface);
-    //pixman_region32_fini(&_backbround_surface->input);
-    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
-
-	_backbround_surface->timeline.force_refresh = 1;
-    _default_view = weston_view_create(_backbround_surface);
-	weston_view_set_position(_default_view, area.x, area.y);
-	weston_view_geometry_dirty(_default_view);
+//	_backbround_surface = weston_surface_create(ctx->ec);
+//	weston_surface_set_color(_backbround_surface, 1.0f, 0.0f, 0.0f, 0.1f);
+//    weston_surface_set_size(_backbround_surface, area.w, area.h);
+//    pixman_region32_fini(&_backbround_surface->opaque);
+//    pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0, area.w,
+//    		area.h);
+//    weston_surface_damage(_backbround_surface);
+//    //pixman_region32_fini(&_backbround_surface->input);
+//    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
+//
+//	_backbround_surface->timeline.force_refresh = 1;
+//    _default_view = weston_view_create(_backbround_surface);
+//	weston_view_set_position(_default_view, area.x, area.y);
+//	weston_view_geometry_dirty(_default_view);
 
 	_pix = _ctx->create_pixmap(area.w, area.h);
 
@@ -246,23 +248,43 @@ void viewport_t::_redraw_back_buffer() {
 	_exposed = true;
 	_damaged += _effective_area;
 
+	weston_surface_damage(_pix->wsurface());
+	(*_ctx->ec->renderer->flush_damage)(_backbround_surface);
+
 }
 
 void viewport_t::trigger_redraw() {
 	/** redraw all child **/
 	tree_t::trigger_redraw();
-	_redraw_back_buffer();
 
-//	if(_pix->get_cairo_surface() != nullptr) {
+	if(_pix->get_cairo_surface() != nullptr) {
+
+		if(_default_view == nullptr) {
+			_backbround_surface = _pix->wsurface();
+			pixman_region32_fini(&_backbround_surface->opaque);
+			pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0, _effective_area.w,
+					_effective_area.h);
+			weston_surface_damage(_backbround_surface);
+
+			_backbround_surface->timeline.force_refresh = 1;
+			_default_view = weston_view_create(_backbround_surface);
+			weston_view_set_position(_default_view, _effective_area.x, _effective_area.y);
+			weston_view_geometry_dirty(_default_view);
+
+			_ctx->sync_tree_view();
+
+		}
+
+		_redraw_back_buffer();
+
+//		weston_surface_state_set_buffer(&_backbround_surface->pending, _pix->wbuffer());
 //
-////		weston_surface_state_set_buffer(&_backbround_surface->pending, _pix->wbuffer());
-////
-////		_backbround_surface->pending.sx = 0;
-////		_backbround_surface->pending.sy = 0;
-////		_backbround_surface->pending.newly_attached = 1;
-////	    weston_surface_damage(_backbround_surface);
-//
-//	}
+//		_backbround_surface->pending.sx = 0;
+//		_backbround_surface->pending.sy = 0;
+//		_backbround_surface->pending.newly_attached = 1;
+//	    weston_surface_damage(_backbround_surface);
+
+	}
 
 //	if(_exposed and _ctx->cmp() == nullptr) {
 //		_exposed = false;

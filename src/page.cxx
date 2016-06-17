@@ -73,6 +73,7 @@ int page_t::page_repaint(struct weston_output *output_base,
 	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
 
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	ths->_root->broadcast_trigger_redraw();
 
 	auto func = ths->repaint_functions[output_base];
 	output_base->repaint = func;
