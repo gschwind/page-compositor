@@ -129,6 +129,8 @@ os_create_anonymous_file(off_t size)
 	if (!name)
 		return -1;
 
+	weston_log("XXXX %s\n", name);
+
 	fd = create_tmpfile_cloexec(name);
 
 	free(name);
@@ -172,6 +174,8 @@ create_shm_buffer(buffer_manager_t * bm, buffer_t *buffer,
 		return -1;
 	}
 
+	weston_log("size = %u\n", size);
+
 	data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (data == MAP_FAILED) {
 		fprintf(stderr, "mmap failed: %m\n");
@@ -197,8 +201,12 @@ buffer_manager_shm_format(void *data, struct wl_shm *wl_shm, uint32_t format)
 {
 	buffer_manager_t * bm = reinterpret_cast<buffer_manager_t*>(data);
 
-//	if (format == WL_SHM_FORMAT_XRGB8888)
-//		d->has_xrgb = true;
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if (format == WL_SHM_FORMAT_ARGB8888) {
+		weston_log("%s: ARGB found\n", __PRETTY_FUNCTION__);
+		bm->has_argb = true;
+	}
 }
 
 struct wl_shm_listener buffer_manager_shm_listener = {
@@ -213,12 +221,14 @@ static void zzz_buffer_manager_get_buffer(void *data,
 
 	buffer_manager_t * bm = reinterpret_cast<buffer_manager_t*>(data);
 
+	weston_log("call %s (%u,%u)\n", __PRETTY_FUNCTION__, width, height);
 
 	struct buffer_t * buffer = new buffer_t;
 	int ret = 0;
 
+
 	ret = create_shm_buffer(bm, buffer,
-					width, height, WL_SHM_FORMAT_XRGB8888);
+					width, height, WL_SHM_FORMAT_ARGB8888);
 	if(ret) {
 		weston_log("cannot create buffer\n");
 	}
@@ -228,8 +238,8 @@ static void zzz_buffer_manager_get_buffer(void *data,
 
 	bm->buffers[serial] = buffer;
 
-	weston_log("send zzz_buffer_manager_ack_buffer\n");
-	zzz_buffer_manager_ack_buffer(bm->buffer_namager, serial, buffer->buffer);
+	weston_log("send zzz_buffer_manager_ack_buffer %p %p\n",bm->buffer_manager, buffer->buffer);
+	zzz_buffer_manager_ack_buffer(bm->buffer_manager, serial, buffer->buffer);
 
 }
 
@@ -247,9 +257,9 @@ buffer_manager_global(void *data, struct wl_registry *registry, uint32_t id,
 
     if (strcmp(interface, "zzz_buffer_manager") == 0
     		&& version >= 1) {
-    	bm->buffer_namager = reinterpret_cast<zzz_buffer_manager*>(wl_registry_bind(registry, id,
+    	bm->buffer_manager = reinterpret_cast<zzz_buffer_manager*>(wl_registry_bind(registry, id,
     			&zzz_buffer_manager_interface, 1));
-    	zzz_buffer_manager_add_listener(bm->buffer_namager,
+    	zzz_buffer_manager_add_listener(bm->buffer_manager,
     			&_zzz_buffer_manager_listener, bm);
 
     	weston_log("FOUND\n");

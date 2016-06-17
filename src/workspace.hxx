@@ -55,8 +55,8 @@ private:
 	static time64_t const _switch_duration;
 
 	time64_t _switch_start_time;
-	shared_ptr<pixmap_t> _switch_screenshot;
-	shared_ptr<renderable_pixmap_t> _switch_renderable;
+	cairo_surface_t * _switch_screenshot;
+	cairo_surface_t * _switch_renderable;
 
 	workspace_switch_direction_e _switch_direction;
 

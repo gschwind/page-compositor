@@ -137,7 +137,11 @@ struct page_t : public page_context_t {
 	wl_listener session;
 
 	wl_resource * _buffer_manager_resource;
-	map<uint32_t, wl_resource *> buffers;
+	list<pixmap_p> pixmap_list;
+
+	using repaint_func = int (*)(weston_output *, pixman_region32_t *);
+
+	map<weston_output *, repaint_func> repaint_functions;
 
 //	key_desc_t bind_page_quit;
 //	key_desc_t bind_toggle_fullscreen;
@@ -368,6 +372,9 @@ struct page_t : public page_context_t {
 		      uint32_t version, uint32_t id);
 	static void print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
 			  uint32_t key, void *data);
+	static int page_repaint(struct weston_output *output_base,
+			   pixman_region32_t *damage);
+
 	void configure_surface(shared_ptr<xdg_surface_toplevel_t>,
 			int32_t sx, int32_t sy);
 
@@ -406,6 +413,7 @@ struct page_t : public page_context_t {
 //	virtual auto mainloop() -> mainloop_t *;
 	virtual void sync_tree_view();
 	virtual void manage_client(shared_ptr<xdg_surface_toplevel_t> mw);
+	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p;
 
 	/**
 	 * the xdg-popup

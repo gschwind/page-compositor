@@ -36,7 +36,9 @@ class viewport_t: public page_component_t {
 	bool _exposed;
 
 	/** rendering tabs is time consuming, thus use back buffer **/
-	shared_ptr<pixmap_t> _back_surf;
+	cairo_surface_t * _back_surf;
+
+	pixmap_p _pix;
 
 	/** area without considering dock windows **/
 	rect _raw_aera;

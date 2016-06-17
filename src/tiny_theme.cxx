@@ -155,7 +155,7 @@ void tiny_theme_t::render_notebook(cairo_t * cr, theme_notebook_t const * n) con
 		cairo_save(cr);
 		cairo_clip(cr, tab_area);
 		cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-		cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), -n->root_x, -n->root_y);
+		cairo_set_source_surface(cr, backgroun_px, -n->root_x, -n->root_y);
 		cairo_paint(cr);
 		cairo_restore(cr);
 
@@ -165,7 +165,7 @@ void tiny_theme_t::render_notebook(cairo_t * cr, theme_notebook_t const * n) con
 		cairo_save(cr);
 		cairo_clip(cr, body_area);
 		cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-		cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), -n->root_x, -n->root_y);
+		cairo_set_source_surface(cr, backgroun_px, -n->root_x, -n->root_y);
 		cairo_paint(cr);
 		cairo_restore(cr);
 	} else {
@@ -219,7 +219,7 @@ void tiny_theme_t::render_notebook(cairo_t * cr, theme_notebook_t const * n) con
 			cairo_save(cr);
 			cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
 			if (backgroun_px != nullptr) {
-				cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), -n->root_x, -n->root_y);
+				cairo_set_source_surface(cr, backgroun_px, -n->root_x, -n->root_y);
 			} else {
 				cairo_set_source_color(cr, default_background_color);
 			}
@@ -449,7 +449,7 @@ void tiny_theme_t::render_notebook_selected(
 	cairo_clip(cr);
 
 	if(has_background) {
-		cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), -n.root_x, -n.root_y);
+		cairo_set_source_surface(cr, backgroun_px, -n.root_x, -n.root_y);
 	} else {
 		cairo_set_source_color(cr, default_background_color);
 	}

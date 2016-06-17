@@ -38,8 +38,9 @@ struct buffer_manager_t {
 	wl_registry * registry;
 	wl_compositor * compositor;
 	wl_shm * shm;
-	zzz_buffer_manager * buffer_namager;
-	//bool has_xrgb;
+	zzz_buffer_manager * buffer_manager;
+
+	bool has_argb;
 
 	std::map<uint32_t, buffer_t *> buffers;
 };

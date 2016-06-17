@@ -5,22 +5,35 @@
  *      Author: gschwind
  */
 
+#include "pixmap.hxx"
 
 #include "exception.hxx"
-#include "pixmap.hxx"
+#include "page.hxx"
+#include "buffer-manager-server-protocol.h"
 
 namespace page {
 
-pixmap_t::
-pixmap_t(pixmap_format_e format, unsigned width, unsigned height) :
-	_w{width},
-	_h{height}
-{
-	_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, _w, _h);
+void pixmap_t::_request_buffer() {
+	/* test create buffer */
+	_serial = wl_display_next_serial(_ctx->_dpy);
+	zzz_buffer_manager_send_get_buffer(_ctx->_buffer_manager_resource, _serial,
+			_w, _h);
+	wl_display_flush_clients(_ctx->_dpy);
+}
 
-	if(cairo_surface_status(_surf) != CAIRO_STATUS_SUCCESS) {
-		throw exception_t{"Unable to create cairo_surface in %s (format=%s,width=%u,height=%u)",
-			__PRETTY_FUNCTION__, format==PIXMAP_RGB?"RGB":"RGBA", width, height};
+pixmap_t::
+pixmap_t(page_t * ctx, pixmap_format_e format, unsigned width, unsigned height) :
+	_ctx{ctx},
+	_w{width},
+	_h{height},
+	_resource{nullptr},
+	_serial{0}
+{
+
+	if(not _ctx->_buffer_manager_resource) {
+		/* wait for bind_buffer_manager call */
+	} else {
+		_request_buffer();
 	}
 
 }
@@ -39,6 +52,25 @@ unsigned pixmap_t::witdh() const {
 
 unsigned pixmap_t::height() const {
 	return _h;
+}
+
+void pixmap_t::bind_buffer_manager() {
+	if(not _resource)
+		_request_buffer();
+}
+
+void pixmap_t::ack_buffer(wl_client * client, wl_resource * resource,
+		uint32_t serial, wl_resource * buffer) {
+	wl_shm_buffer * b = wl_shm_buffer_get(buffer);
+	resource = buffer;
+
+	_resource = buffer;
+	_wbuffer = weston_buffer_from_resource(buffer);
+
+	_surf = cairo_image_surface_create_for_data((uint8_t*)wl_shm_buffer_get_data(b),
+			CAIRO_FORMAT_ARGB32, wl_shm_buffer_get_width(b),
+			wl_shm_buffer_get_height(b), wl_shm_buffer_get_stride(b));
+
 }
 
 }

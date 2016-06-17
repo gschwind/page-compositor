@@ -413,7 +413,7 @@ void simple2_theme_t::render_notebook(cairo_t * cr, theme_notebook_t const * n) 
 	cairo_clip(cr, n->allocation);
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
 	if (backgroun_px != nullptr) {
-		CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), -n->root_x, -n->root_y));
+		CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px, -n->root_x, -n->root_y));
 	} else {
 		CHECK_CAIRO(cairo_set_source_color_alpha(cr, default_background_color));
 	}
@@ -465,7 +465,7 @@ void simple2_theme_t::render_notebook(cairo_t * cr, theme_notebook_t const * n) 
 			CHECK_CAIRO(cairo_save(cr));
 			cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
 			if (backgroun_px != nullptr) {
-				CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), -n->root_x, -n->root_y));
+				CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px, -n->root_x, -n->root_y));
 			} else {
 				CHECK_CAIRO(cairo_set_source_color_alpha(cr, default_background_color));
 			}
@@ -1001,7 +1001,7 @@ void simple2_theme_t::render_split(cairo_t * cr,
 
 	rect sarea = s->allocation;
 	if (backgroun_px != nullptr) {
-		CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), -s->root_x, -s->root_y));
+		CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px, -s->root_x, -s->root_y));
 	} else {
 		CHECK_CAIRO(cairo_set_source_color_alpha(cr, default_background_color));
 	}
@@ -1059,7 +1059,7 @@ void simple2_theme_t::render_empty(cairo_t * cr, rect const & area) const {
 	cairo_clip(cr, area);
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
 	if (backgroun_px != nullptr) {
-		CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px->get_cairo_surface(), 0.0, 0.0));
+		CHECK_CAIRO(cairo_set_source_surface(cr, backgroun_px, 0.0, 0.0));
 	} else {
 		CHECK_CAIRO(cairo_set_source_color_alpha(cr, default_background_color));
 	}
@@ -1069,69 +1069,69 @@ void simple2_theme_t::render_empty(cairo_t * cr, rect const & area) const {
 
 void simple2_theme_t::render_thumbnail(cairo_t * cr, rect position, theme_thumbnail_t const & t) const {
 
-	double y_text_offset = 0;
-
-	if (t.pix != nullptr) {
-		cairo_surface_t * src = t.pix->get_cairo_surface();
-		cairo_save(cr);
-
-		cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
-
-		rect thumbnail_pos = position;
-		thumbnail_pos.h -= 20;
-
-		double src_width = t.pix->witdh();
-		double src_height = t.pix->height();
-
-		double x_ratio = thumbnail_pos.w / src_width;
-		double y_ratio = thumbnail_pos.h / src_height;
-
-		double x_offset, y_offset;
-
-		if (x_ratio < y_ratio) {
-
-			double yp = thumbnail_pos.h / x_ratio;
-
-			x_offset = 0;
-			y_offset = floor((yp - src_height) / 2.0);
-
-			cairo_translate(cr, thumbnail_pos.x, thumbnail_pos.y);
-			cairo_scale(cr, x_ratio, x_ratio);
-			cairo_set_source_surface(cr, src, x_offset, y_offset);
-			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
-			cairo_paint(cr);
-
-			y_text_offset = src_height * x_ratio + (thumbnail_pos.h - (src_height * x_ratio)) / 2.0;
-
-		} else {
-			double xp = thumbnail_pos.w / y_ratio;
-
-			y_offset = 0;
-			x_offset = floor((xp - src_width) / 2.0);
-			cairo_translate(cr, thumbnail_pos.x, thumbnail_pos.y);
-			cairo_scale(cr, y_ratio, y_ratio);
-			cairo_set_source_surface(cr, src, x_offset, y_offset);
-			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
-			cairo_paint(cr);
-
-			y_text_offset = src_height * y_ratio + (thumbnail_pos.h - (src_height * y_ratio)) / 2.0;
-		}
-
-		cairo_restore(cr);
-	} else {
-		y_text_offset = position.h - 20;
-	}
-
-	rect btext = position;
-	btext.y += y_text_offset;
-	btext.h = 20;
-
-	cairo_save(cr);
-	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source_surface(cr, t.title->get_cairo_surface(), btext.x, btext.y);
-	cairo_paint(cr);
-	cairo_restore(cr);
+//	double y_text_offset = 0;
+//
+//	if (t.pix != nullptr) {
+//		cairo_surface_t * src = t.pix->get_cairo_surface();
+//		cairo_save(cr);
+//
+//		cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+//		cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
+//
+//		rect thumbnail_pos = position;
+//		thumbnail_pos.h -= 20;
+//
+//		double src_width = t.pix->witdh();
+//		double src_height = t.pix->height();
+//
+//		double x_ratio = thumbnail_pos.w / src_width;
+//		double y_ratio = thumbnail_pos.h / src_height;
+//
+//		double x_offset, y_offset;
+//
+//		if (x_ratio < y_ratio) {
+//
+//			double yp = thumbnail_pos.h / x_ratio;
+//
+//			x_offset = 0;
+//			y_offset = floor((yp - src_height) / 2.0);
+//
+//			cairo_translate(cr, thumbnail_pos.x, thumbnail_pos.y);
+//			cairo_scale(cr, x_ratio, x_ratio);
+//			cairo_set_source_surface(cr, src, x_offset, y_offset);
+//			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
+//			cairo_paint(cr);
+//
+//			y_text_offset = src_height * x_ratio + (thumbnail_pos.h - (src_height * x_ratio)) / 2.0;
+//
+//		} else {
+//			double xp = thumbnail_pos.w / y_ratio;
+//
+//			y_offset = 0;
+//			x_offset = floor((xp - src_width) / 2.0);
+//			cairo_translate(cr, thumbnail_pos.x, thumbnail_pos.y);
+//			cairo_scale(cr, y_ratio, y_ratio);
+//			cairo_set_source_surface(cr, src, x_offset, y_offset);
+//			cairo_pattern_set_filter(cairo_get_source(cr), CAIRO_FILTER_NEAREST);
+//			cairo_paint(cr);
+//
+//			y_text_offset = src_height * y_ratio + (thumbnail_pos.h - (src_height * y_ratio)) / 2.0;
+//		}
+//
+//		cairo_restore(cr);
+//	} else {
+//		y_text_offset = position.h - 20;
+//	}
+//
+//	rect btext = position;
+//	btext.y += y_text_offset;
+//	btext.h = 20;
+//
+//	cairo_save(cr);
+//	cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+//	cairo_set_source_surface(cr, t.title->get_cairo_surface(), btext.x, btext.y);
+//	cairo_paint(cr);
+//	cairo_restore(cr);
 
 }
 
@@ -1811,74 +1811,74 @@ void simple2_theme_t::render_popup_split(cairo_t * cr, theme_split_t const * s,
 
 void simple2_theme_t::render_menuentry(cairo_t * cr, theme_dropdown_menu_entry_t const & item, rect const & area, bool selected) const {
 
-	cairo_save(cr);
-
-	cairo_rectangle(cr, area.x, area.y, area.w, area.h);
-	if (selected) {
-		::cairo_set_source_rgba(cr, 0.7, 0.7, 0.7, 1.0);
-	} else {
-		::cairo_set_source_rgba(cr, 0.5, 0.5, 0.5, 1.0);
-	}
-	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-	cairo_fill(cr);
-
-	CHECK_CAIRO(cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT));
-
-	/** draw application icon **/
-	rect bicon = area;
-	bicon.h = 16;
-	bicon.w = 16;
-	bicon.x += 5;
-	bicon.y += 5;
-
-	CHECK_CAIRO(cairo_set_operator(cr, CAIRO_OPERATOR_OVER));
-	if (item.icon != nullptr) {
-		if (item.icon->get_cairo_surface() != 0) {
-			CHECK_CAIRO(::cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0));
-			CHECK_CAIRO(cairo_set_source_surface(cr, item.icon->get_cairo_surface(),
-					bicon.x, bicon.y));
-			CHECK_CAIRO(cairo_mask_surface(cr, item.icon->get_cairo_surface(),
-					bicon.x, bicon.y));
-		}
-	}
-
-	/** draw application title **/
-	rect btext = area;
-	btext.h -= 0;
-	btext.w -= 0;
-	btext.x += 24;
-	btext.y += 3;
-
-	/** draw title **/
-	CHECK_CAIRO(cairo_translate(cr, btext.x + 2, btext.y));
-
-	{
-
-		{
-			PangoLayout * pango_layout = pango_layout_new(pango_context);
-			pango_layout_set_font_description(pango_layout, notebook_normal_font);
-			pango_cairo_update_layout(cr, pango_layout);
-			pango_layout_set_text(pango_layout, item.label.c_str(), -1);
-			pango_layout_set_wrap(pango_layout, PANGO_WRAP_CHAR);
-			pango_layout_set_ellipsize(pango_layout, PANGO_ELLIPSIZE_END);
-			pango_layout_set_width(pango_layout, btext.w * PANGO_SCALE);
-			pango_cairo_layout_path(cr, pango_layout);
-			g_object_unref(pango_layout);
-		}
-
-		CHECK_CAIRO(cairo_set_line_width(cr, 3.0));
-		CHECK_CAIRO(cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND));
-		CHECK_CAIRO(cairo_set_line_join(cr, CAIRO_LINE_JOIN_BEVEL));
-		CHECK_CAIRO(cairo_set_source_color_alpha(cr, notebook_normal_outline_color));
-
-		CHECK_CAIRO(cairo_stroke_preserve(cr));
-
-		CHECK_CAIRO(cairo_set_line_width(cr, 1.0));
-		CHECK_CAIRO(cairo_set_source_color_alpha(cr, notebook_normal_text_color));
-		CHECK_CAIRO(cairo_fill(cr));
-	}
-
-	cairo_restore(cr);
+//	cairo_save(cr);
+//
+//	cairo_rectangle(cr, area.x, area.y, area.w, area.h);
+//	if (selected) {
+//		::cairo_set_source_rgba(cr, 0.7, 0.7, 0.7, 1.0);
+//	} else {
+//		::cairo_set_source_rgba(cr, 0.5, 0.5, 0.5, 1.0);
+//	}
+//	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+//	cairo_fill(cr);
+//
+//	CHECK_CAIRO(cairo_set_antialias(cr, CAIRO_ANTIALIAS_DEFAULT));
+//
+//	/** draw application icon **/
+//	rect bicon = area;
+//	bicon.h = 16;
+//	bicon.w = 16;
+//	bicon.x += 5;
+//	bicon.y += 5;
+//
+//	CHECK_CAIRO(cairo_set_operator(cr, CAIRO_OPERATOR_OVER));
+//	if (item.icon != nullptr) {
+//		if (item.icon->get_cairo_surface() != 0) {
+//			CHECK_CAIRO(::cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0));
+//			CHECK_CAIRO(cairo_set_source_surface(cr, item.icon->get_cairo_surface(),
+//					bicon.x, bicon.y));
+//			CHECK_CAIRO(cairo_mask_surface(cr, item.icon->get_cairo_surface(),
+//					bicon.x, bicon.y));
+//		}
+//	}
+//
+//	/** draw application title **/
+//	rect btext = area;
+//	btext.h -= 0;
+//	btext.w -= 0;
+//	btext.x += 24;
+//	btext.y += 3;
+//
+//	/** draw title **/
+//	CHECK_CAIRO(cairo_translate(cr, btext.x + 2, btext.y));
+//
+//	{
+//
+//		{
+//			PangoLayout * pango_layout = pango_layout_new(pango_context);
+//			pango_layout_set_font_description(pango_layout, notebook_normal_font);
+//			pango_cairo_update_layout(cr, pango_layout);
+//			pango_layout_set_text(pango_layout, item.label.c_str(), -1);
+//			pango_layout_set_wrap(pango_layout, PANGO_WRAP_CHAR);
+//			pango_layout_set_ellipsize(pango_layout, PANGO_ELLIPSIZE_END);
+//			pango_layout_set_width(pango_layout, btext.w * PANGO_SCALE);
+//			pango_cairo_layout_path(cr, pango_layout);
+//			g_object_unref(pango_layout);
+//		}
+//
+//		CHECK_CAIRO(cairo_set_line_width(cr, 3.0));
+//		CHECK_CAIRO(cairo_set_line_cap(cr, CAIRO_LINE_CAP_ROUND));
+//		CHECK_CAIRO(cairo_set_line_join(cr, CAIRO_LINE_JOIN_BEVEL));
+//		CHECK_CAIRO(cairo_set_source_color_alpha(cr, notebook_normal_outline_color));
+//
+//		CHECK_CAIRO(cairo_stroke_preserve(cr));
+//
+//		CHECK_CAIRO(cairo_set_line_width(cr, 1.0));
+//		CHECK_CAIRO(cairo_set_source_color_alpha(cr, notebook_normal_text_color));
+//		CHECK_CAIRO(cairo_fill(cr));
+//	}
+//
+//	cairo_restore(cr);
 
 }
 
@@ -1892,7 +1892,7 @@ void simple2_theme_t::cairo_rounded_tab3(cairo_t * cr, double x, double y, doubl
 
 }
 
-shared_ptr<pixmap_t> simple2_theme_t::get_background() const {
+cairo_surface_t * simple2_theme_t::get_background() const {
 	return backgroun_px;
 }
 

@@ -28,7 +28,7 @@ struct compositor_overlay_t : public tree_t {
 	PangoFontMap * _fps_font_map;
 	PangoContext * _fps_context;
 
-	shared_ptr<pixmap_t> _back_surf;
+	cairo_surface_t * _back_surf;
 	rect _position;
 
 	bool _has_damage;
@@ -39,7 +39,7 @@ public:
 		_fps_font_desc = pango_font_description_from_string("Mono 11");
 		_fps_font_map = pango_cairo_font_map_new();
 		_fps_context = pango_font_map_create_context(_fps_font_map);
-		_back_surf = make_shared<pixmap_t>(PIXMAP_RGBA, _position.w, _position.h);
+		//_back_surf = make_shared<pixmap_t>(ctx, PIXMAP_RGBA, _position.w, _position.h);
 
 	}
 
@@ -162,8 +162,8 @@ public:
 		r &= area;
 		for (auto &a : r.rects()) {
 			cairo_clip(cr, a);
-			cairo_set_source_surface(cr, _back_surf->get_cairo_surface(), _position.x, _position.y);
-			cairo_mask_surface(cr, _back_surf->get_cairo_surface(), _position.x, _position.y);
+			cairo_set_source_surface(cr, _back_surf, _position.x, _position.y);
+			cairo_mask_surface(cr, _back_surf, _position.x, _position.y);
 		}
 		cairo_restore(cr);
 	}

@@ -15,6 +15,7 @@
 #include "keymap.hxx"
 #include "pointer-grab-handler.hxx"
 #include "keyboard-grab-handler.hxx"
+#include "pixmap.hxx"
 
 namespace page {
 
@@ -90,6 +91,7 @@ public:
 //	virtual auto mainloop() -> mainloop_t * = 0;
 	virtual void sync_tree_view() = 0;
 	virtual void manage_client(shared_ptr<xdg_surface_toplevel_t> mw) = 0;
+	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p = 0;
 
 };
 

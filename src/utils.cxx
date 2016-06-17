@@ -60,5 +60,19 @@ void cairo_rectangle_arc_corner(cairo_t * cr, rect const & position, double radi
 	cairo_rectangle_arc_corner(cr, position.x, position.y, position.w, position.h, radius, corner_mask);
 }
 
+void weston_surface_state_set_buffer(struct weston_surface_state *state,
+				struct weston_buffer *buffer)
+{
+	if (state->buffer == buffer)
+		return;
+
+	if (state->buffer)
+		wl_list_remove(&state->buffer_destroy_listener.link);
+	state->buffer = buffer;
+	if (state->buffer)
+		wl_signal_add(&state->buffer->destroy_signal,
+			      &state->buffer_destroy_listener);
+}
+
 }
 

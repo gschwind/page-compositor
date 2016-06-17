@@ -113,7 +113,7 @@ public:
 	std::string background_file;
 	std::string scale_mode;
 
-	std::shared_ptr<pixmap_t> backgroun_px;
+	cairo_surface_t * backgroun_px;
 
 	simple2_theme_t(config_handler_t & conf);
 
@@ -207,7 +207,7 @@ public:
 
 	static void cairo_rounded_tab3(cairo_t * cr, double x, double y, double w, double h, double radius);
 
-	virtual shared_ptr<pixmap_t> get_background() const;
+	virtual cairo_surface_t * get_background() const;
 
 	virtual color_t const & get_focused_color() const;
 	virtual color_t const & get_selected_color() const;

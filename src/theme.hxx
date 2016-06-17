@@ -35,18 +35,18 @@ struct margin_t {
 };
 
 struct theme_alttab_entry_t {
-	std::shared_ptr<icon64> icon;
+	cairo_surface_t * icon;
 	std::string label;
 };
 
 struct theme_dropdown_menu_entry_t {
-	std::shared_ptr<icon16> icon;
+	cairo_surface_t * icon;
 	std::string label;
 };
 
 struct theme_thumbnail_t {
-	std::shared_ptr<pixmap_t> pix;
-	std::shared_ptr<pixmap_t> title;
+	cairo_surface_t * pix;
+	cairo_surface_t * title;
 };
 
 class theme_t {
@@ -111,7 +111,7 @@ public:
 	virtual void render_menuentry(cairo_t * cr, theme_dropdown_menu_entry_t const & item, rect const & area, bool selected) const = 0;
 	virtual void update() = 0;
 
-	virtual std::shared_ptr<pixmap_t> get_background() const = 0;
+	virtual cairo_surface_t * get_background() const = 0;
 
 	virtual color_t const & get_focused_color() const = 0;
 	virtual color_t const & get_selected_color() const = 0;

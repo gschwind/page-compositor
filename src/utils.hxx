@@ -917,6 +917,9 @@ T * resource_get(wl_resource * r) {
 	return reinterpret_cast<T *>(wl_resource_get_user_data(r));
 }
 
+void weston_surface_state_set_buffer(struct weston_surface_state *state,
+				struct weston_buffer *buffer);
+
 }
 
 

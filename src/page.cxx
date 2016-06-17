@@ -28,6 +28,7 @@
 #include <typeinfo>
 #include <memory>
 #include <utility>
+#include <list>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -67,6 +68,20 @@
 
 namespace page {
 
+int page_t::page_repaint(struct weston_output *output_base,
+		   pixman_region32_t *damage) {
+	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	auto func = ths->repaint_functions[output_base];
+	output_base->repaint = func;
+	int ret = (*output_base->repaint)(output_base, damage);
+	output_base->repaint = &page_t::page_repaint;
+	return ret;
+
+}
+
 static void ack_buffer(struct wl_client *client,
 		   struct wl_resource *resource,
 		   uint32_t serial,
@@ -75,12 +90,13 @@ static void ack_buffer(struct wl_client *client,
 
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(has_key(ths->buffers, serial)) {
-		ths->buffers[serial] = buffer;
-	} else {
-		throw exception_t{"invalid ack_buffer"};
-	}
+	auto x = std::find_if(ths->pixmap_list.begin(), ths->pixmap_list.end(),
+			[serial](pixmap_p p) -> bool{
+				return p->serial() == serial;
+			});
 
+	if(x != ths->pixmap_list.end())
+		(*x)->ack_buffer(client, resource, serial, buffer);
 
 }
 
@@ -126,13 +142,9 @@ void page_t::bind_zzz_buffer_manager(struct wl_client * client, void * data,
 			&_zzz_buffer_manager_interface, ths, &xx_buffer_delete);
 
 
-	/* test create buffer */
-	uint32_t serial = wl_display_next_serial(ths->_dpy);
-
-	ths->buffers[serial] = nullptr;
-	zzz_buffer_manager_send_get_buffer(ths->_buffer_manager_resource, serial,
-			100, 100);
-	wl_display_flush_clients(ths->_dpy);
+	for(auto & p: ths->pixmap_list) {
+		p->bind_buffer_manager();
+	}
 
 }
 
@@ -355,6 +367,8 @@ void page_t::run() {
 	 */
 	ec = weston_compositor_create(_dpy, nullptr);
 	weston_log("weston_compositor = %p\n", ec);
+
+	ec->user_data = this;
 
 	weston_layer_init(&default_layer, &ec->cursor_layer.link);
 
@@ -3441,6 +3455,8 @@ void page_t::on_output_created(weston_output * output) {
 //	background->timeline.force_refresh = 1;
 //	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
+	repaint_functions[output] = output->repaint;
+	output->repaint = &page_t::page_repaint;
 	_outputs.push_back(output);
 	update_viewport_layout();
 
@@ -3727,6 +3743,12 @@ void page_t::sync_tree_view() {
 
 void page_t::xdg_popup_destroy(wl_client * client, wl_resource * resource) {
 
+}
+
+auto page_t::create_pixmap(uint32_t width, uint32_t height) -> pixmap_p {
+	auto p = make_shared<pixmap_t>(this, PIXMAP_RGBA, width, height);
+	pixmap_list.push_back(p);
+	return p;
 }
 
 }

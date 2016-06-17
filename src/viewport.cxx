@@ -52,6 +52,8 @@ viewport_t::viewport_t(page_context_t * ctx, rect const & area,
 	weston_view_set_position(_default_view, area.x, area.y);
 	weston_view_geometry_dirty(_default_view);
 
+	_pix = _ctx->create_pixmap(area.w, area.h);
+
 }
 
 viewport_t::~viewport_t() {
@@ -157,7 +159,7 @@ void viewport_t::show() {
 }
 
 void viewport_t::destroy_renderable() {
-	_back_surf.reset();
+	_back_surf = nullptr;
 }
 
 void viewport_t::update_renderable() {
@@ -217,13 +219,13 @@ void viewport_t::create_window() {
 }
 
 void viewport_t::_redraw_back_buffer() {
-	if(_back_surf == nullptr)
+	if(_pix->get_cairo_surface() == nullptr)
 		return;
 
 	if(not _is_durty)
 		return;
 
-	cairo_t * cr = cairo_create(_back_surf->get_cairo_surface());
+	cairo_t * cr = cairo_create(_pix->get_cairo_surface());
 	cairo_identity_matrix(cr);
 
 	auto splits = filter_class<split_t>(get_all_children());
@@ -236,7 +238,7 @@ void viewport_t::_redraw_back_buffer() {
 		x->render_legacy(cr);
 	}
 
-	cairo_surface_flush(_back_surf->get_cairo_surface());
+	cairo_surface_flush(_pix->get_cairo_surface());
 	warn(cairo_get_reference_count(cr) == 1);
 	cairo_destroy(cr);
 
@@ -250,6 +252,17 @@ void viewport_t::trigger_redraw() {
 	/** redraw all child **/
 	tree_t::trigger_redraw();
 	_redraw_back_buffer();
+
+//	if(_pix->get_cairo_surface() != nullptr) {
+//
+////		weston_surface_state_set_buffer(&_backbround_surface->pending, _pix->wbuffer());
+////
+////		_backbround_surface->pending.sx = 0;
+////		_backbround_surface->pending.sy = 0;
+////		_backbround_surface->pending.newly_attached = 1;
+////	    weston_surface_damage(_backbround_surface);
+//
+//	}
 
 //	if(_exposed and _ctx->cmp() == nullptr) {
 //		_exposed = false;
@@ -313,17 +326,17 @@ void viewport_t::render(cairo_t * cr, region const & area) {
 		return;
 	if(_back_surf == nullptr)
 		return;
-	if(_back_surf->get_cairo_surface() == nullptr)
+	if(_back_surf == nullptr)
 		return;
 
 	cairo_save(cr);
 	cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_surface(cr, _back_surf->get_cairo_surface(),
+	cairo_set_source_surface(cr, _back_surf,
 			_effective_area.x, _effective_area.y);
 	region r = region{_effective_area} & area;
 	for (auto &i : r.rects()) {
 		cairo_clip(cr, i);
-		cairo_mask_surface(cr, _back_surf->get_cairo_surface(), _effective_area.x, _effective_area.y);
+		cairo_mask_surface(cr, _back_surf, _effective_area.x, _effective_area.y);
 	}
 	cairo_restore(cr);
 }
