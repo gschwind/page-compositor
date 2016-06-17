@@ -68,6 +68,42 @@
 
 namespace page {
 
+static void _page_focus(weston_pointer_grab * grab) {
+	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
+	pod->ths->process_focus(grab);
+}
+
+static void _page_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event) {
+	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
+	pod->ths->process_motion(grab, time, event);
+}
+
+static void _page_button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state) {
+	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
+	pod->ths->process_button(grab, time, button, state);
+}
+
+static void _page_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event) {
+	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
+	pod->ths->process_axis(grab, time, event);
+}
+
+static void _page_axis_source(weston_pointer_grab * grab, uint32_t source) {
+	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
+	pod->ths->process_axis_source(grab, source);
+}
+
+static void _page_frame(weston_pointer_grab * grab) {
+	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
+	pod->ths->process_frame(grab);
+}
+
+static void _page_cancel(weston_pointer_grab * grab) {
+	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
+	pod->ths->process_cancel(grab);
+}
+
+
 int page_t::page_repaint(struct weston_output *output_base,
 		   pixman_region32_t *damage) {
 	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
@@ -274,6 +310,16 @@ page_t::page_t(int argc, char ** argv)
 
 	configuration._fade_in_time = _conf.get_long("compositor", "fade_in_time");
 
+
+	default_grab_pod.grab_interface.focus = &_page_focus;
+	default_grab_pod.grab_interface.motion = &_page_motion;
+	default_grab_pod.grab_interface.button = &_page_button;
+	default_grab_pod.grab_interface.axis = &_page_axis;
+	default_grab_pod.grab_interface.axis_source = &_page_axis_source;
+	default_grab_pod.grab_interface.frame = &_page_frame;
+	default_grab_pod.grab_interface.cancel = &_page_cancel;
+	default_grab_pod.ths = this;
+
 }
 
 page_t::~page_t() {
@@ -400,6 +446,8 @@ void page_t::run() {
 
 	update_viewport_layout();
 
+	old_grab_interface = ec->default_pointer_grab;
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
 
 	weston_compositor_wake(ec);
 
@@ -3751,6 +3799,76 @@ auto page_t::create_pixmap(uint32_t width, uint32_t height) -> pixmap_p {
 	auto p = make_shared<pixmap_t>(this, PIXMAP_RGBA, width, height);
 	pixmap_list.push_back(p);
 	return p;
+}
+
+void page_t::process_focus(weston_pointer_grab * grab) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(old_grab_interface) {
+		grab->interface = old_grab_interface;
+		(*old_grab_interface->focus)(grab);
+		grab->interface = &default_grab_pod.grab_interface;
+	}
+}
+
+void page_t::process_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(old_grab_interface) {
+		grab->interface = old_grab_interface;
+		(*old_grab_interface->motion)(grab, time, event);
+		grab->interface = &default_grab_pod.grab_interface;
+	}
+}
+
+void page_t::process_button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(old_grab_interface) {
+		grab->interface = old_grab_interface;
+		(*old_grab_interface->button)(grab, time, button, state);
+		grab->interface = &default_grab_pod.grab_interface;
+	}
+}
+
+void page_t::process_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(old_grab_interface) {
+		grab->interface = old_grab_interface;
+		(*old_grab_interface->axis)(grab, time, event);
+		grab->interface = &default_grab_pod.grab_interface;
+	}
+}
+
+void page_t::process_axis_source(weston_pointer_grab * grab, uint32_t source) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(old_grab_interface) {
+		grab->interface = old_grab_interface;
+		(*old_grab_interface->axis_source)(grab, source);
+		grab->interface = &default_grab_pod.grab_interface;
+	}
+}
+
+void page_t::process_frame(weston_pointer_grab * grab) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(old_grab_interface) {
+		grab->interface = old_grab_interface;
+		(*old_grab_interface->frame)(grab);
+		grab->interface = &default_grab_pod.grab_interface;
+	}
+}
+
+void page_t::process_cancel(weston_pointer_grab * grab) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(old_grab_interface) {
+		grab->interface = old_grab_interface;
+		(*old_grab_interface->cancel)(grab);
+		grab->interface = &default_grab_pod.grab_interface;
+	}
 }
 
 }

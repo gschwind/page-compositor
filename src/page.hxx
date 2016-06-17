@@ -143,6 +143,13 @@ struct page_t : public page_context_t {
 
 	map<weston_output *, repaint_func> repaint_functions;
 
+	struct _default_grab_interface_t {
+		weston_pointer_grab_interface grab_interface;
+		page_t * ths;
+	} default_grab_pod;
+
+	weston_pointer_grab_interface const * old_grab_interface;
+
 //	key_desc_t bind_page_quit;
 //	key_desc_t bind_toggle_fullscreen;
 //	key_desc_t bind_toggle_compositor;
@@ -362,6 +369,13 @@ struct page_t : public page_context_t {
 //
 //	auto find_client_managed_with(xcb_window_t w) -> shared_ptr<xdg_surface_toplevel_t>;
 
+	void process_focus(weston_pointer_grab * grab);
+	void process_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event);
+	void process_button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state);
+	void process_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event);
+	void process_axis_source(weston_pointer_grab * grab, uint32_t source);
+	void process_frame(weston_pointer_grab * grab);
+	void process_cancel(weston_pointer_grab * grab);
 
 	void connect_all();
 	void on_output_created(weston_output * output);
