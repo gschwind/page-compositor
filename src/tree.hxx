@@ -121,8 +121,8 @@ public:
 
 	void broadcast_trigger_redraw();
 
-	bool broadcast_button(uint32_t time, uint32_t button, uint32_t state);
-	bool broadcast_motion(uint32_t time, weston_pointer_motion_event * event);
+	bool broadcast_button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state);
+	bool broadcast_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event * event);
 	void broadcast_update_layout(time64_t const time);
 	void broadcast_render_finished();
 
@@ -159,8 +159,8 @@ public:
 	virtual void activate();
 	virtual void activate(shared_ptr<tree_t> t);
 
-	virtual bool button(uint32_t time, uint32_t button, uint32_t state);
-	virtual bool motion(uint32_t time, weston_pointer_motion_event * event);
+	virtual bool button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state);
+	virtual bool motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event * event);
 
 	virtual auto get_xid() const -> uint32_t;
 	virtual auto get_parent_xid() const -> uint32_t;

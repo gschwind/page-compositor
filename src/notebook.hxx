@@ -226,6 +226,8 @@ public:
 	virtual region get_damaged();
 	virtual void queue_redraw();
 
+	virtual bool motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event * event);
+
 	/**
 	 * page_component_t interface
 	 **/

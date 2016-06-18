@@ -1052,10 +1052,11 @@ void notebook_t::_update_mouse_over() {
 	}
 
 }
-//
-//bool notebook_t::button_motion(xcb_motion_notify_event_t const * e) {
-//
-//	if (e->event != get_parent_xid()) {
+
+bool notebook_t::motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event * event) {
+	auto pointer = grab->pointer;
+
+//	if (pointer->focus != get_default_view()) {
 //		_has_mouse_change = true;
 //		_mouse_over.event_x = -1;
 //		_mouse_over.event_y = -1;
@@ -1073,9 +1074,9 @@ void notebook_t::_update_mouse_over() {
 //	}
 //
 //	return false;
-//
-//}
-//
+
+}
+
 //bool notebook_t::leave(xcb_leave_notify_event_t const * ev) {
 //	if(ev->event == get_parent_xid()) {
 //		_has_mouse_change = true;

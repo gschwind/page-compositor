@@ -26,9 +26,132 @@
 #include <sys/mman.h>
 #include <wayland-client.h>
 #include <libweston-0/compositor.h>
+#include <cairo.h>
+
 #include "buffer-manager-client-protocol.h"
 
 namespace page {
+
+static
+void pointer_enter(void *data,
+	      struct wl_pointer *wl_pointer,
+	      uint32_t serial,
+	      struct wl_surface *surface,
+	      wl_fixed_t surface_x,
+	      wl_fixed_t surface_y) {
+	buffer_manager_t * bm = reinterpret_cast<buffer_manager_t*>(data);
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	wl_surface_attach(bm->pointer_data.surface, bm->pointer_data.buffer, 0, 0);
+	wl_surface_commit(bm->pointer_data.surface);
+	wl_pointer_set_cursor(bm->pointer, serial, bm->pointer_data.surface, 0, 0);
+
+}
+
+static
+void pointer_leave(void *data,
+	      struct wl_pointer *wl_pointer,
+	      uint32_t serial,
+	      struct wl_surface *surface) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static
+void pointer_motion(void *data,
+	       struct wl_pointer *wl_pointer,
+	       uint32_t time,
+	       wl_fixed_t surface_x,
+	       wl_fixed_t surface_y) {
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static
+void pointer_button(void *data,
+	       struct wl_pointer *wl_pointer,
+	       uint32_t serial,
+	       uint32_t time,
+	       uint32_t button,
+	       uint32_t state) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static
+void poitner_axis(void *data,
+	     struct wl_pointer *wl_pointer,
+	     uint32_t time,
+	     uint32_t axis,
+	     wl_fixed_t value) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static
+void pointer_frame(void *data,
+	      struct wl_pointer *wl_pointer) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static
+void pointer_axis_source(void *data,
+		    struct wl_pointer *wl_pointer,
+		    uint32_t axis_source) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static
+void pointer_axis_stop(void *data,
+		  struct wl_pointer *wl_pointer,
+		  uint32_t time,
+		  uint32_t axis) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static
+void pointer_axis_discrete(void *data,
+		      struct wl_pointer *wl_pointer,
+		      uint32_t axis,
+		      int32_t discrete) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+struct wl_pointer_listener xx_pointer_listener = {
+		pointer_enter,
+		pointer_leave,
+		pointer_motion,
+		pointer_button,
+		poitner_axis,
+		pointer_frame,
+		pointer_axis_source,
+		pointer_axis_stop,
+		pointer_axis_discrete
+};
+
+
+static
+void bm_capabilities(void *data,
+		     struct wl_seat *wl_seat,
+		     uint32_t capabilities) {
+	buffer_manager_t * bm = reinterpret_cast<buffer_manager_t*>(data);
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(capabilities & WL_SEAT_CAPABILITY_POINTER) {
+		bm->pointer = wl_seat_get_pointer(bm->seat);
+		wl_pointer_add_listener(bm->pointer, &xx_pointer_listener, bm);
+	}
+
+}
+
+static
+void bm_name(void *data,
+	     struct wl_seat *wl_seat,
+	     const char *name) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+struct wl_seat_listener xx_seat_listener = {
+		bm_capabilities,
+		bm_name
+};
 
 static void
 buffer_release(void *data, struct wl_buffer *buffer)
@@ -200,13 +323,13 @@ create_shm_buffer(buffer_manager_t * bm, buffer_t *buffer,
 static void xx_surface_enter(void *data,
 	      struct wl_surface *wl_surface,
 	      struct wl_output *output) {
-
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 }
 
 static void xx_surface_leave(void *data,
 	      struct wl_surface *wl_surface,
 	      struct wl_output *output) {
-
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 }
 
 struct wl_surface_listener surface_listener = {
@@ -257,10 +380,16 @@ static void zzz_buffer_manager_get_buffer(void *data,
 	bm->buffers[serial] = buffer;
 
 	buffer->surface = wl_compositor_create_surface(bm->compositor);
-	wl_surface_attach(buffer->surface, buffer->buffer, 0, 0);
-	wl_surface_commit(buffer->surface);
-
 	wl_surface_add_listener(buffer->surface, &surface_listener, bm);
+
+
+	wl_surface_attach(buffer->surface, buffer->buffer, 0, 0);
+	auto region = wl_compositor_create_region(bm->compositor);
+	wl_region_add(region, 0, 0, width, height);
+	wl_surface_set_opaque_region(buffer->surface, region);
+	wl_surface_set_input_region(buffer->surface, region);
+	wl_region_destroy(region);
+	wl_surface_commit(buffer->surface);
 
 	weston_log("send zzz_buffer_manager_ack_buffer %p %p\n",bm->buffer_manager, buffer->buffer);
 	zzz_buffer_manager_ack_buffer(bm->buffer_manager, serial, buffer->surface, buffer->buffer);
@@ -286,16 +415,36 @@ buffer_manager_global(void *data, struct wl_registry *registry, uint32_t id,
     			&zzz_buffer_manager_interface, 1));
     	zzz_buffer_manager_add_listener(bm->buffer_manager,
     			&_zzz_buffer_manager_listener, bm);
-
-    	weston_log("FOUND\n");
     } else if (strcmp(interface, "wl_shm") == 0) {
     	bm->shm = reinterpret_cast<wl_shm*>(wl_registry_bind(registry,
 					  id, &wl_shm_interface, 1));
 		wl_shm_add_listener(bm->shm, &buffer_manager_shm_listener, bm);
-	} else 	if (strcmp(interface, "wl_compositor") == 0) {
+		create_shm_buffer(bm, &bm->pointer_data,
+						16, 16, WL_SHM_FORMAT_ARGB8888);
+
+		cairo_surface_t * surf = cairo_image_surface_create_for_data(
+				(uint8_t*)bm->pointer_data.shm_data, CAIRO_FORMAT_ARGB32, 16, 16, 16*4);
+
+		cairo_t * cr = cairo_create(surf);
+		cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
+		cairo_paint(cr);
+		cairo_destroy(cr);
+		cairo_surface_destroy(surf);
+
+	} else if (strcmp(interface, "wl_compositor") == 0) {
 		bm->compositor =
 				reinterpret_cast<wl_compositor*>(wl_registry_bind(registry,
 					 id, &wl_compositor_interface, 1));
+
+		bm->pointer_data.surface = wl_compositor_create_surface(bm->compositor);
+
+	} else if (strcmp(interface, "wl_seat") == 0) {
+		bm->seat =
+				reinterpret_cast<wl_seat*>(wl_registry_bind(registry,
+					 id, &wl_seat_interface, 1));
+
+		wl_seat_add_listener(bm->seat, &xx_seat_listener, bm);
+
 	}
 
 }

@@ -38,10 +38,15 @@ struct buffer_manager_t {
 	wl_display * display;
 	wl_registry * registry;
 	wl_compositor * compositor;
+	wl_seat * seat;
+	wl_pointer * pointer;
 	wl_shm * shm;
+	wl_region * region;
 	zzz_buffer_manager * buffer_manager;
 
 	bool has_argb;
+
+	buffer_t pointer_data;
 
 	std::map<uint32_t, buffer_t *> buffers;
 };

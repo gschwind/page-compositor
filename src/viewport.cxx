@@ -228,8 +228,8 @@ void viewport_t::_redraw_back_buffer() {
 	if(_pix->get_cairo_surface() == nullptr)
 		return;
 
-	//if(not _is_durty)
-	//	return;
+	if(not _is_durty)
+		return;
 
 	cairo_t * cr = cairo_create(_pix->get_cairo_surface());
 	if(cairo_status(cr)) {
@@ -374,18 +374,21 @@ void viewport_t::_on_ack_buffer(pixmap_t * p) {
 	assert(_pix.get() == p);
 
 	_backbround_surface = _pix->wsurface();
-	pixman_region32_fini(&_backbround_surface->opaque);
-	pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0, _effective_area.w,
-			_effective_area.h);
+//	pixman_region32_fini(&_backbround_surface->opaque);
+//	pixman_region32_init_rect(&_backbround_surface->opaque, 0, 0,
+//			_effective_area.w, _effective_area.h);
+//	pixman_region32_fini(&_backbround_surface->input);
+//	pixman_region32_init_rect(&_backbround_surface->input, 0, 0,
+//			_effective_area.w, _effective_area.h);
+	weston_surface_set_role(_backbround_surface, "none",
+			nullptr, 0);
 	weston_surface_damage(_backbround_surface);
 
 	_backbround_surface->timeline.force_refresh = 1;
 	_default_view = weston_view_create(_backbround_surface);
 	weston_view_set_position(_default_view, _effective_area.x, _effective_area.y);
+	weston_view_set_mask_infinite(_default_view);
 	weston_view_geometry_dirty(_default_view);
-
-	_is_durty = true;
-	_redraw_back_buffer();
 
 	_ctx->sync_tree_view();
 

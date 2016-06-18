@@ -3804,71 +3804,68 @@ auto page_t::create_pixmap(uint32_t width, uint32_t height) -> pixmap_p {
 void page_t::process_focus(weston_pointer_grab * grab) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(old_grab_interface) {
-		grab->interface = old_grab_interface;
-		(*old_grab_interface->focus)(grab);
-		grab->interface = &default_grab_pod.grab_interface;
-	}
+	weston_compositor_set_default_pointer_grab(ec, NULL);
+	(*grab->pointer->default_grab.interface->focus)(grab);
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
 }
 
 void page_t::process_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(old_grab_interface) {
-		grab->interface = old_grab_interface;
-		(*old_grab_interface->motion)(grab, time, event);
-		grab->interface = &default_grab_pod.grab_interface;
-	}
+	_root->broadcast_motion(grab, time, event);
+
+	weston_compositor_set_default_pointer_grab(ec, NULL);
+	(*grab->pointer->default_grab.interface->motion)(grab, time, event);
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+
 }
 
-void page_t::process_button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
+		uint32_t button, uint32_t state) {
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(old_grab_interface) {
-		grab->interface = old_grab_interface;
-		(*old_grab_interface->button)(grab, time, button, state);
-		grab->interface = &default_grab_pod.grab_interface;
-	}
+	_root->broadcast_button(grab, time, button, state);
+
+	weston_compositor_set_default_pointer_grab(ec, NULL);
+	(*grab->pointer->default_grab.interface->button)(grab, time, button, state);
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+
 }
 
 void page_t::process_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(old_grab_interface) {
-		grab->interface = old_grab_interface;
-		(*old_grab_interface->axis)(grab, time, event);
-		grab->interface = &default_grab_pod.grab_interface;
-	}
+	weston_compositor_set_default_pointer_grab(ec, NULL);
+	(*grab->pointer->default_grab.interface->axis)(grab, time, event);
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+
 }
 
 void page_t::process_axis_source(weston_pointer_grab * grab, uint32_t source) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(old_grab_interface) {
-		grab->interface = old_grab_interface;
-		(*old_grab_interface->axis_source)(grab, source);
-		grab->interface = &default_grab_pod.grab_interface;
-	}
+	weston_compositor_set_default_pointer_grab(ec, NULL);
+	(*grab->pointer->default_grab.interface->axis_source)(grab, source);
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+
 }
 
 void page_t::process_frame(weston_pointer_grab * grab) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(old_grab_interface) {
-		grab->interface = old_grab_interface;
-		(*old_grab_interface->frame)(grab);
-		grab->interface = &default_grab_pod.grab_interface;
-	}
+	weston_compositor_set_default_pointer_grab(ec, NULL);
+	(*grab->pointer->default_grab.interface->frame)(grab);
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+
 }
 
 void page_t::process_cancel(weston_pointer_grab * grab) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(old_grab_interface) {
-		grab->interface = old_grab_interface;
-		(*old_grab_interface->cancel)(grab);
-		grab->interface = &default_grab_pod.grab_interface;
-	}
+	weston_compositor_set_default_pointer_grab(ec, NULL);
+	(*grab->pointer->default_grab.interface->cancel)(grab);
+	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+
 }
 
 }
