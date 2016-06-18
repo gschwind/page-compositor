@@ -5,10 +5,9 @@ AM_CXXFLAGS =  \
 	-rdynamic \
 	@LTO@ \
 	@PIXMAN_CFLAGS@ \
-	@CAIRO_CFLAGS@ \
-	@PANGO_CFLAGS@ \
-	@WAYLAND_CFLAGS@ \
 	@WESTON_CFLAGS@ \
+	@WLS_CFLAGS@ \
+	@WLC_CFLAGS@ \
 	-fno-strict-aliasing
 
 BUILT_SOURCES = \
@@ -26,10 +25,9 @@ page_compositor_SOURCES = \
 page_compositor_LDADD = \
 	@LTO@ \
 	@PIXMAN_LIBS@ \
-	@WAYLAND_LIBS@ \
 	@WESTON_LIBS@ \
-	@CAIRO_LIBS@ \
-	@PANGO_LIBS@ \
+	@WLS_LIBS@ \
+	@WLC_LIBS@ \
 	@RT_LIBS@ 
 
 %-protocol.c : $(top_srcdir)/protocol/%.xml

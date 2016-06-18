@@ -32,8 +32,8 @@ void load_x11_backend(weston_compositor* ec) {
 	weston_x11_backend_config config = {{ 0, }};
 	weston_x11_backend_output_config default_output = { 0, };
 
-	default_output.height = 1600;
-	default_output.width = 1600;
+	default_output.height = 800;
+	default_output.width = 600;
 	default_output.name = strdup("Wayland output");
 	default_output.scale = 1;
 	default_output.transform = WL_OUTPUT_TRANSFORM_NORMAL;
@@ -124,27 +124,27 @@ compositor_t::compositor_t() {
 	background->timeline.force_refresh = 1;
 	//weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
-	auto stest = weston_surface_create(ec);
-	weston_surface_set_size(stest, 800, 600);
-    pixman_region32_fini(&stest->opaque);
-    pixman_region32_init_rect(&stest->opaque, 0, 0, 800, 600);
-    weston_surface_damage(stest);
-
-    unsigned * data = (unsigned*)malloc(4*800*600);
-    for(int i = 0; i < 800*600; ++i)
-    	data[i] = 0x88ffff88;
-    auto sbuffer = weston_buffer_from_memory(800, 600, 4*800, WL_SHM_FORMAT_ARGB8888, data);
-    weston_surface_attach(stest, sbuffer);
-    weston_surface_damage(stest);
-
-    auto sview = weston_view_create(stest);
-	weston_view_set_position(sview, 0, 0);
-	stest->timeline.force_refresh = 1;
-	weston_layer_entry_insert(&default_layer.view_list, &sview->layer_link);
-    weston_surface_commit(stest);
-    weston_surface_attach(stest, sbuffer);
-    weston_surface_damage(stest);
-    weston_surface_commit(stest);
+//	auto stest = weston_surface_create(ec);
+//	weston_surface_set_size(stest, 800, 600);
+//    pixman_region32_fini(&stest->opaque);
+//    pixman_region32_init_rect(&stest->opaque, 0, 0, 800, 600);
+//    weston_surface_damage(stest);
+//
+//    unsigned * data = (unsigned*)malloc(4*800*600);
+//    for(int i = 0; i < 800*600; ++i)
+//    	data[i] = 0x88ffff88;
+//    auto sbuffer = weston_buffer_from_memory(800, 600, 4*800, WL_SHM_FORMAT_ARGB8888, data);
+//    weston_surface_attach(stest, sbuffer);
+//    weston_surface_damage(stest);
+//
+//    auto sview = weston_view_create(stest);
+//	weston_view_set_position(sview, 0, 0);
+//	stest->timeline.force_refresh = 1;
+//	weston_layer_entry_insert(&default_layer.view_list, &sview->layer_link);
+//    weston_surface_commit(stest);
+//    weston_surface_attach(stest, sbuffer);
+//    weston_surface_damage(stest);
+//    weston_surface_commit(stest);
 
 }
 
