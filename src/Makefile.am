@@ -4,10 +4,10 @@ AM_CXXFLAGS =  \
 	-std=c++11 \
 	-rdynamic \
 	@LTO@ \
-	@PIXMAN_CFLAGS@ \
-	@WESTON_CFLAGS@ \
 	@WLS_CFLAGS@ \
 	@WLC_CFLAGS@ \
+	@PIXMAN_CFLAGS@ \
+	@WESTON_CFLAGS@ \
 	-fno-strict-aliasing
 
 BUILT_SOURCES = \
@@ -24,10 +24,10 @@ page_compositor_SOURCES = \
 
 page_compositor_LDADD = \
 	@LTO@ \
-	@PIXMAN_LIBS@ \
-	@WESTON_LIBS@ \
 	@WLS_LIBS@ \
 	@WLC_LIBS@ \
+	@PIXMAN_LIBS@ \
+	@WESTON_LIBS@ \
 	@RT_LIBS@ 
 
 %-protocol.c : $(top_srcdir)/protocol/%.xml

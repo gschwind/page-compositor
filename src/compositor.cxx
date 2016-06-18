@@ -24,16 +24,14 @@ using namespace std;
 
 using backend_init_func =
 		int (*)(struct weston_compositor *c,
-	    int *argc, char *argv[],
-	    struct weston_config *config,
 	    struct weston_backend_config *config_base);
 
 void load_x11_backend(weston_compositor* ec) {
 	weston_x11_backend_config config = {{ 0, }};
 	weston_x11_backend_output_config default_output = { 0, };
 
-	default_output.height = 800;
-	default_output.width = 600;
+	default_output.height = 600;
+	default_output.width = 800;
 	default_output.name = strdup("Wayland output");
 	default_output.scale = 1;
 	default_output.transform = WL_OUTPUT_TRANSFORM_NORMAL;
@@ -52,7 +50,7 @@ void load_x11_backend(weston_compositor* ec) {
 	if (!backend_init)
 		return;
 
-	backend_init(ec, NULL, NULL, NULL, &config.base);
+	backend_init(ec, &config.base);
 
 	free(default_output.name);
 
@@ -122,7 +120,7 @@ compositor_t::compositor_t() {
     auto bview = weston_view_create(background);
 	weston_view_set_position(bview, 0, 0);
 	background->timeline.force_refresh = 1;
-	//weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
+	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
 //	auto stest = weston_surface_create(ec);
 //	weston_surface_set_size(stest, 800, 600);
