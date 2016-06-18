@@ -163,7 +163,7 @@ public:
 	virtual bool motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event * event);
 
 	virtual auto get_xid() const -> uint32_t;
-	virtual auto get_parent_xid() const -> uint32_t;
+	virtual auto get_parent_default_view() const -> weston_view *;
 	virtual rect get_window_position() const;
 	virtual void queue_redraw();
 

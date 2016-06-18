@@ -211,11 +211,14 @@ uint32_t tree_t::get_xid() const {
 	return 0;
 }
 
-uint32_t tree_t::get_parent_xid() const {
+auto tree_t::get_parent_default_view() const -> weston_view * {
+	if(get_default_view())
+		return get_default_view();
+
 	if (_parent != nullptr)
-		return _parent->get_parent_xid();
+		return _parent->get_parent_default_view();
 	else
-		return 0;
+		return nullptr;
 }
 
 rect tree_t::get_window_position() const {

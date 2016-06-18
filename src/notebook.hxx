@@ -195,7 +195,7 @@ class notebook_t : public page_component_t {
 	void _set_theme_tab_offset(int x);
 
 	shared_ptr<notebook_t> shared_from_this();
-
+	void update_layout();
 
 public:
 

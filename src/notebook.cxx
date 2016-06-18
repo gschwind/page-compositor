@@ -398,6 +398,35 @@ void notebook_t::render_legacy(cairo_t * cr) {
 
 }
 
+void notebook_t::update_layout() {
+	if(not _transition.empty()) {
+		_layout_is_durty = true;
+	}
+
+	if(_layout_is_durty) {
+		_layout_is_durty = false;
+		_has_mouse_change = true;
+		_update_layout();
+	}
+
+	if(_has_mouse_change) {
+		_has_mouse_change = false;
+		_update_mouse_over();
+	}
+
+//	if (fading_notebook != nullptr and time >= (_swap_start + animation_duration)) {
+//		/** animation is terminated **/
+//		fading_notebook.reset();
+//		_ctx->add_global_damage(to_root_position(_allocation));
+//	}
+//
+//	if (fading_notebook != nullptr) {
+//		double ratio = (static_cast<double>(time - _swap_start) / static_cast<double const>(animation_duration));
+//		ratio = ratio*1.05 - 0.025;
+//		fading_notebook->set_ratio(ratio);
+//	}
+}
+
 void notebook_t::update_layout(time64_t const time) {
 	tree_t::update_layout(time);
 	if(not _transition.empty()) {
@@ -1056,24 +1085,30 @@ void notebook_t::_update_mouse_over() {
 bool notebook_t::motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event * event) {
 	auto pointer = grab->pointer;
 
-//	if (pointer->focus != get_default_view()) {
-//		_has_mouse_change = true;
-//		_mouse_over.event_x = -1;
-//		_mouse_over.event_y = -1;
-//		return false;
-//	}
-//
-//	if (e->child == XCB_NONE) {
-//		_has_mouse_change = true;
-//		_mouse_over.event_x = e->event_x;
-//		_mouse_over.event_y = e->event_y;
-//	} else {
-//		_has_mouse_change = true;
-//		_mouse_over.event_x = -1;
-//		_mouse_over.event_y = -1;
-//	}
-//
-//	return false;
+	if (pointer->focus != get_parent_default_view()) {
+		_has_mouse_change = true;
+		_mouse_over.event_x = -1;
+		_mouse_over.event_y = -1;
+		return false;
+	}
+
+	wl_fixed_t vx, vy;
+
+	weston_view_from_global_fixed(pointer->focus, grab->pointer->x, grab->pointer->y, &vx, &vy);
+
+	double x = wl_fixed_to_double(vx);
+	double y = wl_fixed_to_double(vy);
+
+
+	weston_log("event x=%f, y=%f\n", x, y);
+
+	_has_mouse_change = true;
+	_mouse_over.event_x = x;
+	_mouse_over.event_y = y;
+
+	update_layout();
+
+	return false;
 
 }
 
