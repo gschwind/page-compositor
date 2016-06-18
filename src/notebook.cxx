@@ -95,6 +95,7 @@ void notebook_t::replace(shared_ptr<page_component_t> src, shared_ptr<page_compo
 }
 
 void notebook_t::remove(shared_ptr<tree_t> src) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto mw = dynamic_pointer_cast<xdg_surface_toplevel_t>(src);
 	if (_has_client(mw)) {
 		_remove_client(mw);
@@ -109,6 +110,9 @@ void notebook_t::_activate_client(shared_ptr<xdg_surface_toplevel_t> x) {
 
 void notebook_t::_remove_client(shared_ptr<xdg_surface_toplevel_t> x) {
 	auto x_client_context = _find_client_context(x);
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
 	if(x_client_context == _clients_tab_order.end())
 		return;
 

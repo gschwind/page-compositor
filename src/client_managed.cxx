@@ -144,7 +144,11 @@ static struct ::xdg_surface_interface _xdg_surface_implementation = {
 
 
 void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
-	/* TODO */
+	auto ths = xdg_surface_toplevel_t::get(resource);
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	ths->_ctx->detach(ths->shared_from_this());
+
 }
 
 static void _weston_configure(struct weston_surface * es,
@@ -170,7 +174,8 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_demands_attention{false},
 	_default_view{nullptr},
 	_pending{},
-	_ack_serial{0}
+	_ack_serial{0},
+	_transient_for{nullptr}
 {
 
 	rect pos{0,0,surface->width, surface->height};
@@ -188,7 +193,7 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 	wl_resource_set_implementation(_xdg_surface_resource,
 			&_xdg_surface_implementation,
-			this, &xdg_surface_delete);
+			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
 	surface->configure = &_weston_configure;
 	surface->configure_private = this;
@@ -448,8 +453,8 @@ void xdg_surface_toplevel_t::hide() {
 	}
 
 	if(_default_view) {
-		weston_view_unmap(_default_view);
-		weston_view_destroy(_default_view);
+		//weston_view_unmap(_default_view);
+		//weston_view_destroy(_default_view);
 		_default_view = nullptr;
 	}
 
