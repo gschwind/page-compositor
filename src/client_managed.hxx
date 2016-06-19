@@ -94,6 +94,7 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 	bool _is_resized;
 	bool _is_exposed;
 	bool _has_change;
+	bool _is_activated;
 
 	/* handle the state of management: notebook, floating, fullscreen */
 	managed_window_type_e _managed_type;
@@ -116,7 +117,6 @@ public:
 
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
-
 
 	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
 

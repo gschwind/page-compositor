@@ -13,26 +13,64 @@ namespace page {
 
 using namespace std;
 
-//xdg_surface_popup_t::xdg_surface_popup_t(page_context_t * ctx, xcb_window_t w, xcb_atom_t type) :
-//		xdg_surface_base_t{ctx, w},
-//		_net_wm_type{type}
-//{
-////	_is_visible = true;
-////	_client_proxy->select_input(UNMANAGED_ORIG_WINDOW_EVENT_MASK);
-////	_client_proxy->select_input_shape(true);
-////	_client_proxy->update_shape();
-////	_client_view = _ctx->create_view(w);
-//}
-//
-//xdg_surface_popup_t::~xdg_surface_popup_t() {
-////	_ctx->add_global_damage(get_visible_region());
-////	_client_proxy->select_input(XCB_EVENT_MASK_NO_EVENT);
-//}
-//
-//xcb_atom_t xdg_surface_popup_t::net_wm_type() {
-//	return _net_wm_type;
-//}
-//
+void xdg_surface_popup_t::weston_configure(weston_surface * es, int32_t sx,
+		int32_t sy)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+static void xdg_popup_destroy(wl_client * client, wl_resource * resource) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+}
+
+struct xdg_popup_interface xx_xdg_popup_interface = {
+		xdg_popup_destroy
+};
+
+xdg_surface_popup_t * xdg_surface_popup_t::get(wl_resource *resource) {
+	return reinterpret_cast<xdg_surface_popup_t*>(
+			wl_resource_get_user_data(resource));
+}
+
+void xdg_surface_popup_t::xdg_popup_delete(struct wl_resource *resource) {
+	auto ths = xdg_surface_popup_t::get(resource);
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+}
+
+xdg_surface_popup_t::xdg_surface_popup_t(page_context_t * ctx, wl_client * client,
+		  wl_resource * resource,
+		  uint32_t id,
+		  weston_surface * surface,
+		  weston_surface * parent,
+		  weston_seat * seat,
+		  uint32_t serial,
+		  int32_t x, int32_t y) :
+		xdg_surface_base_t{ctx, client, surface, id}
+{
+	auto _xparent = reinterpret_cast<xdg_surface_base_t*>(parent->configure_private);
+
+	_xdg_surface_resource = wl_resource_create(client, &xdg_popup_interface, 1, id);
+
+	wl_resource_set_implementation(_xdg_surface_resource,
+			&xx_xdg_popup_interface,
+			this, &xdg_surface_popup_t::xdg_popup_delete);
+
+	surface->configure = &xdg_surface_base_t::_weston_configure;
+	surface->configure_private = dynamic_cast<xdg_surface_base_t*>(this);
+
+	_default_view = create_view();
+	weston_view_set_transform_parent(_default_view, _xparent->get_default_view());
+	weston_view_set_position(_default_view, x, y);
+	weston_view_geometry_dirty(_default_view);
+	_ctx->sync_tree_view();
+}
+
+xdg_surface_popup_t::~xdg_surface_popup_t() {
+
+}
+
 //bool xdg_surface_popup_t::has_window(xcb_window_t w) const {
 //	//return w == _client_proxy->id();
 //}

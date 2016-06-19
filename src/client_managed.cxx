@@ -124,7 +124,7 @@ static void _xdg_surface_set_minimized(wl_client * client,
 	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_minimized(client, resource);
 }
 
-static struct ::xdg_surface_interface _xdg_surface_implementation = {
+static struct xdg_surface_interface _xdg_surface_implementation = {
 	page::_xdg_surface_destroy,
 	page::_xdg_surface_set_parent,
 	page::_xdg_surface_set_title,
@@ -151,13 +151,6 @@ void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
 
 }
 
-static void _weston_configure(struct weston_surface * es,
-		int32_t sx, int32_t sy)
-{
-	auto ths = reinterpret_cast<xdg_surface_toplevel_t *>(es->configure_private);
-	ths->weston_configure(es, sx, sy);
-}
-
 xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 		page_context_t * ctx, wl_client * client,
 		weston_surface * surface, uint32_t id) :
@@ -175,7 +168,8 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_default_view{nullptr},
 	_pending{},
 	_ack_serial{0},
-	_transient_for{nullptr}
+	_transient_for{nullptr},
+	_is_activated{false}
 {
 
 	rect pos{0,0,surface->width, surface->height};
@@ -189,14 +183,14 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_base_position = pos;
 	_orig_position = pos;
 
-	_xdg_surface_resource = wl_resource_create(client, &::xdg_surface_interface, 1, id);
+	_xdg_surface_resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
 
 	wl_resource_set_implementation(_xdg_surface_resource,
 			&_xdg_surface_implementation,
 			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
-	surface->configure = &_weston_configure;
-	surface->configure_private = this;
+	surface->configure = &xdg_surface_base_t::_weston_configure;
+	surface->configure_private = dynamic_cast<xdg_surface_base_t*>(this);
 
 	weston_log("bbbb %p\n", surface->configure_private);
 	weston_log("bbbX %p\n", _ctx);
@@ -312,9 +306,12 @@ void xdg_surface_toplevel_t::reconfigure() {
 
 	wl_array array;
 	wl_array_init(&array);
-	wl_array_add(&array, sizeof(uint32_t)*2);
+	wl_array_add(&array, sizeof(uint32_t));
 	((uint32_t*)array.data)[0] = XDG_SURFACE_STATE_MAXIMIZED;
-	((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
+	if(_is_activated) {
+		wl_array_add(&array, sizeof(uint32_t));
+		((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
+	}
 	xdg_surface_send_configure(_xdg_surface_resource, _base_position.w,
 			_base_position.h, &array, _ack_serial);
 	wl_array_release(&array);
@@ -383,6 +380,7 @@ void xdg_surface_toplevel_t::iconify() {
 	if(_is_iconic)
 		return;
 	_is_iconic = true;
+	_is_activated = false;
 }
 
 void xdg_surface_toplevel_t::wm_state_delete() {
@@ -494,6 +492,11 @@ void xdg_surface_toplevel_t::activate() {
 	if(_parent != nullptr) {
 		_parent->activate(shared_from_this());
 	}
+
+	_is_activated = true;
+	weston_seat * seat = wl_container_of(_ctx->ec->seat_list.next, seat, link);
+	weston_surface_activate(_surface, seat);
+	reconfigure();
 
 	if(is_iconic()) {
 		normalize();

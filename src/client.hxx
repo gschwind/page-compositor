@@ -14,6 +14,7 @@
 #include "page_context.hxx"
 #include "client_base.hxx"
 #include "client_managed.hxx"
+#include "client_not_managed.hxx"
 
 namespace page {
 

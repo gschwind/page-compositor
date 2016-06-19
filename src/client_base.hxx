@@ -83,6 +83,13 @@ public:
 	/* find the bigger window that is smaller than w and h */
 	dimention_t<unsigned> compute_size_with_constrain(unsigned w, unsigned h);
 
+	static void _weston_configure(weston_surface * es, int32_t sx, int32_t sy);
+
+	/** called on surface commit */
+	virtual void weston_configure(weston_surface * es, int32_t sx,
+			int32_t sy) = 0;
+
+
 	/**
 	 * tree_t virtual API
 	 **/
@@ -124,8 +131,8 @@ public:
 //	virtual bool has_window(uint32_t w) const = 0;
 //	virtual auto base() const -> uint32_t = 0;
 //	virtual auto orig() const -> uint32_t = 0;
-	virtual auto base_position() const -> rect const & = 0;
-	virtual auto orig_position() const -> rect const & = 0;
+//	virtual auto base_position() const -> rect const & = 0;
+//	virtual auto orig_position() const -> rect const & = 0;
 
 	virtual void set_output(weston_output * output);
 

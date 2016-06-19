@@ -176,6 +176,13 @@ void xdg_surface_base_t::set_output(weston_output * output) {
 	_surface->output = output;
 }
 
+void xdg_surface_base_t::_weston_configure(weston_surface * es, int32_t sx,
+		int32_t sy)
+{
+	auto ths = reinterpret_cast<xdg_surface_base_t *>(es->configure_private);
+	ths->weston_configure(es, sx, sy);
+}
+
 }
 
 

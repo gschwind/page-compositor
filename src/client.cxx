@@ -96,14 +96,22 @@ void client_shell_t::xdg_shell_get_xdg_popup(wl_client * client,
 		  uint32_t serial,
 		  int32_t x, int32_t y) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-//	/* In our case nullptr */
-//	auto surface =
-//		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
-//	auto shell = xdg_shell_t::get(resource);
-//
-//	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
-//
-//	auto xdg_popup = new xdg_popup_t(client, id, surface, x, y);
+	/* In our case nullptr */
+	auto surface =
+		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
+	auto parent =
+		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(parent_resource));
+	auto seat =
+		reinterpret_cast<weston_seat *>(wl_resource_get_user_data(parent_resource));
+	//auto shell = xdg_shell_t::get(resource);
+
+	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
+
+	auto xdg_popup = make_shared<xdg_surface_popup_t>(_ctx, client, resource,
+			id, surface, parent, seat, serial, x, y);
+
+	auto xx = reinterpret_cast<xdg_surface_base_t*>(parent->configure_private);
+	xx->add_subclient(xdg_popup);
 
 }
 
