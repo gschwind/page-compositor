@@ -63,8 +63,6 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
 
-	weston_view * _default_view;
-
 	/** hold floating position **/
 	rect _floating_wished_position;
 
@@ -222,8 +220,6 @@ public:
 	virtual auto base_position() const -> rect const &;
 	virtual auto orig_position() const -> rect const &;
 	//virtual void on_property_notify(xcb_property_notify_event_t const * e);
-
-	virtual auto get_default_view() const -> weston_view *;
 
 	/**
 	 * xdg-surface-interface

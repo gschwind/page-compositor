@@ -37,6 +37,7 @@ void xdg_surface_popup_t::xdg_popup_delete(struct wl_resource *resource) {
 
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
+	wl_resource_destroy(resource);
 }
 
 xdg_surface_popup_t::xdg_surface_popup_t(page_context_t * ctx, wl_client * client,
@@ -60,11 +61,11 @@ xdg_surface_popup_t::xdg_surface_popup_t(page_context_t * ctx, wl_client * clien
 	surface->configure = &xdg_surface_base_t::_weston_configure;
 	surface->configure_private = dynamic_cast<xdg_surface_base_t*>(this);
 
-	_default_view = create_view();
+	_default_view = weston_view_create(surface);
 	weston_view_set_transform_parent(_default_view, _xparent->get_default_view());
 	weston_view_set_position(_default_view, x, y);
 	weston_view_geometry_dirty(_default_view);
-	_ctx->sync_tree_view();
+
 }
 
 xdg_surface_popup_t::~xdg_surface_popup_t() {

@@ -1112,7 +1112,7 @@ bool notebook_t::motion(weston_pointer_grab * grab, uint32_t time, weston_pointe
 	double y = wl_fixed_to_double(vy);
 
 
-	weston_log("event x=%f, y=%f\n", x, y);
+	//weston_log("event x=%f, y=%f\n", x, y);
 
 	_has_mouse_change = true;
 	_mouse_over.event_x = x;

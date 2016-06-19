@@ -52,6 +52,8 @@ protected:
 	/* weston view related to this xdg_surface */
 	list<weston_view *> _views;
 
+	weston_view * _default_view;
+
 public:
 
 	xdg_surface_base_t(xdg_surface_base_t const & c) = delete;
@@ -89,6 +91,7 @@ public:
 	virtual void weston_configure(weston_surface * es, int32_t sx,
 			int32_t sy) = 0;
 
+	virtual auto get_default_view() const -> weston_view *;
 
 	/**
 	 * tree_t virtual API

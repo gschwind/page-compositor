@@ -165,7 +165,6 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_has_focus{false},
 	_is_iconic{true},
 	_demands_attention{false},
-	_default_view{nullptr},
 	_pending{},
 	_ack_serial{0},
 	_transient_for{nullptr},
@@ -623,10 +622,6 @@ void xdg_surface_toplevel_t::set_window_geometry(int32_t x, int32_t y, int32_t w
 
 auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
 	return _xdg_surface_resource;
-}
-
-auto xdg_surface_toplevel_t::get_default_view() const -> weston_view * {
-	return _default_view;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_destroy(struct wl_client *client,

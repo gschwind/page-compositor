@@ -18,7 +18,8 @@ xdg_surface_base_t::xdg_surface_base_t(page_context_t * ctx, wl_client * client,
 	_ctx{ctx},
 	_xdg_surface_resource{nullptr},
 	_client{client},
-	_surface{surface}
+	_surface{surface},
+	_default_view{nullptr}
 {
 
 }
@@ -181,6 +182,10 @@ void xdg_surface_base_t::_weston_configure(weston_surface * es, int32_t sx,
 {
 	auto ths = reinterpret_cast<xdg_surface_base_t *>(es->configure_private);
 	ths->weston_configure(es, sx, sy);
+}
+
+auto xdg_surface_base_t::get_default_view() const -> weston_view * {
+	return _default_view;
 }
 
 }

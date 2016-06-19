@@ -105,13 +105,20 @@ void client_shell_t::xdg_shell_get_xdg_popup(wl_client * client,
 		reinterpret_cast<weston_seat *>(wl_resource_get_user_data(parent_resource));
 	//auto shell = xdg_shell_t::get(resource);
 
+	_ctx->sync_tree_view();
+
 	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
 
 	auto xdg_popup = make_shared<xdg_surface_popup_t>(_ctx, client, resource,
 			id, surface, parent, seat, serial, x, y);
 
+	weston_surface_set_role(surface, "xdg_popup",
+			resource, XDG_SHELL_ERROR_ROLE);
+
 	auto xx = reinterpret_cast<xdg_surface_base_t*>(parent->configure_private);
 	xx->add_subclient(xdg_popup);
+
+	_ctx->sync_tree_view();
 
 }
 

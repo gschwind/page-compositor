@@ -28,8 +28,6 @@ private:
 
 	mutable rect _base_position;
 
-	weston_view * _default_view;
-
 	weston_seat * _seat;
 	weston_surface * _partent;
 
