@@ -98,6 +98,8 @@ struct page_t : public page_context_t {
 	page_configuration_t configuration;
 	config_handler_t _conf;
 
+	pointer_grab_handler_t * _grab_handler;
+
 	list<signal_handler_t> _slots;
 
 
@@ -405,8 +407,8 @@ struct page_t : public page_context_t {
 	virtual auto get_workspace(int id) const -> shared_ptr<workspace_t> const &;
 	virtual int  get_workspace_count() const;
 	virtual int  create_workspace();
-//	virtual void grab_start(pointer_grab_handler_t * handler);
-//	virtual void grab_stop();
+	virtual void grab_start(weston_pointer * pointer, pointer_grab_handler_t * handler);
+	virtual void grab_stop(weston_pointer * pointer);
 	virtual void detach(shared_ptr<tree_t> t);
 	virtual void insert_window_in_notebook(shared_ptr<xdg_surface_toplevel_t> x, shared_ptr<notebook_t> n, bool prefer_activate);
 	virtual void fullscreen_client_to_viewport(shared_ptr<xdg_surface_toplevel_t> c, shared_ptr<viewport_t> v);

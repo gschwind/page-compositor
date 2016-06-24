@@ -245,6 +245,8 @@ page_t::page_t(int argc, char ** argv)
 
 	_buffer_manager_resource = nullptr;
 
+	_grab_handler = nullptr;
+
 //	bind_page_quit           = _conf.get_string("default", "bind_page_quit");
 //	bind_close               = _conf.get_string("default", "bind_close");
 //	bind_exposay_all         = _conf.get_string("default", "bind_exposay_all");
@@ -3201,18 +3203,19 @@ theme_t const * page_t::theme() const {
 //display_compositor_t * page_t::cmp() const {
 //	return const_cast<page_t*>(this);
 //}
-//
-//void page_t::grab_start(pointer_grab_handler_t * handler) {
-//	assert(_grab_handler == nullptr);
-//	_grab_handler = handler;
-//}
-//
-//void page_t::grab_stop() {
-//	assert(_grab_handler != nullptr);
-//	delete _grab_handler;
-//	_grab_handler = nullptr;
-//}
-//
+
+void page_t::grab_start(weston_pointer * pointer, pointer_grab_handler_t * handler) {
+	assert(_grab_handler == nullptr);
+	_grab_handler = handler;
+	pointer_start_grab(pointer, handler);
+}
+
+void page_t::grab_stop(weston_pointer * pointer) {
+	pointer_end_grab(pointer);
+	delete _grab_handler;
+	_grab_handler = nullptr;
+}
+
 //void page_t::overlay_add(shared_ptr<tree_t> x) {
 //	_root->_overlays->push_back(x);
 //}

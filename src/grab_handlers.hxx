@@ -47,6 +47,7 @@ public:
 	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
 	virtual void motion(uint32_t time, weston_pointer_motion_event * event) = 0;
 	virtual void axis(uint32_t time, weston_pointer_axis_event * event) { }
+	virtual void axis_source(uint32_t source) { }
 	virtual void frame() { }
 	virtual void cancel() { }
 
@@ -74,9 +75,10 @@ public:
 	virtual ~grab_bind_client_t();
 
 	virtual void focus() { }
-	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
-	virtual void motion(uint32_t time, weston_pointer_motion_event *event) = 0;
-	virtual void axis(uint32_t time, weston_pointer_axis_event *event) = 0;
+	virtual void button(uint32_t time, uint32_t button, uint32_t state);
+	virtual void motion(uint32_t time, weston_pointer_motion_event *event);
+	virtual void axis(uint32_t time, weston_pointer_axis_event *event) { }
+	virtual void axis_source(uint32_t source) { }
 	virtual void frame() { }
 	virtual void cancel() { }
 
@@ -134,6 +136,7 @@ struct grab_floating_move_t : public pointer_grab_handler_t {
 	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
 	virtual void motion(uint32_t time, weston_pointer_motion_event *event) = 0;
 	virtual void axis(uint32_t time, weston_pointer_axis_event *event) = 0;
+	virtual void axis_source(uint32_t source) { }
 	virtual void frame() { }
 	virtual void cancel() { }
 
@@ -163,6 +166,7 @@ public:
 	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
 	virtual void motion(uint32_t time, weston_pointer_motion_event *event) = 0;
 	virtual void axis(uint32_t time, weston_pointer_axis_event *event) = 0;
+	virtual void axis_source(uint32_t source) { }
 	virtual void frame() { }
 	virtual void cancel() { }
 
@@ -186,8 +190,10 @@ public:
 	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
 	virtual void motion(uint32_t time, weston_pointer_motion_event *event) = 0;
 	virtual void axis(uint32_t time, weston_pointer_axis_event *event) = 0;
+	virtual void axis_source(uint32_t source) { }
 	virtual void frame() { }
 	virtual void cancel() { }
+
 };
 
 //struct grab_alt_tab_t : public pointer_grab_handler_t {

@@ -928,22 +928,22 @@ bool notebook_t::button(weston_pointer_grab * grab, uint32_t time,
 			_scroll_right(30);
 			return true;
 		} else {
-//			for(auto & i: _client_buttons) {
-//				if(std::get<0>(i).is_inside(x, y)) {
-//					auto c = std::get<1>(i).lock();
-//					_ctx->grab_start(new grab_bind_client_t{_ctx, c, XCB_BUTTON_INDEX_1, to_root_position(std::get<0>(i))});
-//					_mouse_over_reset();
-//					return true;
-//				}
-//			}
-//
-//			for(auto & i: _exposay_buttons) {
-//				if(std::get<0>(i).is_inside(x, y) and not std::get<1>(i).expired()) {
-//					auto c = std::get<1>(i).lock();
-//					_ctx->grab_start(new grab_bind_client_t{_ctx, c, XCB_BUTTON_INDEX_1, to_root_position(std::get<0>(i))});
-//					return true;
-//				}
-//			}
+			for(auto & i: _client_buttons) {
+				if(std::get<0>(i).is_inside(x, y)) {
+					auto c = std::get<1>(i).lock();
+					_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, c, BTN_LEFT, to_root_position(std::get<0>(i))});
+					_mouse_over_reset();
+					return true;
+				}
+			}
+
+			for(auto & i: _exposay_buttons) {
+				if(std::get<0>(i).is_inside(x, y) and not std::get<1>(i).expired()) {
+					auto c = std::get<1>(i).lock();
+					_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, c, BTN_LEFT, to_root_position(std::get<0>(i))});
+					return true;
+				}
+			}
 		}
 
 	/* rigth click on page */

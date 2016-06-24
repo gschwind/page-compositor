@@ -34,7 +34,7 @@ void grab_split_t::motion(uint32_t time, weston_pointer_motion_event * event) {
 	auto pointer = base.grab.pointer;
 
 	if(_split.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -60,7 +60,7 @@ void grab_split_t::button(uint32_t time, uint32_t button, uint32_t state) {
 	auto pointer = base.grab.pointer;
 
 	if(_split.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -88,7 +88,7 @@ void grab_split_t::button(uint32_t time, uint32_t button, uint32_t state) {
 		_split.lock()->queue_redraw();
 		_split.lock()->set_split(_split_ratio);
 
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 
 	}
 
@@ -210,7 +210,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 	auto pointer = base.grab.pointer;
 
 	if(c.expired()) {
-		weston_pointer_end_grab(pointer);
+		ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -241,7 +241,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 				c->activate();
 				//ctx->set_focus(c, time);
 			}
-			weston_pointer_end_grab(pointer);
+			ctx->grab_stop(pointer);
 			return;
 		}
 
@@ -295,7 +295,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 			}
 		}
 
-		weston_pointer_end_grab(pointer);
+		ctx->grab_stop(pointer);
 
 	}
 }
@@ -335,7 +335,7 @@ void grab_floating_move_t::motion(uint32_t time,
 	auto pointer = base.grab.pointer;
 
 	if(f.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -365,7 +365,7 @@ void grab_floating_move_t::button(uint32_t time, uint32_t button,
 	auto pointer = base.grab.pointer;
 
 	if (f.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -384,7 +384,7 @@ void grab_floating_move_t::button(uint32_t time, uint32_t button,
 		f->reconfigure();
 
 		//_ctx->set_focus(f, time);
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 	}
 }
 
@@ -425,7 +425,7 @@ void grab_floating_resize_t::motion(uint32_t time,
 	auto pointer = base.grab.pointer;
 
 	if (f.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -538,7 +538,7 @@ void grab_floating_resize_t::button(uint32_t time, uint32_t _button,
 	auto pointer = base.grab.pointer;
 
 	if (f.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -554,7 +554,7 @@ void grab_floating_resize_t::button(uint32_t time, uint32_t _button,
 		f->set_floating_wished_position(final_position);
 		f->reconfigure();
 		//_ctx->set_focus(f, time);
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 	}
 }
 
@@ -582,7 +582,7 @@ void grab_fullscreen_client_t::motion(uint32_t time, weston_pointer_motion_event
 	auto pointer = base.grab.pointer;
 
 	if (mw.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -608,7 +608,7 @@ void grab_fullscreen_client_t::button(uint32_t time, uint32_t _button, uint32_t 
 	auto pointer = base.grab.pointer;
 
 	if(mw.expired()) {
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 		return;
 	}
 
@@ -625,7 +625,7 @@ void grab_fullscreen_client_t::button(uint32_t time, uint32_t _button, uint32_t 
 			_ctx->fullscreen_client_to_viewport(mw.lock(), new_viewport);
 		}
 
-		weston_pointer_end_grab(pointer);
+		_ctx->grab_stop(pointer);
 
 	}
 }
