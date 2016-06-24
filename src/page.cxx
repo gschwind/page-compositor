@@ -3219,10 +3219,6 @@ void page_t::grab_stop(weston_pointer * pointer) {
 //void page_t::overlay_add(shared_ptr<tree_t> x) {
 //	_root->_overlays->push_back(x);
 //}
-//
-//void page_t::add_global_damage(region const & r) {
-//	/* TODO */
-//}
 
 shared_ptr<workspace_t> const & page_t::get_current_workspace() const {
 	return _root->_desktop_list[_root->_current_desktop];

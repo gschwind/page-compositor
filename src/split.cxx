@@ -7,6 +7,8 @@
  *
  */
 
+#include <linux/input.h>
+
 #include <cstdio>
 #include <cmath>
 
@@ -263,18 +265,32 @@ rect split_t::compute_split_bar_location() const {
 void split_t::append_children(vector<shared_ptr<tree_t>> & out) const {
 	out.insert(out.end(), _children.begin(), _children.end());
 }
-//
-//bool split_t::button_press(xcb_button_press_event_t const * e) {
-//	if (e->event == get_parent_xid()
-//			and e->child == _wid
-//			and e->detail == XCB_BUTTON_INDEX_1
-//			and _split_bar_area.is_inside(e->event_x, e->event_y)) {
-//		_ctx->grab_start(new grab_split_t { _ctx, shared_from_this() });
-//		return true;
-//	} else {
-//		return false;
-//	}
-//}
+
+bool split_t::button(weston_pointer_grab * grab, uint32_t time,
+		uint32_t button, uint32_t state) {
+	auto pointer = grab->pointer;
+
+	if (pointer->focus != get_parent_default_view()) {
+		return false;
+	}
+
+	weston_log("button = %d\n", button);
+
+	wl_fixed_t vx, vy;
+
+	weston_view_from_global_fixed(pointer->focus, pointer->x,
+			pointer->y, &vx, &vy);
+
+	double x = wl_fixed_to_double(vx);
+	double y = wl_fixed_to_double(vy);
+
+	if (button == BTN_LEFT and _split_bar_area.is_inside(x, y)) {
+		_ctx->grab_start(pointer, new grab_split_t { _ctx, shared_from_this() });
+		return true;
+	} else {
+		return false;
+	}
+}
 
 shared_ptr<split_t> split_t::shared_from_this() {
 	return dynamic_pointer_cast<split_t>(tree_t::shared_from_this());

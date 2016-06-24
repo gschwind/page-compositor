@@ -44,8 +44,8 @@ public:
 
 
 	virtual void focus() { }
-	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
-	virtual void motion(uint32_t time, weston_pointer_motion_event * event) = 0;
+	virtual void button(uint32_t time, uint32_t button, uint32_t state);
+	virtual void motion(uint32_t time, weston_pointer_motion_event * event);
 	virtual void axis(uint32_t time, weston_pointer_axis_event * event) { }
 	virtual void axis_source(uint32_t source) { }
 	virtual void frame() { }
