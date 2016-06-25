@@ -78,11 +78,11 @@ public:
 	virtual void split_right(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) = 0;
 	virtual void split_top(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) = 0;
 	virtual void split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) = 0;
-//	virtual void set_focus(shared_ptr<xdg_surface_toplevel_t> w, uint32_t tfocus) = 0;
+	virtual void set_focus(weston_pointer * pointer, shared_ptr<xdg_surface_toplevel_t> w) = 0;
 	virtual void notebook_close(shared_ptr<notebook_t> nbk) = 0;
 //	virtual int  left_most_border() = 0;
 //	virtual int  top_most_border() = 0;
-//	virtual auto global_client_focus_history() -> list<weak_ptr<xdg_surface_toplevel_t>> = 0;
+	virtual auto global_client_focus_history() -> list<weak_ptr<xdg_surface_toplevel_t>> = 0;
 //	virtual auto net_client_list() -> list<shared_ptr<xdg_surface_toplevel_t>> = 0;
 //	virtual auto keymap() const -> keymap_t const * = 0;
 //	virtual void switch_to_desktop(unsigned int desktop) = 0;

@@ -141,6 +141,8 @@ struct page_t : public page_context_t {
 	wl_resource * _buffer_manager_resource;
 	list<pixmap_p> pixmap_list;
 
+	weak_ptr<xdg_surface_toplevel_t> _current_focus;
+
 	using repaint_func = int (*)(weston_output *, pixman_region32_t *);
 
 	map<weston_output *, repaint_func> repaint_functions;
@@ -361,10 +363,10 @@ struct page_t : public page_context_t {
 //
 //	void process_pending_events();
 //
-//	bool global_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out);
-//	void global_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in);
-//	void global_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in);
-//	bool global_focus_history_is_empty();
+	bool global_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out);
+	void global_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in);
+	void global_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in);
+	bool global_focus_history_is_empty();
 //
 //	void on_visibility_change_handler(xcb_window_t xid, bool visible);
 //	void on_block_mainloop_handler();
@@ -417,11 +419,11 @@ struct page_t : public page_context_t {
 	virtual void split_right(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c);
 	virtual void split_top(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c);
 	virtual void split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c);
-//	virtual void set_focus(shared_ptr<xdg_surface_toplevel_t> w, uint32_t tfocus);
+	virtual void set_focus(weston_pointer * pointer, shared_ptr<xdg_surface_toplevel_t> w);
 	virtual void notebook_close(shared_ptr<notebook_t> nbk);
 //	virtual int  left_most_border();
 //	virtual int  top_most_border();
-//	virtual auto global_client_focus_history() -> list<weak_ptr<xdg_surface_toplevel_t>>;
+	virtual auto global_client_focus_history() -> list<weak_ptr<xdg_surface_toplevel_t>>;
 //	virtual auto net_client_list() -> list<shared_ptr<xdg_surface_toplevel_t>>;
 //	virtual auto keymap() const -> keymap_t const *;
 //	virtual auto create_view(xcb_window_t w) -> shared_ptr<client_view_t>;

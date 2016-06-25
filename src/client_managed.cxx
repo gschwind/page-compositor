@@ -307,7 +307,7 @@ void xdg_surface_toplevel_t::reconfigure() {
 	wl_array_init(&array);
 	wl_array_add(&array, sizeof(uint32_t));
 	((uint32_t*)array.data)[0] = XDG_SURFACE_STATE_MAXIMIZED;
-	if(_is_activated) {
+	if(_has_focus) {
 		wl_array_add(&array, sizeof(uint32_t));
 		((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
 	}

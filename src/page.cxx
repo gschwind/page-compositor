@@ -1511,49 +1511,48 @@ void page_t::insert_window_in_notebook(
 //
 //}
 
-//void page_t::set_focus(shared_ptr<xdg_surface_toplevel_t> new_focus, uint32_t tfocus) {
-////	/* if we want to defocus something */
-////	if(new_focus == nullptr) {
-////		if(conf()._auto_refocus) {
-////			if (get_current_workspace()->client_focus_history_front(new_focus)) {
-////				new_focus->activate();
-////				get_current_workspace()->client_focus_history_move_front(new_focus);
-////				global_focus_history_move_front(new_focus);
-////				_dpy->set_net_active_window(new_focus->orig());
-////				new_focus->activate();
-////				new_focus->focus(tfocus);
-////				_net_active_window = new_focus;
-////			} else {
-////				_net_active_window.reset();
-////				_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, tfocus);
-////				_dpy->set_net_active_window(XCB_WINDOW_NONE);
-////			}
-////		} else {
-////			_net_active_window.reset();
-////			_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, tfocus);
-////			_dpy->set_net_active_window(XCB_WINDOW_NONE);
-////		}
-////	} else {
-////
-////		if(tfocus == XCB_CURRENT_TIME) {
-////			xcb_timestamp_t time = 0;
-////			if (get_safe_net_wm_user_time(new_focus, time)) {
-////				tfocus = time;
-////			}
-////		}
-////
-////		if(tfocus == XCB_CURRENT_TIME)
-////			std::cout << "Warning: Invalid focus time (0)" << std::endl;
-////
-////		get_current_workspace()->client_focus_history_move_front(new_focus);
-////		global_focus_history_move_front(new_focus);
-////		_dpy->set_net_active_window(new_focus->orig());
-////		new_focus->activate();
-////		new_focus->focus(tfocus);
-////		_net_active_window = new_focus;
-////	}
-////
-////	_need_restack = true;
+void page_t::set_focus(weston_pointer * pointer,
+		shared_ptr<xdg_surface_toplevel_t> new_focus) {
+	assert(new_focus != nullptr);
+	assert(new_focus->get_default_view() != nullptr);
+
+	if(!_current_focus.expired()) {
+		_current_focus.lock()->set_focus_state(false);
+	}
+
+	get_current_workspace()->client_focus_history_move_front(new_focus);
+	global_focus_history_move_front(new_focus);
+	new_focus->activate();
+	new_focus->set_focus_state(true);
+
+	//weston_pointer_set_focus(pointer, new_focus->get_default_view(), 0, 0);
+	_current_focus = new_focus;
+
+	sync_tree_view();
+
+}
+
+//void page_t::clear_focus(weston_pointer * pointer) {
+//	/* if we want to defocus something */
+//	if(conf()._auto_refocus) {
+//		if (get_current_workspace()->client_focus_history_front(new_focus)) {
+//			new_focus->activate();
+//			get_current_workspace()->client_focus_history_move_front(new_focus);
+//			global_focus_history_move_front(new_focus);
+//			new_focus->activate();
+//			new_focus->set_focus_state(true);
+//			_current_focus = new_focus;
+//		} else {
+//			_current_focus.reset();
+//			weston_pointer_clear_focus()
+//		}
+//	} else {
+//		_net_active_window.reset();
+//		_dpy->set_input_focus(identity_window, XCB_INPUT_FOCUS_NONE, tfocus);
+//		_dpy->set_net_active_window(XCB_WINDOW_NONE);
+//	}
+//
+//	sync_tree_view();
 //
 //}
 
@@ -3254,32 +3253,32 @@ int page_t::create_workspace() {
 //keymap_t const * page_t::keymap() const {
 //	return _keymap;
 //}
-//
-//list<weak_ptr<xdg_surface_toplevel_t>> page_t::global_client_focus_history() {
-//	return _global_focus_history;
-//}
-//
-//bool page_t::global_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out) {
-//	if(not global_focus_history_is_empty()) {
-//		out = _global_focus_history.front().lock();
-//		return true;
-//	}
-//	return false;
-//}
-//
-//void page_t::global_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in) {
-//	_global_focus_history.remove_if([in](weak_ptr<tree_t> const & w) { return w.expired() or w.lock() == in; });
-//}
-//
-//void page_t::global_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in) {
-//	move_front(_global_focus_history, in);
-//}
-//
-//bool page_t::global_focus_history_is_empty() {
-//	_global_focus_history.remove_if([](weak_ptr<tree_t> const & w) { return w.expired(); });
-//	return _global_focus_history.empty();
-//}
-//
+
+list<weak_ptr<xdg_surface_toplevel_t>> page_t::global_client_focus_history() {
+	return _global_focus_history;
+}
+
+bool page_t::global_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out) {
+	if(not global_focus_history_is_empty()) {
+		out = _global_focus_history.front().lock();
+		return true;
+	}
+	return false;
+}
+
+void page_t::global_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in) {
+	_global_focus_history.remove_if([in](weak_ptr<tree_t> const & w) { return w.expired() or w.lock() == in; });
+}
+
+void page_t::global_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in) {
+	move_front(_global_focus_history, in);
+}
+
+bool page_t::global_focus_history_is_empty() {
+	_global_focus_history.remove_if([](weak_ptr<tree_t> const & w) { return w.expired(); });
+	return _global_focus_history.empty();
+}
+
 //void page_t::start_alt_tab(xcb_timestamp_t time) {
 //
 //	/* TODO */

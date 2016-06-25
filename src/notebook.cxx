@@ -978,12 +978,12 @@ bool notebook_t::button(weston_pointer_grab * grab, uint32_t time,
 //				}
 //			}
 		}
-	} else if (state == WL_POINTER_BUTTON_STATE_PRESSED and button == 4) {
+	} else if (state == WL_POINTER_BUTTON_STATE_PRESSED and button == BTN_FORWARD) {
 		if(_theme_client_tabs_area.is_inside(x, y)) {
 			_scroll_left(15);
 			return true;
 		}
-	} else if (state == WL_POINTER_BUTTON_STATE_PRESSED and button == 5) {
+	} else if (state == WL_POINTER_BUTTON_STATE_PRESSED and button == BTN_BACK) {
 		if(_theme_client_tabs_area.is_inside(x, y)) {
 			_scroll_right(15);
 			return true;
