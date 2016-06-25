@@ -88,6 +88,7 @@ void grab_split_t::button(uint32_t time, uint32_t button, uint32_t state) {
 		_split.lock()->queue_redraw();
 		_split.lock()->set_split(_split_ratio);
 
+		_ctx->sync_tree_view();
 		_ctx->grab_stop(pointer);
 
 	}

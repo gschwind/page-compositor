@@ -173,7 +173,7 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 	rect pos{0,0,surface->width, surface->height};
 
-	printf("window default position = %s\n", pos.to_string().c_str());
+	weston_log("window default position = %s\n", pos.to_string().c_str());
 
 	_managed_type = MANAGED_UNDEFINED;
 
@@ -314,6 +314,7 @@ void xdg_surface_toplevel_t::reconfigure() {
 	xdg_surface_send_configure(_xdg_surface_resource, _base_position.w,
 			_base_position.h, &array, _ack_serial);
 	wl_array_release(&array);
+	wl_client_flush(_client);
 
 
 }

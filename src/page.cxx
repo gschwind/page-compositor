@@ -3754,6 +3754,10 @@ void page_t::configure_surface(shared_ptr<xdg_surface_toplevel_t> xdg_surface,
 //	xdg_surface->set_minimized();
 //}
 
+/**
+ * This function synchronize the page tree with the weston scene graph. The side
+ * effects are damage all outputs and schedule repaint for all outputs.
+ **/
 void page_t::sync_tree_view() {
 
 	list<weston_view *> lv;

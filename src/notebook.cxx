@@ -376,6 +376,7 @@ string notebook_t::get_node_name() const {
 
 void notebook_t::render_legacy(cairo_t * cr) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	update_layout();
 	_ctx->theme()->render_notebook(cr, &_theme_notebook);
 
 	if(_theme_client_tabs.size() > 0) {
