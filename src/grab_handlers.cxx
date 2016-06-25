@@ -242,6 +242,8 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 				c->activate();
 				//ctx->set_focus(c, time);
 			}
+
+			ctx->sync_tree_view();
 			ctx->grab_stop(pointer);
 			return;
 		}
@@ -296,6 +298,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 			}
 		}
 
+		ctx->sync_tree_view();
 		ctx->grab_stop(pointer);
 
 	}
