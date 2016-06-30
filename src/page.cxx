@@ -3866,7 +3866,16 @@ void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 		}
 		if (pointer->button_count == 0 &&
 				 state == WL_POINTER_BUTTON_STATE_RELEASED) {
+
 			weston_pointer_set_focus(pointer, view, sx, sy);
+
+			auto xdg_window =
+					dynamic_cast<xdg_surface_toplevel_t*>(reinterpret_cast<xdg_surface_base_t*>(view->surface->configure_private));
+
+			if(xdg_window) {
+				set_focus(pointer, xdg_window->shared_from_this());
+			}
+
 		}
 	}
 
