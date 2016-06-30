@@ -65,6 +65,8 @@ public:
 
 	bool has_motif_border();
 
+	auto surface() const -> weston_surface * { return _surface; }
+
 	void add_subclient(shared_ptr<xdg_surface_base_t> s);
 
 	bool is_window(wl_client * client, uint32_t id);

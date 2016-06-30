@@ -380,7 +380,7 @@ void viewport_t::_on_ack_buffer(pixmap_t * p) {
 //	pixman_region32_fini(&_backbround_surface->input);
 //	pixman_region32_init_rect(&_backbround_surface->input, 0, 0,
 //			_effective_area.w, _effective_area.h);
-	weston_surface_set_role(_backbround_surface, "none",
+	weston_surface_set_role(_backbround_surface, "page_viewport",
 			nullptr, 0);
 	weston_surface_damage(_backbround_surface);
 

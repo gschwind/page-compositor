@@ -1513,6 +1513,7 @@ void page_t::insert_window_in_notebook(
 
 void page_t::set_focus(weston_pointer * pointer,
 		shared_ptr<xdg_surface_toplevel_t> new_focus) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	assert(new_focus != nullptr);
 	assert(new_focus->get_default_view() != nullptr);
 
@@ -1524,8 +1525,13 @@ void page_t::set_focus(weston_pointer * pointer,
 	global_focus_history_move_front(new_focus);
 	new_focus->activate();
 	new_focus->set_focus_state(true);
-
 	//weston_pointer_set_focus(pointer, new_focus->get_default_view(), 0, 0);
+
+//	auto keyboard = weston_seat_get_keyboard(pointer->seat);
+//	if(keyboard)
+//		weston_keyboard_set_focus(keyboard, new_focus->surface());
+	weston_seat_set_keyboard_focus(pointer->seat, new_focus->surface());
+
 	_current_focus = new_focus;
 
 	sync_tree_view();
@@ -3775,7 +3781,7 @@ void page_t::sync_tree_view() {
 	weston_layer_entry * cur;
 	wl_list_for_each_safe(cur, nxt, &default_layer.view_list.link, link) {
 		weston_view * v = wl_container_of(cur, v, layer_link);
-		weston_view_unmap(v);
+		weston_layer_entry_remove(&v->layer_link);
 	}
 
 	for(auto v: lv) {
@@ -3825,12 +3831,44 @@ void page_t::process_motion(weston_pointer_grab * grab, uint32_t time, weston_po
 void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 		uint32_t button, uint32_t state) {
 	//weston_log("call %s\n", __PRETTY_FUNCTION__);
+//	weston_compositor_set_default_pointer_grab(ec, NULL);
+//	(*grab->pointer->default_grab.interface->button)(grab, time, button, state);
+//	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
 
-	_root->broadcast_button(grab, time, button, state);
+	struct weston_pointer *pointer = grab->pointer;
+	struct weston_compositor *compositor = pointer->seat->compositor;
+	struct weston_view *view;
+	struct wl_resource *resource;
+	uint32_t serial;
+	struct wl_display *display = compositor->wl_display;
+	wl_fixed_t sx, sy;
+	struct wl_list *resource_list = NULL;
 
-	weston_compositor_set_default_pointer_grab(ec, NULL);
-	(*grab->pointer->default_grab.interface->button)(grab, time, button, state);
-	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+	if (pointer->focus_client)
+		resource_list = &pointer->focus_client->pointer_resources;
+	if (resource_list && !wl_list_empty(resource_list)) {
+		resource_list = &pointer->focus_client->pointer_resources;
+		serial = wl_display_next_serial(display);
+		wl_resource_for_each(resource, resource_list)
+			wl_pointer_send_button(resource,
+					       serial,
+					       time,
+					       button,
+					       state);
+	}
+
+	view = weston_compositor_pick_view(compositor,
+					   pointer->x, pointer->y,
+					   &sx, &sy);
+	if(view) {
+		if(strcmp("page_viewport", view->surface->role_name) == 0) {
+			_root->broadcast_button(grab, time, button, state);
+		}
+		if (pointer->button_count == 0 &&
+				 state == WL_POINTER_BUTTON_STATE_RELEASED) {
+			weston_pointer_set_focus(pointer, view, sx, sy);
+		}
+	}
 
 }
 

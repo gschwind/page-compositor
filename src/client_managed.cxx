@@ -494,8 +494,6 @@ void xdg_surface_toplevel_t::activate() {
 	}
 
 	_is_activated = true;
-	weston_seat * seat = wl_container_of(_ctx->ec->seat_list.next, seat, link);
-	weston_surface_activate(_surface, seat);
 	reconfigure();
 
 	if(is_iconic()) {
