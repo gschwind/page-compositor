@@ -182,6 +182,9 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_base_position = pos;
 	_orig_position = pos;
 
+	_transient_childdren = make_shared<tree_t>();
+	push_back(_transient_childdren);
+
 	_xdg_surface_resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
 
 	wl_resource_set_implementation(_xdg_surface_resource,
@@ -242,13 +245,13 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 
 	//_ctx->add_global_damage(get_visible_region());
 
-	if(_default_view) {
-		weston_layer_entry_remove(&_default_view->layer_link);
-		weston_view_destroy(_default_view);
-		_default_view = nullptr;
-	}
-
-	on_destroy.signal(this);
+//	if(_default_view) {
+//		weston_layer_entry_remove(&_default_view->layer_link);
+//		weston_view_destroy(_default_view);
+//		_default_view = nullptr;
+//	}
+//
+//	on_destroy.signal(this);
 
 //	unselect_inputs_unsafe();
 //
@@ -627,7 +630,10 @@ void xdg_surface_toplevel_t::xdg_surface_destroy(struct wl_client *client,
 		struct wl_resource *resource)
 {
 	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
+	on_destroy.signal(this);
+	_ctx->sync_tree_view();
 	wl_resource_destroy(resource);
+
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_parent(wl_client * client,

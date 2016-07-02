@@ -42,8 +42,6 @@ auto tree_t::parent() const -> shared_ptr<tree_t> {
  * Change parent of this node to parent.
  **/
 void tree_t::set_parent(tree_t * parent) {
-	assert(parent != nullptr);
-	assert(_parent == nullptr);
 	_parent = parent;
 }
 

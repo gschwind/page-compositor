@@ -116,7 +116,7 @@ void client_shell_t::xdg_shell_get_xdg_popup(wl_client * client,
 			resource, XDG_SHELL_ERROR_ROLE);
 
 	auto xx = reinterpret_cast<xdg_surface_base_t*>(parent->configure_private);
-	xx->add_subclient(xdg_popup);
+	xx->append_popup(xdg_popup);
 
 	_ctx->sync_tree_view();
 

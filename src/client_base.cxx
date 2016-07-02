@@ -22,11 +22,13 @@ xdg_surface_base_t::xdg_surface_base_t(page_context_t * ctx, wl_client * client,
 	_default_view{nullptr}
 {
 
+	_popups = make_shared<tree_t>();
+	push_back(_popups);
+
 }
 
 xdg_surface_base_t::~xdg_surface_base_t() {
-	if(_xdg_surface_resource)
-		wl_resource_destroy(_xdg_surface_resource);
+
 }
 
 bool xdg_surface_base_t::has_motif_border() {
@@ -186,6 +188,17 @@ void xdg_surface_base_t::_weston_configure(weston_surface * es, int32_t sx,
 
 auto xdg_surface_base_t::get_default_view() const -> weston_view * {
 	return _default_view;
+}
+
+void xdg_surface_base_t::append_popup(shared_ptr<xdg_surface_base_t> p) {
+	assert(p != nullptr);
+	_popups->push_back(dynamic_pointer_cast<tree_t>(p));
+	_ctx->sync_tree_view();
+	if(_is_visible) {
+		p->show();
+	} else {
+		p->hide();
+	}
 }
 
 }

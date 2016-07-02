@@ -86,6 +86,8 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 
 	xdg_surface_toplevel_t * _transient_for;
 
+	shared_ptr<tree_t> _transient_childdren;
+
 	bool _has_focus;
 	bool _is_iconic;
 	bool _demands_attention;
@@ -109,9 +111,9 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 
 	static void xdg_surface_delete(wl_resource *resource);
 
-	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
-
 public:
+
+	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
 
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);

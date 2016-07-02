@@ -1209,7 +1209,8 @@ void notebook_t::_client_title_change(shared_ptr<xdg_surface_toplevel_t> c) {
 }
 
 void notebook_t::_client_destroy(xdg_surface_toplevel_t * c) {
-	throw exception_t("not expected call of %d", __PRETTY_FUNCTION__);
+	//throw exception_t("not expected call of %d", __PRETTY_FUNCTION__);
+	remove(c->shared_from_this());
 }
 
 void notebook_t::_client_focus_change(shared_ptr<xdg_surface_toplevel_t> c) {

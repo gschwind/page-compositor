@@ -29,7 +29,6 @@ private:
 	mutable rect _base_position;
 
 	weston_seat * _seat;
-	weston_surface * _partent;
 
 	/* avoid copy */
 	xdg_surface_popup_t(xdg_surface_popup_t const &);
@@ -40,7 +39,10 @@ private:
 
 	static void _weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
+
 public:
+
+	void xdg_popup_destroy(wl_client * client, wl_resource * resource);
 
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);

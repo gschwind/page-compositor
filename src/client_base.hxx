@@ -54,6 +54,8 @@ protected:
 
 	weston_view * _default_view;
 
+	shared_ptr<tree_t> _popups;
+
 public:
 
 	xdg_surface_base_t(xdg_surface_base_t const & c) = delete;
@@ -140,6 +142,7 @@ public:
 //	virtual auto orig_position() const -> rect const & = 0;
 
 	virtual void set_output(weston_output * output);
+	virtual void append_popup(shared_ptr<xdg_surface_base_t> p);
 
 };
 
