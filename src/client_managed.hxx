@@ -72,9 +72,6 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 	/** the absolute position without border **/
 	rect _wished_position;
 
-	rect _orig_position;
-	rect _base_position;
-
 	// the output surface (i.e. surface where we write things)
 	cairo_surface_t * _surf;
 

@@ -158,8 +158,6 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_floating_wished_position{},
 	_notebook_wished_position{},
 	_wished_position{},
-	_orig_position{},
-	_base_position{},
 	_surf{nullptr},
 	_icon(nullptr),
 	_has_focus{false},
@@ -179,8 +177,6 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 	_floating_wished_position = pos;
 	_notebook_wished_position = pos;
-	_base_position = pos;
-	_orig_position = pos;
 
 	_transient_childdren = make_shared<tree_t>();
 	push_back(_transient_childdren);
@@ -192,10 +188,11 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
 	surface->configure = &xdg_surface_base_t::_weston_configure;
+
+	/* /!\ use xdg_surface_base, leaving the choie of the virutal
+	 * weston_configure */
 	surface->configure_private = dynamic_cast<xdg_surface_base_t*>(this);
 
-	weston_log("bbbb %p\n", surface->configure_private);
-	weston_log("bbbX %p\n", _ctx);
 
 	/* tell weston how to use this data */
 	if (weston_surface_set_role(surface, "xdg_surface",
@@ -275,32 +272,15 @@ void xdg_surface_toplevel_t::reconfigure() {
 
 	if (is(MANAGED_FLOATING)) {
 		_wished_position = _floating_wished_position;
-
-		/* floating window without borders */
-		_base_position = _wished_position;
-
-		_orig_position.x = 0;
-		_orig_position.y = 0;
-		_orig_position.w = _wished_position.w;
-		_orig_position.h = _wished_position.h;
-
-		/* avoid to hide title bar of floating windows */
-		if(_base_position.y < 0) {
-			_base_position.y = 0;
-		}
-
-		//cairo_xcb_surface_set_size(_surf, _base_position.w, _base_position.h);
-
 	} else {
 		_wished_position = _notebook_wished_position;
-		_base_position = _notebook_wished_position;
-		_orig_position = rect(0, 0, _base_position.w, _base_position.h);
 	}
 
 	_is_resized = true;
 
 	if(_default_view) {
-		weston_view_set_position(_default_view, _base_position.x, _base_position.y);
+		weston_view_set_position(_default_view, _wished_position.x,
+				_wished_position.y);
 		weston_view_geometry_dirty(_default_view);
 	}
 
@@ -314,8 +294,8 @@ void xdg_surface_toplevel_t::reconfigure() {
 		wl_array_add(&array, sizeof(uint32_t));
 		((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
 	}
-	xdg_surface_send_configure(_xdg_surface_resource, _base_position.w,
-			_base_position.h, &array, _ack_serial);
+	xdg_surface_send_configure(_xdg_surface_resource, _wished_position.w,
+			_wished_position.h, &array, _ack_serial);
 	wl_array_release(&array);
 	wl_client_flush(_client);
 
@@ -330,7 +310,7 @@ void xdg_surface_toplevel_t::set_managed_type(managed_window_type_e type)
 }
 
 rect xdg_surface_toplevel_t::get_base_position() const {
-	return _base_position;
+	return _wished_position;
 }
 
 managed_window_type_e xdg_surface_toplevel_t::get_type() {
@@ -423,11 +403,11 @@ string xdg_surface_toplevel_t::get_node_name() const {
 }
 
 rect const & xdg_surface_toplevel_t::base_position() const {
-	return _base_position;
+	return _wished_position;
 }
 
 rect const & xdg_surface_toplevel_t::orig_position() const {
-	return _orig_position;
+	return _wished_position;
 }
 
 void xdg_surface_toplevel_t::update_layout(time64_t const time) {
