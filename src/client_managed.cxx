@@ -12,6 +12,7 @@
 #include <typeinfo>
 
 #include <cairo.h>
+#include <linux/input.h>
 
 #include "client_managed.hxx"
 #include "renderable_floating_outer_gradien.hxx"
@@ -654,6 +655,16 @@ void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct w
 		 struct wl_resource *seat_resource, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	auto seat = reinterpret_cast<weston_seat*>(
+			wl_resource_get_user_data(seat_resource));
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, shared_from_this(), BTN_LEFT, rect(x, y, 1, 1)});
+
 
 //	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
 //
