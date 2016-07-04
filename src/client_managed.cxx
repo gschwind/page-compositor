@@ -147,8 +147,12 @@ void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
 	auto ths = xdg_surface_toplevel_t::get(resource);
 
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	ths->_ctx->detach(ths->shared_from_this());
+	ths->on_destroy.signal(ths);
 
+}
+
+void xdg_surface_toplevel_t::weston_surface_destroy() {
+	on_destroy.signal(this);
 }
 
 xdg_surface_toplevel_t::xdg_surface_toplevel_t(
@@ -188,6 +192,13 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	 * weston_configure */
 	surface->configure_private = dynamic_cast<xdg_surface_base_t*>(this);
 
+	surface_destroy.notify = [] (wl_listener *l, void *data) {
+		weston_surface * surface = reinterpret_cast<weston_surface*>(data);
+		auto ths = dynamic_cast<xdg_surface_toplevel_t*>(reinterpret_cast<xdg_surface_base_t*>(surface->configure_private));
+		ths->weston_surface_destroy();
+	};
+
+	wl_signal_add(&surface->destroy_signal, &surface_destroy);
 
 	/* tell weston how to use this data */
 	if (weston_surface_set_role(surface, "xdg_surface",
@@ -427,9 +438,10 @@ void xdg_surface_toplevel_t::hide() {
 	}
 
 	if(_default_view) {
-		//weston_view_unmap(_default_view);
-		//weston_view_destroy(_default_view);
+		weston_view_unmap(_default_view);
+		weston_view_destroy(_default_view);
 		_default_view = nullptr;
+		_ctx->sync_tree_view();
 	}
 
 	_is_visible = false;

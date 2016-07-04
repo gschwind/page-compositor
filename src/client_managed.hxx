@@ -60,6 +60,9 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 
 	} _pending, _current;
 
+
+	wl_listener surface_destroy;
+
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
 
@@ -92,6 +95,8 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 
 
 	static void xdg_surface_delete(wl_resource *resource);
+
+	void weston_surface_destroy();
 
 public:
 
