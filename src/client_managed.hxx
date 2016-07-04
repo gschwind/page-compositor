@@ -148,6 +148,7 @@ public:
 	//void grab_button_focused_unsafe();
 	//void grab_button_unfocused_unsafe();
 
+	void send_close();
 
 	void set_title(char const *);
 	void set_transient_for(xdg_surface_toplevel_t * s);

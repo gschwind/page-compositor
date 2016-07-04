@@ -493,6 +493,10 @@ void xdg_surface_toplevel_t::trigger_redraw() {
 
 }
 
+void xdg_surface_toplevel_t::send_close() {
+	xdg_surface_send_close(_xdg_surface_resource);
+}
+
 void xdg_surface_toplevel_t::set_title(char const * title) {
 	_has_change = true;
 	weston_log("%p title: %s\n", this, title);

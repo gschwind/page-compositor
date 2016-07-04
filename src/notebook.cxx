@@ -915,9 +915,9 @@ bool notebook_t::button(weston_pointer_grab * grab, uint32_t time,
 			start_exposay();
 			return true;
 		} else if (_area.close_client.is_inside(x, y)) {
-//			if(_selected != nullptr)
-//				_selected->delete_window(e->time);
-//			return true;
+			if(_selected != nullptr)
+				_selected->send_close();
+			return true;
 		} else if (_area.undck_client.is_inside(x, y)) {
 			if (_selected != nullptr)
 				_ctx->unbind_window(_selected);
