@@ -56,22 +56,22 @@ bool notebook_t::add_client(client_managed_p x, bool prefer_activate) {
 
 		/* remove current selected */
 		if (_selected != nullptr) {
-			_selected->iconify();
+			//_selected->iconify();
 			_selected->hide();
 		}
 
 		/* select the new one */
 		_selected = x;
 		if(_is_visible) {
-			_selected->normalize();
+			//_selected->normalize();
 			_selected->show();
 		} else {
-			_selected->iconify();
+			//_selected->iconify();
 			_selected->hide();
 		}
 
 	} else {
-		x->iconify();
+		//x->iconify();
 		x->hide();
 	}
 
@@ -119,7 +119,7 @@ void notebook_t::_remove_client(shared_ptr<xdg_surface_toplevel_t> x) {
 	/** update selection **/
 	if (_selected == x) {
 		_start_fading();
-		_selected->iconify();
+		//_selected->iconify();
 		_selected->hide();
 		_selected = nullptr;
 	}
@@ -139,7 +139,7 @@ void notebook_t::_remove_client(shared_ptr<xdg_surface_toplevel_t> x) {
 		_selected = dynamic_pointer_cast<xdg_surface_toplevel_t>(_children.back());
 
 		if (_selected != nullptr and _is_visible) {
-			_selected->normalize();
+			//_selected->normalize();
 			_selected->show();
 		}
 	}
@@ -151,20 +151,20 @@ void notebook_t::_remove_client(shared_ptr<xdg_surface_toplevel_t> x) {
 
 void notebook_t::_set_selected(shared_ptr<xdg_surface_toplevel_t> c) {
 	/** already selected **/
-	if(_selected == c and not c->is_iconic())
+	if(_selected == c)
 		return;
 
 	_stop_exposay();
 	_start_fading();
 
 	if(_selected != nullptr and c != _selected) {
-		_selected->iconify();
+		//_selected->iconify();
 		_selected->hide();
 	}
 	/** set selected **/
 	_selected = c;
 	if(_is_visible) {
-		_selected->normalize();
+		//_selected->normalize();
 		_selected->show();
 	}
 
@@ -181,7 +181,7 @@ void notebook_t::update_client_position(shared_ptr<xdg_surface_toplevel_t> c) {
 void notebook_t::iconify_client(shared_ptr<xdg_surface_toplevel_t> x) {
 	if(_selected == x) {
 		_start_fading();
-		_selected->iconify();
+		//_selected->iconify();
 		_selected->hide();
 		_layout_is_durty = true;
 	}
@@ -545,7 +545,7 @@ void notebook_t::_update_notebook_areas() {
 		if(_selected != nullptr) {
 			rect & b = _theme_notebook.selected_client.position;
 
-			if (not _selected->is_iconic()) {
+			if (not _selected_is_iconic) {
 
 				_area.close_client.x = b.x + b.w
 						- _ctx->theme()->notebook.selected_close_width;
@@ -629,7 +629,7 @@ void notebook_t::_update_theme_notebook(theme_notebook_t & theme_notebook) {
 					(int)floor((int)(offset + selected_box_width) - floor(offset)),
 					(int)_ctx->theme()->notebook.tab_height };
 
-			if(_selected->has_focus()) {
+			if(_selected_has_focus) {
 				theme_notebook.selected_client.tab_color =
 						_ctx->theme()->get_focused_color();
 			} else {
@@ -638,8 +638,8 @@ void notebook_t::_update_theme_notebook(theme_notebook_t & theme_notebook) {
 			}
 
 			theme_notebook.selected_client.title = _selected->title();
-			theme_notebook.selected_client.icon = _selected->icon();
-			theme_notebook.selected_client.is_iconic = _selected->is_iconic();
+			theme_notebook.selected_client.icon = nullptr;
+			theme_notebook.selected_client.is_iconic = _selected_is_iconic;
 			theme_notebook.has_selected_client = true;
 		} else {
 			theme_notebook.has_selected_client = false;
@@ -655,16 +655,16 @@ void notebook_t::_update_theme_notebook(theme_notebook_t & theme_notebook) {
 									- floor(offset)),
 				(int) _ctx->theme()->notebook.tab_height };
 
-			if (i.client->has_focus()) {
+			if(_selected_has_focus and _selected == i.client) {
 				tab.tab_color = _ctx->theme()->get_focused_color();
-			} else if (_selected == i.client) {
+			} if (_selected == i.client) {
 				tab.tab_color = _ctx->theme()->get_selected_color();
 			} else {
 				tab.tab_color = _ctx->theme()->get_normal_color();
 			}
 			tab.title = i.client->title();
-			tab.icon = i.client->icon();
-			tab.is_iconic = i.client->is_iconic();
+			tab.icon = nullptr;
+			tab.is_iconic = false;
 			offset += _ctx->theme()->notebook.iconic_tab_width;
 		}
 
@@ -1136,7 +1136,8 @@ bool notebook_t::motion(weston_pointer_grab * grab, uint32_t time, weston_pointe
 
 void notebook_t::_mouse_over_reset() {
 	if (_mouse_over.tab != nullptr) {
-		if (std::get<1>(*_mouse_over.tab).lock()->has_focus()) {
+		if (std::get<1>(*_mouse_over.tab).lock() == _selected
+				and _selected_has_focus) {
 			std::get<2>(*_mouse_over.tab)->tab_color =
 					_ctx->theme()->get_focused_color();
 		} else if (_selected == std::get<1>(*_mouse_over.tab).lock()) {
@@ -1213,7 +1214,10 @@ void notebook_t::_client_destroy(xdg_surface_toplevel_t * c) {
 	remove(c->shared_from_this());
 }
 
-void notebook_t::_client_focus_change(shared_ptr<xdg_surface_toplevel_t> c) {
+void notebook_t::_client_focus_change(shared_ptr<xdg_surface_toplevel_t> c, bool v) {
+	if(c == _selected) {
+		_selected_has_focus = v;
+	}
 	_layout_is_durty = true;
 }
 
@@ -1242,7 +1246,6 @@ void notebook_t::hide() {
 	_is_visible = false;
 
 	if(_selected != nullptr) {
-		_selected->iconify();
 		_selected->hide();
 	}
 }
@@ -1251,7 +1254,6 @@ void notebook_t::show() {
 	_is_visible = true;
 
 	if(_selected != nullptr) {
-		_selected->normalize();
 		_selected->show();
 	}
 }

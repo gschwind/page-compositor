@@ -1618,6 +1618,9 @@ void page_t::split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_top
 	split->show();
 }
 
+/*
+ * This function will close the given notebook, if possible
+ */
 void page_t::notebook_close(shared_ptr<notebook_t> nbk) {
 	/**
 	 * Closing notebook mean destroying the split base of this
@@ -1654,10 +1657,10 @@ void page_t::notebook_close(shared_ptr<notebook_t> nbk) {
 
 	/* move all client from destroyed notebook to new default pop */
 	auto clients = filter_class<xdg_surface_toplevel_t>(nbk->children());
-	bool notebook_has_focus = false;
+//	bool notebook_has_focus = false;
 	for(auto i : clients) {
-		if(i->has_focus())
-			notebook_has_focus = true;
+//		if(i->has_focus())
+//			notebook_has_focus = true;
 		nbk->remove(i);
 		insert_window_in_notebook(i, nullptr, false);
 	}
@@ -2252,7 +2255,7 @@ void page_t::unbind_window(shared_ptr<xdg_surface_toplevel_t> mw) {
 	mw->set_managed_type(MANAGED_FLOATING);
 	insert_in_tree_using_transient_for(mw);
 	mw->queue_redraw();
-	mw->normalize();
+	//mw->normalize();
 	mw->show();
 	mw->activate();
 }
@@ -3595,7 +3598,7 @@ void page_t::configure_surface(shared_ptr<xdg_surface_toplevel_t> xdg_surface,
 
 	weston_log("ccc %p\n", xdg_surface.get());
 
-	if(xdg_surface->is(MANAGED_UNDEFINED)) {
+	if(xdg_surface->is(MANAGED_UNCONFIGURED)) {
 		manage_client(xdg_surface);
 	} else {
 		/* TODO: update the state if necessary */

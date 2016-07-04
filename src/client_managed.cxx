@@ -158,14 +158,9 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_floating_wished_position{},
 	_notebook_wished_position{},
 	_wished_position{},
-	_surf{nullptr},
-	_icon(nullptr),
 	_has_focus{false},
-	_is_iconic{true},
-	_demands_attention{false},
 	_pending{},
 	_ack_serial{0},
-	_transient_for{nullptr},
 	_is_activated{false}
 {
 
@@ -173,7 +168,7 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 
-	_managed_type = MANAGED_UNDEFINED;
+	_managed_type = MANAGED_UNCONFIGURED;
 
 	_floating_wished_position = pos;
 	_notebook_wished_position = pos;
@@ -276,8 +271,6 @@ void xdg_surface_toplevel_t::reconfigure() {
 		_wished_position = _notebook_wished_position;
 	}
 
-	_is_resized = true;
-
 	if(_default_view) {
 		weston_view_set_position(_default_view, _wished_position.x,
 				_wished_position.y);
@@ -327,53 +320,53 @@ bool xdg_surface_toplevel_t::is(managed_window_type_e type) {
  *
  * unsafe: need to lock the _orig window to use it.
  **/
-void xdg_surface_toplevel_t::grab_button_focused_unsafe() {
-
-
-}
+//void xdg_surface_toplevel_t::grab_button_focused_unsafe() {
+//
+//
+//}
 
 /**
  * set usual passive button grab for a not focused client.
  *
  * unsafe: need to lock the _orig window to use it.
  **/
-void xdg_surface_toplevel_t::grab_button_unfocused_unsafe() {
-
-}
+//void xdg_surface_toplevel_t::grab_button_unfocused_unsafe() {
+//
+//}
 
 bool xdg_surface_toplevel_t::is_fullscreen() {
 	return _managed_type == MANAGED_FULLSCREEN;
 }
 
-bool xdg_surface_toplevel_t::skip_task_bar() {
-	return false;
-}
+//bool xdg_surface_toplevel_t::skip_task_bar() {
+//	return false;
+//}
+//
+//void xdg_surface_toplevel_t::net_wm_state_delete() {
+//
+//}
 
-void xdg_surface_toplevel_t::net_wm_state_delete() {
+//void xdg_surface_toplevel_t::normalize() {
+//	if(not _is_iconic)
+//		return;
+//	_is_iconic = false;
+//}
+//
+//void xdg_surface_toplevel_t::iconify() {
+//	if(_is_iconic)
+//		return;
+//	_is_iconic = true;
+//	_is_activated = false;
+//}
 
-}
-
-void xdg_surface_toplevel_t::normalize() {
-	if(not _is_iconic)
-		return;
-	_is_iconic = false;
-}
-
-void xdg_surface_toplevel_t::iconify() {
-	if(_is_iconic)
-		return;
-	_is_iconic = true;
-	_is_activated = false;
-}
-
-void xdg_surface_toplevel_t::wm_state_delete() {
-	/**
-	 * This one is for removing the window manager tag, thus only check if the window
-	 * still exist. (don't need lock);
-	 **/
-
-	//_client_proxy->delete_wm_state();
-}
+//void xdg_surface_toplevel_t::wm_state_delete() {
+//	/**
+//	 * This one is for removing the window manager tag, thus only check if the window
+//	 * still exist. (don't need lock);
+//	 **/
+//
+//	//_client_proxy->delete_wm_state();
+//}
 
 void xdg_surface_toplevel_t::set_floating_wished_position(rect const & pos) {
 	_floating_wished_position = pos;
@@ -402,13 +395,13 @@ string xdg_surface_toplevel_t::get_node_name() const {
 	return oss.str();
 }
 
-rect const & xdg_surface_toplevel_t::base_position() const {
-	return _wished_position;
-}
-
-rect const & xdg_surface_toplevel_t::orig_position() const {
-	return _wished_position;
-}
+//rect const & xdg_surface_toplevel_t::base_position() const {
+//	return _wished_position;
+//}
+//
+//rect const & xdg_surface_toplevel_t::orig_position() const {
+//	return _wished_position;
+//}
 
 void xdg_surface_toplevel_t::update_layout(time64_t const time) {
 	if(not _is_visible)
@@ -423,7 +416,7 @@ void xdg_surface_toplevel_t::render_finished() {
 void xdg_surface_toplevel_t::set_focus_state(bool is_focused) {
 	_has_change = true;
 	_has_focus = is_focused;
-	on_focus_change.signal(shared_from_this());
+	on_focus_change.signal(shared_from_this(), is_focused);
 	queue_redraw();
 }
 
@@ -458,17 +451,17 @@ void xdg_surface_toplevel_t::show() {
 
 }
 
-bool xdg_surface_toplevel_t::is_iconic() {
-	return _is_iconic;
-}
+//bool xdg_surface_toplevel_t::is_iconic() {
+//	return _is_iconic;
+//}
 
-bool xdg_surface_toplevel_t::is_stiky() {
-	return false;
-}
-
-bool xdg_surface_toplevel_t::is_modal() {
-	return false;
-}
+//bool xdg_surface_toplevel_t::is_stiky() {
+//	return false;
+//}
+//
+//bool xdg_surface_toplevel_t::is_modal() {
+//	return false;
+//}
 
 void xdg_surface_toplevel_t::activate() {
 
@@ -479,10 +472,7 @@ void xdg_surface_toplevel_t::activate() {
 	_is_activated = true;
 	reconfigure();
 
-	if(is_iconic()) {
-		normalize();
-		queue_redraw();
-	}
+	queue_redraw();
 
 }
 
@@ -493,7 +483,7 @@ void xdg_surface_toplevel_t::queue_redraw() {
 	}
 
 	if(is(MANAGED_FLOATING)) {
-		_is_resized = true;
+		//_is_resized = true;
 	} else {
 		tree_t::queue_redraw();
 	}
@@ -513,28 +503,28 @@ void xdg_surface_toplevel_t::set_title(char const * title) {
 	}
 }
 
-shared_ptr<icon16> xdg_surface_toplevel_t::icon() const {
-	return _icon;
-}
+//shared_ptr<icon16> xdg_surface_toplevel_t::icon() const {
+//	return _icon;
+//}
+//
+//bool xdg_surface_toplevel_t::has_focus() const {
+//	return _has_focus;
+//}
 
-bool xdg_surface_toplevel_t::has_focus() const {
-	return _has_focus;
-}
-
-void xdg_surface_toplevel_t::set_current_desktop(unsigned int n) {
-
-}
-
-void xdg_surface_toplevel_t::set_demands_attention(bool x) {
-	_demands_attention = x;
-}
-
-bool xdg_surface_toplevel_t::demands_attention() {
-	return _demands_attention;
-}
+//void xdg_surface_toplevel_t::set_current_desktop(unsigned int n) {
+//
+//}
+//
+//void xdg_surface_toplevel_t::set_demands_attention(bool x) {
+//	_demands_attention = x;
+//}
+//
+//bool xdg_surface_toplevel_t::demands_attention() {
+//	return _demands_attention;
+//}
 
 string const & xdg_surface_toplevel_t::title() const {
-	return _title;
+	return _current.title;
 }
 
 
@@ -543,8 +533,6 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	weston_log("typeInfo %p\n", es->configure_private);
-	weston_log("typeInfo %s\n", typeid(es->configure_private).name());
 
 	/* configuration is invalid */
 	if(_ack_serial != 0)
@@ -552,17 +540,31 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 
 	auto ptr = shared_from_this();
 
-	if(is(MANAGED_UNDEFINED)) {
+	if(_pending.maximized != _current.maximized) {
+		if(_pending.maximized) {
+			/* on maximize */
+		} else {
+			/* on unmaximize */
+		}
+	}
+
+	if(_pending.minimized != _current.minimized) {
+		if(_pending.minimized) {
+			/* on minimize */
+		} else {
+			/* on unminimize */
+		}
+	}
+
+	_current = _pending;
+
+	if(is(MANAGED_UNCONFIGURED)) {
 		_ctx->manage_client(ptr);
 	} else {
 		/* TODO: update the state if necessary */
 		if(_default_view)
 			weston_view_schedule_repaint(_default_view);
 	}
-
-	/* once configure is finished apply pending states */
-	_title = _pending.title;
-	_transient_for = _pending.transient_for;
 
 }
 
@@ -571,35 +573,11 @@ void xdg_surface_toplevel_t::set_transient_for(xdg_surface_toplevel_t * s) {
 }
 
 auto xdg_surface_toplevel_t::transient_for() const -> xdg_surface_toplevel_t * {
-	return _transient_for;
+	return _current.transient_for;
 }
 
 auto xdg_surface_toplevel_t::get(wl_resource * r) -> xdg_surface_toplevel_t * {
 	return reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(r));
-}
-
-void xdg_surface_toplevel_t::set_maximized() {
-	_pending.maximize = true;
-}
-
-void xdg_surface_toplevel_t::unset_maximized() {
-	_pending.maximize = false;
-}
-
-void xdg_surface_toplevel_t::set_fullscreen() {
-	_pending.fullscreen = true;
-}
-
-void xdg_surface_toplevel_t::unset_fullscreen() {
-	_pending.fullscreen = false;
-}
-
-void xdg_surface_toplevel_t::set_minimized() {
-	_pending.minimize = true;
-}
-
-void xdg_surface_toplevel_t::set_window_geometry(int32_t x, int32_t y, int32_t w, int32_t h) {
-	_pending.geometry = rect(x, y, w, h);
 }
 
 auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
@@ -710,44 +688,38 @@ void xdg_surface_toplevel_t::xdg_surface_set_window_geometry(struct wl_client *c
 				int32_t width,
 				int32_t height)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_window_geometry(x, y, width, height);
+	_pending.geometry = rect(x, y, width, height);
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_maximized(struct wl_client *client,
 			  struct wl_resource *resource)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_maximized();
+	_pending.maximized = true;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_unset_maximized(struct wl_client *client,
 			    struct wl_resource *resource)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->unset_maximized();
+	_pending.maximized = false;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_fullscreen(struct wl_client *client,
 			   struct wl_resource *resource,
 			   struct wl_resource *output_resource)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_fullscreen();
+	_pending.fullscreen = true;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_unset_fullscreen(struct wl_client *client,
 			     struct wl_resource *resource)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->unset_fullscreen();
+	_pending.fullscreen = false;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_minimized(struct wl_client *client,
 			    struct wl_resource *resource)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_minimized();
+	_pending.minimized = true;
 }
 
 }

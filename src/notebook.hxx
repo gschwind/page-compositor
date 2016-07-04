@@ -63,6 +63,8 @@ class notebook_t : public page_component_t {
 	bool _has_scroll_arrow;
 	bool _layout_is_durty;
 	bool _has_mouse_change;
+	bool _selected_is_iconic;
+	bool _selected_has_focus;
 
 	struct {
 		int event_x;
@@ -163,7 +165,7 @@ class notebook_t : public page_component_t {
 
 	void _client_title_change(shared_ptr<xdg_surface_toplevel_t> c);
 	void _client_destroy(xdg_surface_toplevel_t * c);
-	void _client_focus_change(shared_ptr<xdg_surface_toplevel_t> c);
+	void _client_focus_change(shared_ptr<xdg_surface_toplevel_t> c, bool v);
 
 	void _update_allocation(rect & allocation);
 

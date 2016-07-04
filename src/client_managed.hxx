@@ -30,7 +30,7 @@ class page_t;
 using namespace std;
 
 enum managed_window_type_e {
-	MANAGED_UNDEFINED,
+	MANAGED_UNCONFIGURED,
 	MANAGED_FLOATING,
 	MANAGED_NOTEBOOK,
 	MANAGED_FULLSCREEN,
@@ -44,21 +44,21 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 	struct _state {
 		std::string title;
 		bool fullscreen;
-		bool maximize;
-		bool minimize;
+		bool maximized;
+		bool minimized;
 		xdg_surface_toplevel_t * transient_for;
 		rect geometry;
 
 		_state() {
 			fullscreen = false;
-			maximize = false;
-			minimize = false;
+			maximized = false;
+			minimized = false;
 			title = "";
 			transient_for = nullptr;
 			geometry = rect{0,0,0,0};
 		}
 
-	} _pending;
+	} _pending, _current;
 
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
@@ -69,27 +69,12 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 	/** hold notebook position **/
 	rect _notebook_wished_position;
 
-	/** the absolute position without border **/
+	/** -- **/
 	rect _wished_position;
-
-	// the output surface (i.e. surface where we write things)
-	cairo_surface_t * _surf;
-
-	// window title cache
-	string _title;
-
-	// icon cache
-	shared_ptr<icon16> _icon;
-
-	xdg_surface_toplevel_t * _transient_for;
 
 	shared_ptr<tree_t> _transient_childdren;
 
 	bool _has_focus;
-	bool _is_iconic;
-	bool _demands_attention;
-	bool _is_resized;
-	bool _is_exposed;
 	bool _has_change;
 	bool _is_activated;
 
@@ -123,44 +108,45 @@ public:
 
 	signal_t<xdg_surface_toplevel_t *> on_destroy;
 	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_title_change;
-	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_focus_change;
+	signal_t<shared_ptr<xdg_surface_toplevel_t>, bool> on_focus_change;
 	signal_t<shared_ptr<xdg_surface_toplevel_t>, int32_t, int32_t> on_configure;
 
+	/* read only attributes */
 	auto resource() const -> wl_resource *;
+	auto title() const -> string const &;
 
 	bool is(managed_window_type_e type);
-	auto title() const -> string const &;
 	auto get_wished_position() -> rect const &;
 	void set_floating_wished_position(rect const & pos);
 	rect get_base_position() const;
 	void reconfigure();
-	void normalize();
-	void iconify();
-	bool has_focus() const;
-	bool is_iconic();
+//	void normalize();
+//	void iconify();
+//	bool has_focus() const;
+//	bool is_iconic();
 	//void delete_window(xcb_timestamp_t);
-	auto icon() const -> shared_ptr<icon16>;
+//	auto icon() const -> shared_ptr<icon16>;
 	void set_notebook_wished_position(rect const & pos);
-	void set_current_desktop(unsigned int n);
-	bool is_stiky();
-	bool is_modal();
+	//void set_current_desktop(unsigned int n);
+	//bool is_stiky();
+	//bool is_modal();
 	//void net_wm_state_add(atom_e atom);
 	//void net_wm_state_remove(atom_e atom);
-	void net_wm_state_delete();
-	void wm_state_delete();
+	//void net_wm_state_delete();
+	//void wm_state_delete();
 	bool is_fullscreen();
-	bool skip_task_bar();
+	//bool skip_task_bar();
 	auto get_floating_wished_position() -> rect const & ;
-	bool lock();
-	void unlock();
+	//bool lock();
+	//void unlock();
 	void set_focus_state(bool is_focused);
-	void set_demands_attention(bool x);
-	bool demands_attention();
+	//void set_demands_attention(bool x);
+	//bool demands_attention();
 	//void focus(xcb_timestamp_t t);
 	auto get_type() -> managed_window_type_e;
 	void set_managed_type(managed_window_type_e type);
-	void grab_button_focused_unsafe();
-	void grab_button_unfocused_unsafe();
+	//void grab_button_focused_unsafe();
+	//void grab_button_unfocused_unsafe();
 
 
 	void set_title(char const *);
@@ -216,8 +202,8 @@ public:
 //	virtual bool has_window(uint32_t w) const;
 //	virtual auto base() const -> uint32_t;
 //	virtual auto orig() const -> uint32_t;
-	virtual auto base_position() const -> rect const &;
-	virtual auto orig_position() const -> rect const &;
+//	virtual auto base_position() const -> rect const &;
+//	virtual auto orig_position() const -> rect const &;
 	//virtual void on_property_notify(xcb_property_notify_event_t const * e);
 
 	/**
