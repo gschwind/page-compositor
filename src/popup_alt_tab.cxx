@@ -7,9 +7,9 @@
  *
  */
 
+#include <xdg-surface-toplevel.hxx>
 #include "popup_alt_tab.hxx"
 
-#include "client_managed.hxx"
 #include "workspace.hxx"
 
 namespace page {

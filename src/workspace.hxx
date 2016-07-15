@@ -16,9 +16,9 @@
 #include "utils.hxx"
 #include "page_context.hxx"
 #include "viewport.hxx"
-#include "client_managed.hxx"
-#include "client_not_managed.hxx"
 #include "renderable_pixmap.hxx"
+#include "xdg-surface-popup.hxx"
+#include "xdg-surface-toplevel.hxx"
 
 namespace page {
 
@@ -60,7 +60,7 @@ private:
 
 	workspace_switch_direction_e _switch_direction;
 
-	list<weak_ptr<xdg_surface_toplevel_t>> _client_focus_history;
+	list<xdg_surface_toplevel_view_w> _client_focus_history;
 
 public:
 
@@ -81,11 +81,11 @@ public:
 	auto get_viewport_map() const -> vector<shared_ptr<viewport_t>>;
 	void set_primary_viewport(shared_ptr<viewport_t> v);
 	auto set_layout(vector<shared_ptr<viewport_t>> const & new_layout) -> void;
-	void attach(shared_ptr<xdg_surface_toplevel_t> c);
+	void attach(xdg_surface_toplevel_view_p c);
 
-	bool client_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out);
-	void client_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in);
-	void client_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in);
+	bool client_focus_history_front(xdg_surface_toplevel_view_p & out);
+	void client_focus_history_remove(xdg_surface_toplevel_view_p in);
+	void client_focus_history_move_front(xdg_surface_toplevel_view_p in);
 	bool client_focus_history_is_empty();
 
 	/**

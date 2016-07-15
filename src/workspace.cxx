@@ -12,6 +12,8 @@
 #include "viewport.hxx"
 #include "workspace.hxx"
 
+#include "xdg-surface-toplevel-view.hxx"
+
 namespace page {
 
 using namespace std;
@@ -39,7 +41,7 @@ workspace_t::workspace_t(page_context_t * ctx, unsigned id) :
 }
 
 static bool is_dock(shared_ptr<tree_t> const & x) {
-	auto c = dynamic_pointer_cast<xdg_surface_toplevel_t>(x);
+	auto c = dynamic_pointer_cast<xdg_surface_toplevel_view_t>(x);
 	if(c != nullptr) {
 		return c->is(MANAGED_DOCK);
 	}
@@ -142,7 +144,7 @@ void workspace_t::update_default_pop() {
 	}
 }
 
-void workspace_t::attach(shared_ptr<xdg_surface_toplevel_t> c) {
+void workspace_t::attach(xdg_surface_toplevel_view_p c) {
 	assert(c != nullptr);
 
 	if(c->is(MANAGED_FULLSCREEN)) {
@@ -232,7 +234,7 @@ void workspace_t::show() {
 	}
 }
 
-bool workspace_t::client_focus_history_front(shared_ptr<xdg_surface_toplevel_t> & out) {
+bool workspace_t::client_focus_history_front(xdg_surface_toplevel_view_p & out) {
 	if(not client_focus_history_is_empty()) {
 		out = _client_focus_history.front().lock();
 		return true;
@@ -240,16 +242,16 @@ bool workspace_t::client_focus_history_front(shared_ptr<xdg_surface_toplevel_t> 
 	return false;
 }
 
-void workspace_t::client_focus_history_remove(shared_ptr<xdg_surface_toplevel_t> in) {
-	_client_focus_history.remove_if([in](weak_ptr<tree_t> w) { return w.expired() or w.lock() == in; });
+void workspace_t::client_focus_history_remove(xdg_surface_toplevel_view_p in) {
+	_client_focus_history.remove_if([in](tree_w w) { return w.expired() or w.lock() == in; });
 }
 
-void workspace_t::client_focus_history_move_front(shared_ptr<xdg_surface_toplevel_t> in) {
+void workspace_t::client_focus_history_move_front(xdg_surface_toplevel_view_p in) {
 	move_front(_client_focus_history, in);
 }
 
 bool workspace_t::client_focus_history_is_empty() {
-	_client_focus_history.remove_if([](weak_ptr<tree_t> const & w) { return w.expired(); });
+	_client_focus_history.remove_if([](tree_w const & w) { return w.expired(); });
 	return _client_focus_history.empty();
 }
 

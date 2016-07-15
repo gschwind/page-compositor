@@ -25,15 +25,21 @@ page_compositor_SOURCES = \
 	tree.hxx \
 	page.cxx \
 	page.hxx \
-	client.cxx \
-	client.hxx \
+	xdg-shell-client.cxx \
+	xdg-shell-client.hxx \
 	page-context.hxx \
-	client_base.cxx \
-	client_base.hxx \
-	client_managed.cxx \
-	client_managed.hxx \
-	client_not_managed.cxx \
-	client_not_managed.hxx \
+	xdg-surface-base.cxx \
+	xdg-surface-base.hxx \
+	xdg-surface-toplevel.cxx \
+	xdg-surface-toplevel.hxx \
+	xdg-surface-popup.cxx \
+	xdg-surface-popup.hxx \
+	xdg-surface-base-view.cxx \
+	xdg-surface-base-view.hxx \
+	xdg-surface-toplevel-view.cxx \
+	xdg-surface-toplevel-view.hxx \
+	xdg-surface-popup-view.cxx \
+	xdg-surface-popup-view.hxx \
 	utils.cxx \
 	pixmap.cxx \
 	grab_handlers.cxx \

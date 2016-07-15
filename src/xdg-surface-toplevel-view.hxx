@@ -1,27 +1,14 @@
 /*
- * managed_window.hxx
+ * xdg_surface_toplevel_view.hxx
  *
- * copyright (2010-2014) Benoit Gschwind
- *
- * This code is licensed under the GPLv3. see COPYING file for more details.
+ * copyright (2016) Benoit Gschwind
  *
  */
 
-#ifndef CLIENT_MANAGED_HXX_
-#define CLIENT_MANAGED_HXX_
+#ifndef SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_
+#define SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_
 
-#include <string>
-#include <vector>
-#include <typeinfo>
-
-#include "xdg-surface-interface.hxx"
-#include "icon_handler.hxx"
-#include "theme.hxx"
-
-#include "floating_event.hxx"
-#include "renderable_floating_outer_gradien.hxx"
-#include "renderable_pixmap.hxx"
-
+#include "xdg-surface-toplevel.hxx"
 
 namespace page {
 
@@ -37,34 +24,11 @@ enum managed_window_type_e {
 	MANAGED_DOCK
 };
 
-class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_base_t {
+class xdg_surface_toplevel_view_t : public tree_t {
 
-	friend class page::page_t;
-
-	struct _state {
-		std::string title;
-		bool fullscreen;
-		bool maximized;
-		bool minimized;
-		xdg_surface_toplevel_t * transient_for;
-		rect geometry;
-
-		_state() {
-			fullscreen = false;
-			maximized = false;
-			minimized = false;
-			title = "";
-			transient_for = nullptr;
-			geometry = rect{0,0,0,0};
-		}
-
-	} _pending, _current;
-
-
-	wl_listener surface_destroy;
-
-	/* 0 if ack by client, otherwise the last serial sent */
-	uint32_t _ack_serial;
+	friend class page_t;
+	page_context_t * _ctx;
+	xdg_surface_toplevel_t * _xdg_surface;
 
 	/** hold floating position **/
 	rect _floating_wished_position;
@@ -75,46 +39,45 @@ class xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_bas
 	/** -- **/
 	rect _wished_position;
 
-	shared_ptr<tree_t> _transient_childdren;
+	weston_view * _default_view;
 
-	bool _has_focus;
-	bool _has_change;
-	bool _is_activated;
+	shared_ptr<tree_t> _transient_childdren;
+	shared_ptr<tree_t> _popups_childdren;
+	map<xdg_surface_base_t *, signal_handler_t> _xsig;
 
 	/* handle the state of management: notebook, floating, fullscreen */
 	managed_window_type_e _managed_type;
 
 	/* private to avoid copy */
-	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
-	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &) = delete;
+	xdg_surface_toplevel_view_t(xdg_surface_toplevel_view_t const &) = delete;
+	xdg_surface_toplevel_view_t & operator=(xdg_surface_toplevel_view_t const &) = delete;
 
 	void set_wished_position(rect const & position);
 	rect const & get_wished_position() const;
 
 	void set_theme(theme_t const * theme);
 
-
 	static void xdg_surface_delete(wl_resource *resource);
 
-	void weston_surface_destroy();
+	bool _has_change;
+	bool _has_focus;
 
 public:
 
-	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_t>;
+	void add_transient_child(xdg_surface_toplevel_view_p c);
+	void add_popup_child(xdg_surface_popup_view_p c);
+
+	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_view_t>;
 
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
 	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
 
-	xdg_surface_toplevel_t(page_context_t * ctx, wl_client * client,
-			weston_surface * surface, uint32_t id);
-	virtual ~xdg_surface_toplevel_t();
+	xdg_surface_toplevel_view_t(xdg_surface_toplevel_t * s);
+	virtual ~xdg_surface_toplevel_view_t();
 
-	signal_t<xdg_surface_toplevel_t *> on_destroy;
-	signal_t<shared_ptr<xdg_surface_toplevel_t>> on_title_change;
-	signal_t<shared_ptr<xdg_surface_toplevel_t>, bool> on_focus_change;
-	signal_t<shared_ptr<xdg_surface_toplevel_t>, int32_t, int32_t> on_configure;
+	auto xdg_surface() -> xdg_surface_toplevel_t *;
 
 	/* read only attributes */
 	auto resource() const -> wl_resource *;
@@ -154,10 +117,6 @@ public:
 	//void grab_button_unfocused_unsafe();
 
 	void send_close();
-
-	void set_title(char const *);
-	void set_transient_for(xdg_surface_toplevel_t * s);
-	auto transient_for() const -> xdg_surface_toplevel_t *;
 
 	void set_maximized();
 	void unset_maximized();
@@ -212,48 +171,9 @@ public:
 //	virtual auto orig_position() const -> rect const &;
 	//virtual void on_property_notify(xcb_property_notify_event_t const * e);
 
-	/**
-	 * xdg-surface-interface
-	 **/
-	virtual void xdg_surface_destroy(wl_client * client, wl_resource * resource)
-			override;
-	virtual void xdg_surface_set_parent(wl_client * client,
-			wl_resource * resource, wl_resource * parent_resource) override;
-	virtual void xdg_surface_set_app_id(wl_client * client,
-			wl_resource * resource, const char * app_id) override;
-	virtual void xdg_surface_show_window_menu(wl_client * client,
-			wl_resource * surface_resource, wl_resource * seat_resource,
-			uint32_t serial, int32_t x, int32_t y) override;
-	virtual void xdg_surface_set_title(wl_client * client,
-			wl_resource * resource, const char * title) override;
-	virtual void xdg_surface_move(wl_client * client, wl_resource * resource,
-			wl_resource* seat_resource, uint32_t serial) override;
-	virtual void xdg_surface_resize(wl_client* client, wl_resource * resource,
-			wl_resource * seat_resource, uint32_t serial, uint32_t edges)
-					override;
-	virtual void xdg_surface_ack_configure(wl_client * client,
-			wl_resource * resource, uint32_t serial) override;
-	virtual void xdg_surface_set_window_geometry(wl_client * client,
-			wl_resource * resource, int32_t x, int32_t y, int32_t width,
-			int32_t height) override;
-	virtual void xdg_surface_set_maximized(wl_client * client,
-			wl_resource * resource) override;
-	virtual void xdg_surface_unset_maximized(wl_client* client,
-			wl_resource* resource) override;
-	virtual void xdg_surface_set_fullscreen(wl_client * client,
-			wl_resource * resource, wl_resource * output_resource) override;
-	virtual void xdg_surface_unset_fullscreen(wl_client * client,
-			wl_resource * resource) override;
-	virtual void xdg_surface_set_minimized(wl_client * client,
-			wl_resource * resource) override;
-
 };
-
-
-using client_managed_p = shared_ptr<xdg_surface_toplevel_t>;
-using client_managed_w = weak_ptr<xdg_surface_toplevel_t>;
 
 }
 
 
-#endif /* MANAGED_WINDOW_HXX_ */
+#endif /* SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_ */

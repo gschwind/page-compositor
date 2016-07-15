@@ -11,15 +11,17 @@
 
 #include <typeinfo>
 
-#include <cairo.h>
 #include <linux/input.h>
+#include <xdg-surface-toplevel.hxx>
 
-#include "client_managed.hxx"
 #include "renderable_floating_outer_gradien.hxx"
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
 #include "xdg-shell-server-protocol.h"
+#include "xdg-shell-client.hxx"
+
+#include "xdg-surface-toplevel-view.hxx"
 
 namespace page {
 
@@ -145,405 +147,53 @@ static struct xdg_surface_interface _xdg_surface_implementation = {
 
 
 void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
-	auto ths = xdg_surface_toplevel_t::get(resource);
-
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	ths->on_destroy.signal(ths);
-
-}
-
-void xdg_surface_toplevel_t::weston_surface_destroy() {
-	on_destroy.signal(this);
+	auto xs = xdg_surface_toplevel_t::get(resource);
+	xs->_xdg_shell_client->destroy_toplevel(xs);
+	delete xs;
 }
 
 xdg_surface_toplevel_t::xdg_surface_toplevel_t(
-		page_context_t * ctx, wl_client * client,
-		weston_surface * surface, uint32_t id) :
-	xdg_surface_base_t{ctx, client, surface, id},
-	_floating_wished_position{},
-	_notebook_wished_position{},
-	_wished_position{},
-	_has_focus{false},
+		page_context_t * ctx,
+		xdg_shell_client_t * xdg_shell_client,
+		wl_client * client,
+		weston_surface * surface,
+		uint32_t id) :
+	xdg_surface_base_t{ctx, xdg_shell_client, client, surface, id},
 	_pending{},
-	_ack_serial{0},
-	_is_activated{false}
+	_ack_serial{0}
 {
+	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
 
 	rect pos{0,0,surface->width, surface->height};
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 
-	_managed_type = MANAGED_UNCONFIGURED;
+	_resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
 
-	_floating_wished_position = pos;
-	_notebook_wished_position = pos;
-
-	_transient_childdren = make_shared<tree_t>();
-	push_back(_transient_childdren);
-
-	_xdg_surface_resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
-
-	wl_resource_set_implementation(_xdg_surface_resource,
+	wl_resource_set_implementation(_resource,
 			&_xdg_surface_implementation,
 			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
-	surface->configure = &xdg_surface_base_t::_weston_configure;
-
-	/* /!\ use xdg_surface_base, leaving the choie of the virutal
-	 * weston_configure */
-	surface->configure_private = dynamic_cast<xdg_surface_base_t*>(this);
-
-	surface_destroy.notify = [] (wl_listener *l, void *data) {
-		weston_surface * surface = reinterpret_cast<weston_surface*>(data);
-		auto ths = dynamic_cast<xdg_surface_toplevel_t*>(reinterpret_cast<xdg_surface_base_t*>(surface->configure_private));
-		ths->weston_surface_destroy();
-	};
-
-	wl_signal_add(&surface->destroy_signal, &surface_destroy);
-
 	/* tell weston how to use this data */
 	if (weston_surface_set_role(surface, "xdg_surface",
-			_xdg_surface_resource, XDG_SHELL_ERROR_ROLE) < 0)
+			_resource, XDG_SHELL_ERROR_ROLE) < 0)
 		throw "TODO";
-
-//	/** if x == 0 then place window at center of the screen **/
-//	if (_floating_wished_position.x == 0 and not is(MANAGED_DOCK)) {
-//		_floating_wished_position.x =
-//				(_client_proxy->geometry().width - _floating_wished_position.w) / 2;
-//	}
-//
-//	if(_floating_wished_position.x - _ctx->theme()->floating.margin.left < 0) {
-//		_floating_wished_position.x = _ctx->theme()->floating.margin.left;
-//	}
-//
-//	/**
-//	 * if y == 0 then place window at center of the screen
-//	 **/
-//	if (_floating_wished_position.y == 0 and not is(MANAGED_DOCK)) {
-//		_floating_wished_position.y = (_client_proxy->geometry().height - _floating_wished_position.h) / 2;
-//	}
-//
-//	if(_floating_wished_position.y - _ctx->theme()->floating.margin.top < 0) {
-//		_floating_wished_position.y = _ctx->theme()->floating.margin.top;
-//	}
-
-	/**
-	 * Create the base window, window that will content managed window
-	 **/
-
-	rect b = _floating_wished_position;
-
-	//update_floating_areas();
-
-	uint32_t cursor;
-
-	//cursor = cnx()->xc_top_side;
-
-	//select_inputs_unsafe();
-
-	//update_icon();
 
 }
 
 xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
-
-	//_ctx->add_global_damage(get_visible_region());
-
-//	if(_default_view) {
-//		weston_layer_entry_remove(&_default_view->layer_link);
-//		weston_view_destroy(_default_view);
-//		_default_view = nullptr;
-//	}
-//
-//	on_destroy.signal(this);
-
-//	unselect_inputs_unsafe();
-//
-//	if (_surf != nullptr) {
-//		warn(cairo_surface_get_reference_count(_surf) == 1);
-//		cairo_surface_destroy(_surf);
-//		_surf = nullptr;
-//	}
-//
-//	destroy_back_buffer();
-
-}
-
-auto xdg_surface_toplevel_t::shared_from_this() -> shared_ptr<xdg_surface_toplevel_t> {
-	return dynamic_pointer_cast<xdg_surface_toplevel_t>(tree_t::shared_from_this());
-}
-
-void xdg_surface_toplevel_t::reconfigure() {
-	if(not _default_view)
-		return;
-
-	if (is(MANAGED_FLOATING)) {
-		_wished_position = _floating_wished_position;
-	} else {
-		_wished_position = _notebook_wished_position;
+	weston_log("DELETE xdg_surface_toplevel_t %p\n", this);
+	/* should not be usefull, delete must be call on resource destroy */
+	if(_resource) {
+		wl_resource_set_user_data(_resource, nullptr);
 	}
-
-	if(_default_view) {
-		weston_view_set_position(_default_view, _wished_position.x,
-				_wished_position.y);
-		weston_view_geometry_dirty(_default_view);
-	}
-
-	_ack_serial = weston_compositor_get_time();
-
-	wl_array array;
-	wl_array_init(&array);
-	wl_array_add(&array, sizeof(uint32_t));
-	((uint32_t*)array.data)[0] = XDG_SURFACE_STATE_MAXIMIZED;
-	if(_has_focus) {
-		wl_array_add(&array, sizeof(uint32_t));
-		((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
-	}
-	xdg_surface_send_configure(_xdg_surface_resource, _wished_position.w,
-			_wished_position.h, &array, _ack_serial);
-	wl_array_release(&array);
-	wl_client_flush(_client);
-
-
-}
-
-
-void xdg_surface_toplevel_t::set_managed_type(managed_window_type_e type)
-{
-	_managed_type = type;
-	reconfigure();
-}
-
-rect xdg_surface_toplevel_t::get_base_position() const {
-	return _wished_position;
-}
-
-managed_window_type_e xdg_surface_toplevel_t::get_type() {
-	return _managed_type;
-}
-
-bool xdg_surface_toplevel_t::is(managed_window_type_e type) {
-	return _managed_type == type;
-}
-
-
-/**
- * set usual passive button grab for a focused client.
- *
- * unsafe: need to lock the _orig window to use it.
- **/
-//void xdg_surface_toplevel_t::grab_button_focused_unsafe() {
-//
-//
-//}
-
-/**
- * set usual passive button grab for a not focused client.
- *
- * unsafe: need to lock the _orig window to use it.
- **/
-//void xdg_surface_toplevel_t::grab_button_unfocused_unsafe() {
-//
-//}
-
-bool xdg_surface_toplevel_t::is_fullscreen() {
-	return _managed_type == MANAGED_FULLSCREEN;
-}
-
-//bool xdg_surface_toplevel_t::skip_task_bar() {
-//	return false;
-//}
-//
-//void xdg_surface_toplevel_t::net_wm_state_delete() {
-//
-//}
-
-//void xdg_surface_toplevel_t::normalize() {
-//	if(not _is_iconic)
-//		return;
-//	_is_iconic = false;
-//}
-//
-//void xdg_surface_toplevel_t::iconify() {
-//	if(_is_iconic)
-//		return;
-//	_is_iconic = true;
-//	_is_activated = false;
-//}
-
-//void xdg_surface_toplevel_t::wm_state_delete() {
-//	/**
-//	 * This one is for removing the window manager tag, thus only check if the window
-//	 * still exist. (don't need lock);
-//	 **/
-//
-//	//_client_proxy->delete_wm_state();
-//}
-
-void xdg_surface_toplevel_t::set_floating_wished_position(rect const & pos) {
-	_floating_wished_position = pos;
-}
-
-void xdg_surface_toplevel_t::set_notebook_wished_position(rect const & pos) {
-	_notebook_wished_position = pos;
-}
-
-rect const & xdg_surface_toplevel_t::get_wished_position() {
-	return _wished_position;
-}
-
-rect const & xdg_surface_toplevel_t::get_floating_wished_position() {
-	return _floating_wished_position;
-}
-//
-//bool xdg_surface_toplevel_t::has_window(xcb_window_t w) const {
-//	return false;
-//}
-
-string xdg_surface_toplevel_t::get_node_name() const {
-	string s = _get_node_name<'M'>();
-	ostringstream oss;
-	oss << s << " " << (void*)nullptr << " " << title();
-	return oss.str();
-}
-
-//rect const & xdg_surface_toplevel_t::base_position() const {
-//	return _wished_position;
-//}
-//
-//rect const & xdg_surface_toplevel_t::orig_position() const {
-//	return _wished_position;
-//}
-
-void xdg_surface_toplevel_t::update_layout(time64_t const time) {
-	if(not _is_visible)
-		return;
-
-}
-
-void xdg_surface_toplevel_t::render_finished() {
-
-}
-
-void xdg_surface_toplevel_t::set_focus_state(bool is_focused) {
-	_has_change = true;
-	_has_focus = is_focused;
-	on_focus_change.signal(shared_from_this(), is_focused);
-	queue_redraw();
-}
-
-void xdg_surface_toplevel_t::hide() {
-
-	for(auto x: _children) {
-		x->hide();
-	}
-
-	if(_default_view) {
-		weston_view_unmap(_default_view);
-		weston_view_destroy(_default_view);
-		_default_view = nullptr;
-		_ctx->sync_tree_view();
-	}
-
-	_is_visible = false;
-}
-
-void xdg_surface_toplevel_t::show() {
-	_is_visible = true;
-
-	if(not _default_view) {
-		_default_view = weston_view_create(_surface);
-		reconfigure();
-		weston_log("bbXX %p\n", _surface->compositor);
-		_ctx->sync_tree_view();
-	}
-
-	for(auto x: _children) {
-		x->show();
-	}
-
-}
-
-//bool xdg_surface_toplevel_t::is_iconic() {
-//	return _is_iconic;
-//}
-
-//bool xdg_surface_toplevel_t::is_stiky() {
-//	return false;
-//}
-//
-//bool xdg_surface_toplevel_t::is_modal() {
-//	return false;
-//}
-
-void xdg_surface_toplevel_t::activate() {
-
-	if(_parent != nullptr) {
-		_parent->activate(shared_from_this());
-	}
-
-	_is_activated = true;
-	reconfigure();
-
-	queue_redraw();
-
-}
-
-void xdg_surface_toplevel_t::queue_redraw() {
-
-	if(_default_view) {
-		weston_view_schedule_repaint(_default_view);
-	}
-
-	if(is(MANAGED_FLOATING)) {
-		//_is_resized = true;
-	} else {
-		tree_t::queue_redraw();
-	}
-}
-
-void xdg_surface_toplevel_t::trigger_redraw() {
 
 }
 
 void xdg_surface_toplevel_t::send_close() {
-	xdg_surface_send_close(_xdg_surface_resource);
+	xdg_surface_send_close(_resource);
 }
-
-void xdg_surface_toplevel_t::set_title(char const * title) {
-	_has_change = true;
-	weston_log("%p title: %s\n", this, title);
-	if(title) {
-		_pending.title = title;
-	} else {
-		_pending.title = "";
-	}
-}
-
-//shared_ptr<icon16> xdg_surface_toplevel_t::icon() const {
-//	return _icon;
-//}
-//
-//bool xdg_surface_toplevel_t::has_focus() const {
-//	return _has_focus;
-//}
-
-//void xdg_surface_toplevel_t::set_current_desktop(unsigned int n) {
-//
-//}
-//
-//void xdg_surface_toplevel_t::set_demands_attention(bool x) {
-//	_demands_attention = x;
-//}
-//
-//bool xdg_surface_toplevel_t::demands_attention() {
-//	return _demands_attention;
-//}
-
-string const & xdg_surface_toplevel_t::title() const {
-	return _current.title;
-}
-
 
 
 void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
@@ -554,8 +204,6 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 	/* configuration is invalid */
 	if(_ack_serial != 0)
 		return;
-
-	auto ptr = shared_from_this();
 
 	if(_pending.maximized != _current.maximized) {
 		if(_pending.maximized) {
@@ -573,24 +221,18 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 		}
 	}
 
-	_current = _pending;
-
-	if(is(MANAGED_UNCONFIGURED)) {
-		_ctx->manage_client(ptr);
-	} else {
-		/* TODO: update the state if necessary */
-		if(_default_view)
-			weston_view_schedule_repaint(_default_view);
+	if(_pending.transient_for != _current.transient_for) {
+		if(_current.transient_for)
+			_xdg_shell_client->remove_all_transient(
+					xdg_surface_toplevel_t::get(_current.transient_for));
+		if(_pending.transient_for) {
+			auto xs = xdg_surface_toplevel_t::get(_pending.transient_for);
+			xs->_transient_chiddren.push_back(this);
+		}
 	}
 
-}
+	_current = _pending;
 
-void xdg_surface_toplevel_t::set_transient_for(xdg_surface_toplevel_t * s) {
-	_pending.transient_for = s;
-}
-
-auto xdg_surface_toplevel_t::transient_for() const -> xdg_surface_toplevel_t * {
-	return _current.transient_for;
 }
 
 auto xdg_surface_toplevel_t::get(wl_resource * r) -> xdg_surface_toplevel_t * {
@@ -598,31 +240,21 @@ auto xdg_surface_toplevel_t::get(wl_resource * r) -> xdg_surface_toplevel_t * {
 }
 
 auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
-	return _xdg_surface_resource;
+	return _resource;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_destroy(struct wl_client *client,
 		struct wl_resource *resource)
 {
 	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	on_destroy.signal(this);
-	_ctx->sync_tree_view();
 	wl_resource_destroy(resource);
-
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_parent(wl_client * client,
 		wl_resource * resource, wl_resource * parent_resource)
 {
 	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-
-	if(parent_resource) {
-		auto parent = reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(resource));
-		xdg_surface->set_transient_for(parent);
-	} else {
-		xdg_surface->set_transient_for(nullptr);
-	}
-
+	xdg_surface->_pending.transient_for = parent_resource;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_app_id(struct wl_client *client,
@@ -648,7 +280,7 @@ void xdg_surface_toplevel_t::xdg_surface_set_title(wl_client *client,
 			wl_resource *resource, const char *title)
 {
 	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->set_title(title);
+	_pending.title = title;
 }
 
 void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct wl_resource *resource,
@@ -663,7 +295,7 @@ void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct w
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
 
-	_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, shared_from_this(), BTN_LEFT, rect(x, y, 1, 1)});
+	_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view().lock(), BTN_LEFT, rect(x, y, 1, 1)});
 
 
 //	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
@@ -748,6 +380,17 @@ void xdg_surface_toplevel_t::xdg_surface_set_minimized(struct wl_client *client,
 {
 	_pending.minimized = true;
 }
+
+auto xdg_surface_toplevel_t::create_view() -> xdg_surface_toplevel_view_p {
+	auto view = make_shared<xdg_surface_toplevel_view_t>(this);
+	_master_view = view;
+	return view;
+}
+
+auto xdg_surface_toplevel_t::master_view() -> xdg_surface_toplevel_view_w {
+	return _master_view;
+}
+
 
 }
 

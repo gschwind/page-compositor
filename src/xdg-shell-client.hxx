@@ -5,22 +5,22 @@
  *      Author: gschwind
  */
 
-#ifndef SRC_CLIENT_HXX_
-#define SRC_CLIENT_HXX_
+#ifndef SRC_XDG_SHELL_CLIENT_HXX_
+#define SRC_XDG_SHELL_CLIENT_HXX_
 
 #include <list>
 
 #include "xdg-shell-interface.hxx"
 #include "page_context.hxx"
-#include "client_base.hxx"
-#include "client_managed.hxx"
-#include "client_not_managed.hxx"
+#include "xdg-surface-base.hxx"
+#include "xdg-surface-popup.hxx"
+#include "xdg-surface-toplevel.hxx"
 
 namespace page {
 
 using namespace std;
 
-struct client_shell_t : public xdg_shell_vtable {
+struct xdg_shell_client_t : public xdg_shell_vtable {
 	page_context_t * _ctx;
 
 	wl_client * client;
@@ -28,12 +28,24 @@ struct client_shell_t : public xdg_shell_vtable {
 	/* resource created for xdg_shell */
 	wl_resource * xdg_shell_resource;
 
-	/* list of surfaces belon the client */
-	list<shared_ptr<xdg_surface_toplevel_t>> xdg_surface_toplevel_list;
+	signal_t<xdg_shell_client_t *> destroy;
+//	signal_t<xdg_shell_client_t *, xdg_surface_toplevel_t *> create_toplevel;
+//	signal_t<xdg_shell_client_t *, xdg_surface_popup_t *> create_popup;
 
-	client_shell_t(page_context_t * ctx, wl_client * client, uint32_t id);
 
-	static client_shell_t * get(wl_resource * resource);
+	map<uint32_t, xdg_surface_toplevel_t *> xdg_surface_toplevel_map;
+	map<uint32_t, xdg_surface_popup_t *> xdg_surface_popup_map;
+
+	xdg_shell_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
+
+	void remove_all_transient(xdg_surface_toplevel_t * s);
+	void remove_all_popup(xdg_surface_popup_t * s);
+
+	void destroy_toplevel(xdg_surface_toplevel_t * s);
+	void destroy_popup(xdg_surface_popup_t * s);
+
+
+	static xdg_shell_client_t * get(wl_resource * resource);
 
 	static void xdg_shell_delete(wl_resource * resource);
 
@@ -55,4 +67,4 @@ struct client_shell_t : public xdg_shell_vtable {
 
 }
 
-#endif /* SRC_CLIENT_HXX_ */
+#endif /* SRC_XDG_SHELL_CLIENT_HXX_ */

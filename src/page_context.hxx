@@ -10,7 +10,7 @@
 
 #include <typeinfo>
 
-#include "tree.hxx"
+#include "tree-types.hxx"
 #include "theme_split.hxx"
 #include "keymap.hxx"
 #include "pointer-grab-handler.hxx"
@@ -22,14 +22,8 @@ namespace page {
 using namespace std;
 
 class theme_t;
-class notebook_t;
-class viewport_t;
-class xdg_surface_base_t;
-class xdg_surface_toplevel_t;
-class client_proxy_t;
-class client_view_t;
-class workspace_t;
 class mainloop_t;
+
 
 
 struct page_configuration_t {
@@ -63,26 +57,26 @@ public:
 	virtual auto theme() const -> theme_t const * = 0;
 //	virtual void overlay_add(shared_ptr<tree_t> x) = 0;
 //	virtual void add_global_damage(region const & r) = 0;
-	virtual auto find_mouse_viewport(int x, int y) const -> shared_ptr<viewport_t> = 0;
-	virtual auto get_current_workspace() const -> shared_ptr<workspace_t> const & = 0;
-	virtual auto get_workspace(int id) const -> shared_ptr<workspace_t> const & = 0;
+	virtual auto find_mouse_viewport(int x, int y) const -> viewport_p = 0;
+	virtual auto get_current_workspace() const -> workspace_p const & = 0;
+	virtual auto get_workspace(int id) const -> workspace_p const & = 0;
 	virtual int  get_workspace_count() const = 0;
 	virtual int  create_workspace() = 0;
 	virtual void grab_start(weston_pointer * pointer, pointer_grab_handler_t * handler) = 0;
 	virtual void grab_stop(weston_pointer * pointer) = 0;
-	virtual void detach(shared_ptr<tree_t> t) = 0;
-	virtual void insert_window_in_notebook(shared_ptr<xdg_surface_toplevel_t> x, shared_ptr<notebook_t> n, bool prefer_activate) = 0;
-	virtual void fullscreen_client_to_viewport(shared_ptr<xdg_surface_toplevel_t> c, shared_ptr<viewport_t> v) = 0;
-	virtual void unbind_window(shared_ptr<xdg_surface_toplevel_t> mw) = 0;
-	virtual void split_left(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) = 0;
-	virtual void split_right(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) = 0;
-	virtual void split_top(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) = 0;
-	virtual void split_bottom(shared_ptr<notebook_t> nbk, shared_ptr<xdg_surface_toplevel_t> c) = 0;
-	virtual void set_focus(weston_pointer * pointer, shared_ptr<xdg_surface_toplevel_t> w) = 0;
-	virtual void notebook_close(shared_ptr<notebook_t> nbk) = 0;
+	virtual void detach(tree_p t) = 0;
+	virtual void insert_window_in_notebook(xdg_surface_toplevel_view_p x, notebook_p n, bool prefer_activate) = 0;
+	virtual void fullscreen_client_to_viewport(xdg_surface_toplevel_view_p c, viewport_p v) = 0;
+	virtual void unbind_window(xdg_surface_toplevel_view_p mw) = 0;
+	virtual void split_left(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
+	virtual void split_right(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
+	virtual void split_top(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
+	virtual void split_bottom(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
+	virtual void set_focus(weston_pointer * pointer, xdg_surface_toplevel_view_p w) = 0;
+	virtual void notebook_close(notebook_p nbk) = 0;
 //	virtual int  left_most_border() = 0;
 //	virtual int  top_most_border() = 0;
-	virtual auto global_client_focus_history() -> list<weak_ptr<xdg_surface_toplevel_t>> = 0;
+	virtual auto global_client_focus_history() -> list<xdg_surface_toplevel_view_w> = 0;
 //	virtual auto net_client_list() -> list<shared_ptr<xdg_surface_toplevel_t>> = 0;
 //	virtual auto keymap() const -> keymap_t const * = 0;
 //	virtual void switch_to_desktop(unsigned int desktop) = 0;
@@ -90,7 +84,7 @@ public:
 //	virtual void make_surface_stats(int & size, int & count) = 0;
 //	virtual auto mainloop() -> mainloop_t * = 0;
 	virtual void sync_tree_view() = 0;
-	virtual void manage_client(shared_ptr<xdg_surface_toplevel_t> mw) = 0;
+	virtual void manage_client(xdg_surface_toplevel_view_p mw) = 0;
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p = 0;
 
 };

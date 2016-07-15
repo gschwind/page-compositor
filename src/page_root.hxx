@@ -10,9 +10,9 @@
 
 #include "page_context.hxx"
 #include "page_component.hxx"
-#include "client_not_managed.hxx"
-#include "client_managed.hxx"
 #include "compositor_overlay.hxx"
+#include "xdg-surface-popup.hxx"
+#include "xdg-surface-toplevel.hxx"
 
 namespace page {
 

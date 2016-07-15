@@ -261,9 +261,9 @@ bool is_expired(weak_ptr<T> & x) {
  * /!\ also remove expired !
  **/
 template<typename T0>
-std::list<std::shared_ptr<T0>> lock(std::list<std::weak_ptr<T0>> & x) {
+std::vector<std::shared_ptr<T0>> lock(std::list<std::weak_ptr<T0>> & x) {
 	x.remove_if(is_expired<T0>);
-	std::list<std::shared_ptr<T0>> ret;
+	std::vector<std::shared_ptr<T0>> ret;
 	for(auto i: x) ret.push_back(i.lock());
 	return ret;
 }
@@ -684,10 +684,17 @@ class signal_t {
 
 public:
 
+	signal_t() : _callback_list{} { }
 	~signal_t() { }
 
 	// default connect
 	signal_handler_t connect(void(*func)(F ...)) {
+		auto ret = make_shared<_func_t>(func);
+		_callback_list.push_front(weak_ptr<_func_t>{ret});
+		return std::static_pointer_cast<void>(ret);
+	}
+
+	signal_handler_t connect(_func_t func) {
 		auto ret = make_shared<_func_t>(func);
 		_callback_list.push_front(weak_ptr<_func_t>{ret});
 		return std::static_pointer_cast<void>(ret);
@@ -919,6 +926,7 @@ T * resource_get(wl_resource * r) {
 
 void weston_surface_state_set_buffer(struct weston_surface_state *state,
 				struct weston_buffer *buffer);
+
 
 }
 

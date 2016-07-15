@@ -12,7 +12,7 @@
 
 #include <limits>
 
-#include "client_base.hxx"
+#include "xdg-surface-base.hxx"
 
 namespace page {
 

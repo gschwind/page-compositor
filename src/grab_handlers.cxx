@@ -9,13 +9,15 @@
 
 #include "grab_handlers.hxx"
 #include "page_context.hxx"
+#include "xdg-surface-toplevel-view.hxx"
 
 namespace page {
 
 using namespace std;
 
-grab_split_t::grab_split_t(page_context_t * ctx, shared_ptr<split_t> s) :
-		_ctx { ctx }, _split { s }
+grab_split_t::grab_split_t(page_context_t * ctx, split_p s) :
+		_ctx{ctx},
+		_split{s}
 {
 	_slider_area = s->to_root_position(s->get_split_bar_area());
 	_split_ratio = s->ratio();
@@ -96,7 +98,7 @@ void grab_split_t::button(uint32_t time, uint32_t button, uint32_t state) {
 }
 
 grab_bind_client_t::grab_bind_client_t(page_context_t * ctx,
-		shared_ptr<xdg_surface_toplevel_t> c, uint32_t button,
+		xdg_surface_toplevel_view_p c, uint32_t button,
 		rect const & pos) :
 		ctx{ctx},
 		c{c},
@@ -116,7 +118,7 @@ grab_bind_client_t::~grab_bind_client_t() {
 }
 
 void grab_bind_client_t::_find_target_notebook(int x, int y,
-		shared_ptr<notebook_t> & target, notebook_area_e & zone) {
+		notebook_p & target, notebook_area_e & zone) {
 
 	target = nullptr;
 	zone = NOTEBOOK_AREA_NONE;
@@ -175,7 +177,7 @@ void grab_bind_client_t::motion(uint32_t time,
 //	if (pn0 == nullptr)
 //		return;
 
-	shared_ptr<notebook_t> new_target;
+	notebook_p new_target;
 	notebook_area_e new_zone;
 	_find_target_notebook(x, y, new_target, new_zone);
 
@@ -223,7 +225,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 	if (pointer->button_count == 0
 			and state == WL_POINTER_BUTTON_STATE_RELEASED) {
 
-		shared_ptr<notebook_t> new_target;
+		notebook_p new_target;
 		notebook_area_e new_zone;
 		_find_target_notebook(x, y, new_target, new_zone);
 
@@ -306,7 +308,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 
 
 grab_floating_move_t::grab_floating_move_t(page_context_t * ctx,
-		shared_ptr<xdg_surface_toplevel_t> f, uint32_t button, int x, int y) :
+		xdg_surface_toplevel_view_p f, uint32_t button, int x, int y) :
 		_ctx{ctx},
 		f{f},
 		original_position{f->get_wished_position()},
@@ -394,7 +396,7 @@ void grab_floating_move_t::button(uint32_t time, uint32_t button,
 
 
 grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx,
-		shared_ptr<xdg_surface_toplevel_t> f, uint32_t button,
+		xdg_surface_toplevel_view_p f, uint32_t button,
 		int x, int y, resize_mode_e mode) :
 		_ctx{ctx},
 		f{f},
@@ -474,8 +476,9 @@ void grab_floating_resize_t::motion(uint32_t time,
 	}
 
 	/* apply normal hints */
-	dimention_t<unsigned> final_size =
-			f.lock()->compute_size_with_constrain(size.w, size.h);
+	//dimention_t<unsigned> final_size =
+	//		f.lock()->compute_size_with_constrain(size.w, size.h);
+	dimention_t<unsigned> final_size(size.w, size.h);
 	size.w = final_size.width;
 	size.h = final_size.height;
 
@@ -523,7 +526,7 @@ void grab_floating_resize_t::motion(uint32_t time,
 	final_position = size;
 
 	rect popup_new_position = size;
-	if (f.lock()->has_motif_border()) {
+	if (false) {
 		popup_new_position.x -= _ctx->theme()->floating.margin.left;
 		popup_new_position.y -= _ctx->theme()->floating.margin.top;
 		popup_new_position.w += _ctx->theme()->floating.margin.left
@@ -563,7 +566,7 @@ void grab_floating_resize_t::button(uint32_t time, uint32_t _button,
 }
 
 grab_fullscreen_client_t::grab_fullscreen_client_t(page_context_t * ctx,
-		shared_ptr<xdg_surface_toplevel_t> mw, uint32_t button, int x, int y) :
+		xdg_surface_toplevel_view_p mw, uint32_t button, int x, int y) :
  _ctx{ctx},
  mw{mw},
  //pn0{nullptr},
@@ -582,7 +585,8 @@ grab_fullscreen_client_t::~grab_fullscreen_client_t() {
 //		_ctx->detach(pn0);
 }
 
-void grab_fullscreen_client_t::motion(uint32_t time, weston_pointer_motion_event * event) {
+void grab_fullscreen_client_t::motion(uint32_t time,
+		weston_pointer_motion_event * event) {
 	auto pointer = base.grab.pointer;
 
 	if (mw.expired()) {
@@ -597,7 +601,7 @@ void grab_fullscreen_client_t::motion(uint32_t time, weston_pointer_motion_event
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
 
-	shared_ptr<viewport_t> new_viewport = _ctx->find_mouse_viewport(x, y);
+	viewport_p new_viewport = _ctx->find_mouse_viewport(x, y);
 
 	if(new_viewport != v.lock()) {
 		if(new_viewport != nullptr) {
@@ -608,7 +612,8 @@ void grab_fullscreen_client_t::motion(uint32_t time, weston_pointer_motion_event
 
 }
 
-void grab_fullscreen_client_t::button(uint32_t time, uint32_t _button, uint32_t state) {
+void grab_fullscreen_client_t::button(uint32_t time, uint32_t _button,
+		uint32_t state) {
 	auto pointer = base.grab.pointer;
 
 	if(mw.expired()) {

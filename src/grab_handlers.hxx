@@ -55,12 +55,12 @@ public:
 
 class grab_bind_client_t : public pointer_grab_handler_t {
 	page_context_t * ctx;
-	weak_ptr<xdg_surface_toplevel_t> c;
+	xdg_surface_toplevel_view_w c;
 
 	rect start_position;
 	uint32_t _button;
 	notebook_area_e zone;
-	weak_ptr<notebook_t> target_notebook;
+	notebook_w target_notebook;
 	//shared_ptr<popup_notebook0_t> pn0;
 
 	void _find_target_notebook(int x, int y,
@@ -69,7 +69,7 @@ class grab_bind_client_t : public pointer_grab_handler_t {
 public:
 
 	grab_bind_client_t(page_context_t * ctx,
-			shared_ptr<xdg_surface_toplevel_t> c, uint32_t button,
+			xdg_surface_toplevel_view_p c, uint32_t button,
 			rect const & pos);
 
 	virtual ~grab_bind_client_t();
@@ -86,8 +86,8 @@ public:
 };
 
 struct mode_data_notebook_client_menu_t  : public pointer_grab_handler_t {
-	weak_ptr<notebook_t> from;
-	weak_ptr<xdg_surface_toplevel_t> client;
+	notebook_w from;
+	xdg_surface_toplevel_view_w client;
 	bool active_grab;
 	rect b;
 
@@ -122,13 +122,14 @@ struct grab_floating_move_t : public pointer_grab_handler_t {
 	int y_root;
 	rect original_position;
 	rect popup_original_position;
-	weak_ptr<xdg_surface_toplevel_t> f;
+	xdg_surface_toplevel_view_w f;
 	rect final_position;
 	uint32_t _button;
 
 	//shared_ptr<popup_notebook0_t> pfm;
 
-	grab_floating_move_t(page_context_t * ctx, shared_ptr<xdg_surface_toplevel_t> f, unsigned int button, int x, int y);
+	grab_floating_move_t(page_context_t * ctx, xdg_surface_toplevel_view_p f,
+			unsigned int button, int x, int y);
 
 	virtual ~grab_floating_move_t();
 
@@ -144,7 +145,7 @@ struct grab_floating_move_t : public pointer_grab_handler_t {
 
 struct grab_floating_resize_t : public pointer_grab_handler_t {
 	page_context_t * _ctx;
-	weak_ptr<xdg_surface_toplevel_t> f;
+	xdg_surface_toplevel_view_w f;
 
 	resize_mode_e mode;
 	int x_root;
@@ -158,7 +159,7 @@ struct grab_floating_resize_t : public pointer_grab_handler_t {
 public:
 
 	grab_floating_resize_t(page_context_t * _ctx,
-			shared_ptr<xdg_surface_toplevel_t> f, uint32_t button, int x,
+			xdg_surface_toplevel_view_p f, uint32_t button, int x,
 			int y, resize_mode_e mode);
 
 	virtual ~grab_floating_resize_t();
@@ -174,16 +175,15 @@ public:
 
 struct grab_fullscreen_client_t : public pointer_grab_handler_t {
 	page_context_t * _ctx;
-	weak_ptr<xdg_surface_toplevel_t> mw;
-	weak_ptr<viewport_t> v;
+	xdg_surface_toplevel_view_w mw;
+	viewport_w v;
 	//shared_ptr<popup_notebook0_t> pn0;
 	uint32_t _button;
 
 public:
 
 	grab_fullscreen_client_t(page_context_t * ctx,
-			shared_ptr<xdg_surface_toplevel_t> mw, uint32_t button, int x,
-			int y);
+			xdg_surface_toplevel_view_p mw, uint32_t button, int x, int y);
 
 	virtual ~grab_fullscreen_client_t();
 	virtual void focus() { }
