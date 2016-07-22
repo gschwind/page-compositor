@@ -159,6 +159,7 @@ public:
 
 	virtual void queue_redraw();
 	virtual void trigger_redraw();
+	virtual auto get_default_view() const -> weston_view *;
 
 	/**
 	 * client base API

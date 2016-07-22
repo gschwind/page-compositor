@@ -176,9 +176,15 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
 	/* tell weston how to use this data */
-	if (weston_surface_set_role(surface, "xdg_surface",
+	if (weston_surface_set_role(surface, "xdg_toplevel",
 			_resource, XDG_SHELL_ERROR_ROLE) < 0)
 		throw "TODO";
+
+	surface->configure_private = this;
+	surface->configure = [](weston_surface *es, int32_t sx, int32_t sy) {
+		auto ths = reinterpret_cast<xdg_surface_toplevel_t*>(es->configure_private);
+		ths->weston_configure(es, sx, sy);
+	};
 
 }
 
@@ -200,6 +206,10 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(_master_view.expired()) {
+		_ctx->manage_client(create_view());
+	}
 
 	/* configuration is invalid */
 	if(_ack_serial != 0)

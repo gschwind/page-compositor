@@ -41,7 +41,8 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 	_floating_wished_position{},
 	_notebook_wished_position{},
 	_wished_position{},
-	_xdg_surface{xdg_surface}
+	_xdg_surface{xdg_surface},
+	_default_view{nullptr}
 {
 	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
 
@@ -95,6 +96,8 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 	//select_inputs_unsafe();
 
 	//update_icon();
+
+	show();
 
 }
 
@@ -265,16 +268,16 @@ void xdg_surface_toplevel_view_t::set_focus_state(bool is_focused) {
 
 void xdg_surface_toplevel_view_t::hide() {
 
-	for(auto x: _children) {
-		x->hide();
-	}
-
-	if(_default_view) {
-		weston_view_unmap(_default_view);
-		weston_view_destroy(_default_view);
-		_default_view = nullptr;
-		_ctx->sync_tree_view();
-	}
+//	for(auto x: _children) {
+//		x->hide();
+//	}
+//
+//	if(_default_view) {
+//		weston_view_unmap(_default_view);
+//		weston_view_destroy(_default_view);
+//		_default_view = nullptr;
+//		_ctx->sync_tree_view();
+//	}
 
 	_is_visible = false;
 }
@@ -286,12 +289,12 @@ void xdg_surface_toplevel_view_t::show() {
 		_default_view = weston_view_create(_xdg_surface->_surface);
 		reconfigure();
 		weston_log("bbXX %p\n", _xdg_surface->_surface->compositor);
-		_ctx->sync_tree_view();
+		//_ctx->sync_tree_view();
 	}
 
-	for(auto x: _children) {
-		x->show();
-	}
+//	for(auto x: _children) {
+//		x->show();
+//	}
 
 }
 
@@ -391,6 +394,10 @@ auto xdg_surface_toplevel_view_t::get(wl_resource * r) -> xdg_surface_toplevel_t
 
 auto xdg_surface_toplevel_view_t::resource() const -> wl_resource * {
 	return _xdg_surface->_resource;
+}
+
+auto xdg_surface_toplevel_view_t::get_default_view() const -> weston_view * {
+	return _default_view;
 }
 
 }

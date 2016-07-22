@@ -2245,10 +2245,6 @@ void page_t::fullscreen_client_to_viewport(xdg_surface_toplevel_view_p c, viewpo
 void page_t::bind_window(xdg_surface_toplevel_view_p mw, bool activate) {
 	detach(mw);
 	insert_window_in_notebook(mw, nullptr, activate);
-	if(activate) {
-		mw->activate();
-		//set_focus(mw, XCB_CURRENT_TIME);
-	}
 }
 
 void page_t::unbind_window(xdg_surface_toplevel_view_p mw) {

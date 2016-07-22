@@ -8,12 +8,13 @@
 #ifndef SRC_XDG_SURFACE_BASE_VIEW_HXX_
 #define SRC_XDG_SURFACE_BASE_VIEW_HXX_
 
+#include <memory>
+
 #include "xdg-surface-base.hxx"
 
 #include "tree.hxx"
 
 namespace page {
-
 
 using namespace std;
 
@@ -25,6 +26,7 @@ struct xdg_surface_base_view_t : public tree_t {
 	xdg_surface_base_view_t(xdg_surface_base_view_t const & c) = delete;
 	xdg_surface_base_view_t();
 	virtual ~xdg_surface_base_view_t();
+
 };
 
 }

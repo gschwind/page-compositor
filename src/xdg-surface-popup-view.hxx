@@ -17,6 +17,8 @@ namespace page {
 class xdg_surface_popup_view_t : public xdg_surface_base_view_t {
 private:
 
+	weston_view * _default_view;
+
 	xdg_surface_popup_t * _xdg_surface_popup;
 
 	/* avoid copy */
@@ -34,6 +36,10 @@ public:
 
 	xdg_surface_popup_view_t(xdg_surface_popup_t * p);
 	virtual ~xdg_surface_popup_view_t();
+
+	void add_popup_child(xdg_surface_popup_view_p child);
+
+	virtual auto get_default_view() const -> weston_view *;
 
 };
 

@@ -13,6 +13,7 @@
 
 #include "xdg-shell-client.hxx"
 #include "xdg-surface-popup-view.hxx"
+#include "xdg-surface-toplevel-view.hxx"
 
 namespace page {
 
@@ -27,6 +28,26 @@ void xdg_surface_popup_t::weston_configure(weston_surface * es, int32_t sx,
 		int32_t sy)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if(_master_view.expired()) {
+		auto xview = create_view();
+
+		if(strcmp("xdg_toplevel", parent->role_name) == 0) {
+			auto _xparent = reinterpret_cast<xdg_surface_toplevel_t*>(parent->configure_private)->master_view();
+			if(not _xparent.expired()) {
+				_xparent.lock()->add_popup_child(xview);
+				_ctx->sync_tree_view();
+			}
+		} else if (strcmp("xdg_popup", parent->role_name) == 0) {
+			auto _xparent = reinterpret_cast<xdg_surface_popup_t*>(parent->configure_private)->master_view();
+			if(not _xparent.expired()) {
+				_xparent.lock()->add_popup_child(xview);
+				_ctx->sync_tree_view();
+			}
+
+		}
+	}
+
 }
 
 static void xdg_popup_destroy(wl_client * client, wl_resource * resource) {
@@ -57,11 +78,16 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 		  weston_seat * seat,
 		  uint32_t serial,
 		  int32_t x, int32_t y) :
-		xdg_surface_base_t{ctx, xdg_shell_client, client, surface, id}
+		xdg_surface_base_t{ctx, xdg_shell_client, client, surface, id},
+		id{id},
+		surface{surface},
+		parent{parent},
+		seat{seat},
+		serial{serial},
+		x{x},
+		y{y}
 {
 	weston_log("ALLOC xdg_surface_popup_t %p\n", this);
-
-	auto _xparent = reinterpret_cast<xdg_surface_base_t*>(parent->configure_private);
 
 	_resource =
 			wl_resource_create(client, &xdg_popup_interface, 1, id);
@@ -70,6 +96,18 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 			&xx_xdg_popup_interface,
 			this,
 			&xdg_surface_popup_t::xdg_popup_delete);
+
+	surface->configure_private = this;
+	surface->configure = [](weston_surface *es, int32_t sx, int32_t sy) {
+		auto ths = reinterpret_cast<xdg_surface_popup_t*>(es->configure_private);
+		ths->weston_configure(es, sx, sy);
+	};
+
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(surface, "xdg_popup",
+			_resource, XDG_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
+
 
 }
 

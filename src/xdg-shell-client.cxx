@@ -82,10 +82,6 @@ void xdg_shell_client_t::xdg_shell_get_xdg_surface(wl_client * client,
 
 	xdg_surface_toplevel_map[id] = xdg_surface;
 
-	printf("create (%p)\n", xdg_surface);
-
-	/* TODO: put in pending queue */
-
 	weston_log("exit %s\n", __PRETTY_FUNCTION__);
 
 }

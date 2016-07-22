@@ -49,7 +49,6 @@ bool notebook_t::add_client(xdg_surface_toplevel_view_p x, bool prefer_activate)
 
 	x->set_parent(this);
 	x->set_managed_type(MANAGED_NOTEBOOK);
-	_children.push_back(x);
 
 	_client_context_t client_context{this, x};
 	_clients_tab_order.push_front(client_context);
@@ -59,23 +58,14 @@ bool notebook_t::add_client(xdg_surface_toplevel_view_p x, bool prefer_activate)
 
 		/* remove current selected */
 		if (_selected != nullptr) {
-			//_selected->iconify();
-			_selected->hide();
+			_children.remove(_selected);
 		}
 
 		/* select the new one */
 		_selected = x;
 		if(_is_visible) {
-			//_selected->normalize();
-			_selected->show();
-		} else {
-			//_selected->iconify();
-			_selected->hide();
+			_children.push_back(_selected);
 		}
-
-	} else {
-		//x->iconify();
-		x->hide();
 	}
 
 	update_client_position(_selected);
@@ -122,13 +112,11 @@ void notebook_t::_remove_client(xdg_surface_toplevel_view_p x) {
 	/** update selection **/
 	if (_selected == x) {
 		_start_fading();
-		//_selected->iconify();
-		_selected->hide();
+		_children.remove(x);
 		_selected = nullptr;
 	}
 
 	// cleanup
-	_children.remove(x);
 	x->clear_parent();
 
 	_clients_tab_order.erase(x_client_context);
@@ -136,14 +124,13 @@ void notebook_t::_remove_client(xdg_surface_toplevel_view_p x) {
 	_mouse_over_reset();
 
 	if(not _ctx->conf()._enable_shade_windows
-			and not _children.empty()
+			and not _clients_tab_order.empty()
 			and _selected == nullptr
 			and not _exposay) {
-		_selected = dynamic_pointer_cast<xdg_surface_toplevel_view_t>(_children.back());
+		_selected = _clients_tab_order.back().client;
 
 		if (_selected != nullptr and _is_visible) {
-			//_selected->normalize();
-			_selected->show();
+			_children.push_back(_selected);
 		}
 	}
 
@@ -161,14 +148,12 @@ void notebook_t::_set_selected(xdg_surface_toplevel_view_p c) {
 	_start_fading();
 
 	if(_selected != nullptr and c != _selected) {
-		//_selected->iconify();
-		_selected->hide();
+		_children.remove(_selected);
 	}
 	/** set selected **/
 	_selected = c;
 	if(_is_visible) {
-		//_selected->normalize();
-		_selected->show();
+		_children.push_back(_selected);
 	}
 
 	_layout_is_durty = true;
@@ -184,8 +169,7 @@ void notebook_t::update_client_position(xdg_surface_toplevel_view_p c) {
 void notebook_t::iconify_client(xdg_surface_toplevel_view_p x) {
 	if(_selected == x) {
 		_start_fading();
-		//_selected->iconify();
-		_selected->hide();
+		_children.remove(x);
 		_layout_is_durty = true;
 	}
 }
@@ -360,10 +344,8 @@ void notebook_t::activate() {
 
 void notebook_t::activate(shared_ptr<tree_t> t) {
 	assert(t != nullptr);
-	assert(has_key(_children, t));
 
 	activate();
-	move_back(_children, t);
 
 	auto mw = dynamic_pointer_cast<xdg_surface_toplevel_view_t>(t);
 	if (mw != nullptr) {
