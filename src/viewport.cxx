@@ -397,6 +397,7 @@ void viewport_t::_on_ack_buffer(pixmap_t * p) {
 	//weston_view_set_mask_infinite(_default_view);
 	weston_view_geometry_dirty(_default_view);
 
+	queue_redraw();
 	_ctx->sync_tree_view();
 
 

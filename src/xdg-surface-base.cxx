@@ -13,20 +13,15 @@ using namespace std;
 
 xdg_surface_base_t::xdg_surface_base_t(
 		page_context_t * ctx,
-		xdg_shell_client_t * xdg_shell_client,
 		wl_client * client,
 		weston_surface * surface,
 		uint32_t id) :
 	_ctx{ctx},
-	_xdg_shell_client{xdg_shell_client},
 	_resource{nullptr},
 	_client{client},
 	_surface{surface},
 	_id{id}
 {
-
-	_surface->configure = &xdg_surface_base_t::_weston_configure;
-
 	/**
 	 * weston_surface are used for wl_surface, but those surfaces can have
 	 * several role, configure_private may hold xdg_surface_toplevel or
@@ -34,10 +29,11 @@ xdg_surface_base_t::xdg_surface_base_t(
 	 * xdg_surface_base, allowing dynamic_cast.
 	 **/
 	_surface->configure_private = this;
+	_surface->configure = &xdg_surface_base_t::_weston_configure;
 
 	_surface_destroy.notify = [] (wl_listener *l, void *data) {
-		weston_surface * surface = reinterpret_cast<weston_surface*>(data);
-		auto ths = reinterpret_cast<xdg_surface_base_t*>(surface->configure_private);
+		auto surface = reinterpret_cast<weston_surface*>(data);
+		auto ths = xdg_surface_base_t::get(surface);
 		ths->weston_destroy();
 	};
 
@@ -59,17 +55,13 @@ xdg_surface_base_t::~xdg_surface_base_t() {
 void xdg_surface_base_t::_weston_configure(weston_surface * es, int32_t sx,
 		int32_t sy)
 {
-	auto ths = reinterpret_cast<xdg_surface_base_t *>(es->configure_private);
+	auto ths = xdg_surface_base_t::get(es);
 	ths->weston_configure(es, sx, sy);
 }
 
-void xdg_surface_base_t::weston_configure(weston_surface * es, int32_t sx,
-		int32_t sy) {
-
-}
-
-void xdg_surface_base_t::weston_destroy() {
-
+xdg_surface_base_t * xdg_surface_base_t::get(weston_surface * surface)
+{
+	return reinterpret_cast<xdg_surface_base_t *>(surface->configure_private);
 }
 
 

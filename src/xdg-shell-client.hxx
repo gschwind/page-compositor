@@ -12,6 +12,7 @@
 
 #include "xdg-shell-interface.hxx"
 #include "page_context.hxx"
+
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
 #include "xdg-surface-toplevel.hxx"
@@ -20,7 +21,7 @@ namespace page {
 
 using namespace std;
 
-struct xdg_shell_client_t : public xdg_shell_vtable {
+struct xdg_shell_client_t : protected connectable_t, public xdg_shell_vtable {
 	page_context_t * _ctx;
 
 	wl_client * client;
@@ -29,14 +30,12 @@ struct xdg_shell_client_t : public xdg_shell_vtable {
 	wl_resource * xdg_shell_resource;
 
 	signal_t<xdg_shell_client_t *> destroy;
-//	signal_t<xdg_shell_client_t *, xdg_surface_toplevel_t *> create_toplevel;
-//	signal_t<xdg_shell_client_t *, xdg_surface_popup_t *> create_popup;
-
 
 	map<uint32_t, xdg_surface_toplevel_t *> xdg_surface_toplevel_map;
 	map<uint32_t, xdg_surface_popup_t *> xdg_surface_popup_map;
 
 	xdg_shell_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
+	virtual ~xdg_shell_client_t() { }
 
 	void remove_all_transient(xdg_surface_toplevel_t * s);
 	void remove_all_popup(xdg_surface_popup_t * s);

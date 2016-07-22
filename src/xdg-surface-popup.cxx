@@ -12,6 +12,8 @@
 #include "xdg-shell-server-protocol.h"
 
 #include "xdg-shell-client.hxx"
+#include "xdg-surface-popup.hxx"
+#include "xdg-surface-toplevel.hxx"
 #include "xdg-surface-popup-view.hxx"
 #include "xdg-surface-toplevel-view.hxx"
 
@@ -31,21 +33,17 @@ void xdg_surface_popup_t::weston_configure(weston_surface * es, int32_t sx,
 
 	if(_master_view.expired()) {
 		auto xview = create_view();
+		auto base = xdg_surface_base_t::get(parent);
+		weston_log("%p\n", base);
+		auto parent_view = base->base_master_view();
+		weston_log("%p\n", parent_view.get());
 
-		if(strcmp("xdg_toplevel", parent->role_name) == 0) {
-			auto _xparent = reinterpret_cast<xdg_surface_toplevel_t*>(parent->configure_private)->master_view();
-			if(not _xparent.expired()) {
-				_xparent.lock()->add_popup_child(xview);
-				_ctx->sync_tree_view();
-			}
-		} else if (strcmp("xdg_popup", parent->role_name) == 0) {
-			auto _xparent = reinterpret_cast<xdg_surface_popup_t*>(parent->configure_private)->master_view();
-			if(not _xparent.expired()) {
-				_xparent.lock()->add_popup_child(xview);
-				_ctx->sync_tree_view();
-			}
-
+		if(parent_view != nullptr) {
+			parent_view->add_popup_child(xview, x, y);
 		}
+
+		_ctx->sync_tree_view();
+
 	}
 
 }
@@ -56,7 +54,7 @@ static void xdg_popup_destroy(wl_client * client, wl_resource * resource) {
 	p->xdg_popup_destroy(client, resource);
 }
 
-struct xdg_popup_interface xx_xdg_popup_interface = {
+static struct xdg_popup_interface const _xdg_popup_implementation = {
 		xdg_popup_destroy
 };
 
@@ -64,13 +62,12 @@ void xdg_surface_popup_t::xdg_popup_delete(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto xs = xdg_surface_popup_t::get(resource);
 	xs->destroy_all_views();
-	xs->_xdg_shell_client->destroy_popup(xs);
+	xs->destroy.signal(xs);
 	delete xs;
 }
 
 xdg_surface_popup_t::xdg_surface_popup_t(
 		  page_context_t * ctx,
-		  xdg_shell_client_t * xdg_shell_client,
 		  wl_client * client,
 		  wl_resource * resource,
 		  uint32_t id,
@@ -79,7 +76,7 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 		  weston_seat * seat,
 		  uint32_t serial,
 		  int32_t x, int32_t y) :
-		xdg_surface_base_t{ctx, xdg_shell_client, client, surface, id},
+		xdg_surface_base_t{ctx, client, surface, id},
 		id{id},
 		surface{surface},
 		parent{parent},
@@ -94,15 +91,9 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 			reinterpret_cast<wl_interface const *>(&xdg_popup_interface), 1, id);
 
 	wl_resource_set_implementation(_resource,
-			&xx_xdg_popup_interface,
+			&_xdg_popup_implementation,
 			this,
 			&xdg_surface_popup_t::xdg_popup_delete);
-
-	surface->configure_private = this;
-	surface->configure = [](weston_surface *es, int32_t sx, int32_t sy) {
-		auto ths = reinterpret_cast<xdg_surface_popup_t*>(es->configure_private);
-		ths->weston_configure(es, sx, sy);
-	};
 
 	/* tell weston how to use this data */
 	if (weston_surface_set_role(surface, "xdg_popup",
@@ -115,9 +106,9 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 xdg_surface_popup_t::~xdg_surface_popup_t() {
 	weston_log("DELETE xdg_surface_popup_t %p\n", this);
 	/* should not be usefull, delete must be call on resource destroy */
-	if(_resource) {
-		wl_resource_set_user_data(_resource, nullptr);
-	}
+//	if(_resource) {
+//		wl_resource_set_user_data(_resource, nullptr);
+//	}
 
 }
 
@@ -139,12 +130,29 @@ auto xdg_surface_popup_t::master_view() -> xdg_surface_popup_view_w {
 
 void xdg_surface_popup_t::weston_destroy() {
 	destroy_all_views();
+
+	if(_surface) {
+		wl_list_remove(&_surface_destroy.link);
+		_surface->configure_private = nullptr;
+		_surface->configure = nullptr;
+		_surface = nullptr;
+	}
+
 }
 
 void xdg_surface_popup_t::destroy_all_views() {
 	if(not _master_view.expired()) {
 		_master_view.lock()->signal_destroy();
 	}
+}
+
+xdg_surface_popup_t * xdg_surface_popup_t::get(weston_surface * surface) {
+	return dynamic_cast<xdg_surface_popup_t*>(
+			xdg_surface_base_t::get(surface));
+}
+
+xdg_surface_base_view_p xdg_surface_popup_t::base_master_view() {
+	return dynamic_pointer_cast<xdg_surface_base_view_t>(_master_view.lock());
 }
 
 }

@@ -11,11 +11,13 @@
  *
  */
 
-#ifndef CLIENT_BASE_HXX_
-#define CLIENT_BASE_HXX_
+#ifndef XDG_SURFACE_BASE_HXX_
+#define XDG_SURFACE_BASE_HXX_
 
 #include <cassert>
 #include <memory>
+
+#include "tree-types.hxx"
 
 #include "utils.hxx"
 #include "region.hxx"
@@ -40,7 +42,6 @@ struct xdg_surface_base_t {
 	weston_surface *       _surface;
 	uint32_t               _id;
 	wl_resource *          _resource;
-	xdg_shell_client_t *   _xdg_shell_client;
 	wl_listener            _surface_destroy;
 
 	xdg_surface_base_t(xdg_surface_base_t const &) = delete;
@@ -48,7 +49,6 @@ struct xdg_surface_base_t {
 
 	xdg_surface_base_t(
 			page_context_t * ctx,
-			xdg_shell_client_t * xdg_shell_client,
 			wl_client * client,
 			weston_surface * surface,
 			uint32_t id);
@@ -57,14 +57,17 @@ struct xdg_surface_base_t {
 
 	auto surface() const -> weston_surface * { return _surface; }
 	static void _weston_configure(weston_surface * es, int32_t sx, int32_t sy);
-	/** called on surface commit */
-	virtual void weston_configure(weston_surface * es, int32_t sx,
-			int32_t sy);
 
-	virtual void weston_destroy();
+	virtual void weston_destroy() = 0;
+
+	virtual xdg_surface_base_view_p base_master_view() = 0;
+	/** called on surface commit */
+	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy) = 0;
+
+	static xdg_surface_base_t * get(weston_surface * surface);
 
 };
 
 }
 
-#endif /* CLIENT_HXX_ */
+#endif /* XDG_SURFACE_BASE_HXX_ */

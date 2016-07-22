@@ -39,7 +39,7 @@ public:
 	xdg_surface_popup_view_t(xdg_surface_popup_t * p);
 	virtual ~xdg_surface_popup_view_t();
 
-	void add_popup_child(xdg_surface_popup_view_p child);
+	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);
 	void destroy_popup_child(xdg_surface_popup_view_t * c);
 
 	virtual auto get_default_view() const -> weston_view *;

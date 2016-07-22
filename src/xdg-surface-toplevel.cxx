@@ -21,6 +21,7 @@
 #include "xdg-shell-server-protocol.h"
 #include "xdg-shell-client.hxx"
 
+#include "xdg-surface-base-view.hxx"
 #include "xdg-surface-toplevel-view.hxx"
 
 namespace page {
@@ -127,7 +128,7 @@ static void _xdg_surface_set_minimized(wl_client * client,
 	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_minimized(client, resource);
 }
 
-static struct xdg_surface_interface _xdg_surface_implementation = {
+static struct xdg_surface_interface const _xdg_surface_implementation = {
 	page::_xdg_surface_destroy,
 	page::_xdg_surface_set_parent,
 	page::_xdg_surface_set_title,
@@ -150,17 +151,16 @@ void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto xs = xdg_surface_toplevel_t::get(resource);
 	xs->destroy_all_views();
-	xs->_xdg_shell_client->destroy_toplevel(xs);
+	xs->destroy.signal(xs);
 	delete xs;
 }
 
 xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 		page_context_t * ctx,
-		xdg_shell_client_t * xdg_shell_client,
 		wl_client * client,
 		weston_surface * surface,
 		uint32_t id) :
-	xdg_surface_base_t{ctx, xdg_shell_client, client, surface, id},
+	xdg_surface_base_t{ctx, client, surface, id},
 	_pending{},
 	_ack_serial{0}
 {
@@ -182,30 +182,33 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 			_resource, XDG_SHELL_ERROR_ROLE) < 0)
 		throw "TODO";
 
-	surface->configure_private = this;
-	surface->configure = [](weston_surface *es, int32_t sx, int32_t sy) {
-		auto ths = reinterpret_cast<xdg_surface_toplevel_t*>(es->configure_private);
-		ths->weston_configure(es, sx, sy);
-	};
-
 }
 
 xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 	weston_log("DELETE xdg_surface_toplevel_t %p\n", this);
 	/* should not be usefull, delete must be call on resource destroy */
-	if(_resource) {
-		wl_resource_set_user_data(_resource, nullptr);
-	}
+//	if(_resource) {
+//		wl_resource_set_user_data(_resource, nullptr);
+//	}
 
 }
 
 void xdg_surface_toplevel_t::weston_destroy() {
 	destroy_all_views();
+
+	if(_surface) {
+		wl_list_remove(&_surface_destroy.link);
+		_surface->configure_private = nullptr;
+		_surface->configure = nullptr;
+		_surface = nullptr;
+	}
+
 }
 
 void xdg_surface_toplevel_t::destroy_all_views() {
 	if(not _master_view.expired()) {
-		_master_view.lock()->signal_destroy();
+		auto master_view = _master_view.lock();
+		master_view->signal_destroy();
 	}
 }
 
@@ -245,13 +248,7 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 	}
 
 	if(_pending.transient_for != _current.transient_for) {
-		if(_current.transient_for)
-			_xdg_shell_client->remove_all_transient(
-					xdg_surface_toplevel_t::get(_current.transient_for));
-		if(_pending.transient_for) {
-			auto xs = xdg_surface_toplevel_t::get(_pending.transient_for);
-			xs->_transient_chiddren.push_back(this);
-		}
+
 	}
 
 	if(not _master_view.expired()) {
@@ -414,6 +411,15 @@ void xdg_surface_toplevel_t::minimize() {
 		_ctx->bind_window(master_view, true);
 	}
 
+}
+
+xdg_surface_toplevel_t * xdg_surface_toplevel_t::get(weston_surface * surface) {
+	return dynamic_cast<xdg_surface_toplevel_t*>(
+			xdg_surface_base_t::get(surface));
+}
+
+xdg_surface_base_view_p xdg_surface_toplevel_t::base_master_view() {
+	return dynamic_pointer_cast<xdg_surface_base_view_t>(_master_view.lock());
 }
 
 

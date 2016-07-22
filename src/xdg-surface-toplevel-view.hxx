@@ -9,6 +9,7 @@
 #define SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_
 
 #include "xdg-surface-toplevel.hxx"
+#include "xdg-surface-base-view.hxx"
 
 namespace page {
 
@@ -24,7 +25,7 @@ enum managed_window_type_e {
 	MANAGED_DOCK
 };
 
-class xdg_surface_toplevel_view_t : public tree_t {
+class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
 
 	friend class page_t;
 	page_context_t * _ctx;
@@ -69,7 +70,7 @@ public:
 	signal_t<xdg_surface_toplevel_view_t*> destroy;
 
 	void add_transient_child(xdg_surface_toplevel_view_p c);
-	void add_popup_child(xdg_surface_popup_view_p c);
+	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);
 
 	void destroy_popup_child(xdg_surface_popup_view_t * c);
 

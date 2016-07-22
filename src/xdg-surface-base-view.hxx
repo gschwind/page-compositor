@@ -8,6 +8,7 @@
 #ifndef SRC_XDG_SURFACE_BASE_VIEW_HXX_
 #define SRC_XDG_SURFACE_BASE_VIEW_HXX_
 
+#include <typeinfo>
 #include <memory>
 
 #include "xdg-surface-base.hxx"
@@ -26,6 +27,8 @@ struct xdg_surface_base_view_t : public tree_t {
 	xdg_surface_base_view_t(xdg_surface_base_view_t const & c) = delete;
 	xdg_surface_base_view_t();
 	virtual ~xdg_surface_base_view_t();
+
+	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y) = 0;
 
 };
 

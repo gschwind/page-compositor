@@ -351,7 +351,9 @@ static int xxvprintf(const char * fmt, va_list args) {
 		log = fopen("/tmp/page-compositor.log", "w");
 	}
 
-	return vfprintf(log, fmt, args);
+	int ret = vfprintf(log, fmt, args);
+	fflush(log);
+	return ret;
 
 }
 
@@ -3963,8 +3965,8 @@ void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 
 			weston_pointer_set_focus(pointer, view, sx, sy);
 
-			if(strcmp("xdg_toplevel", view->surface->role_name) == 0) {
-				auto xdg_window = reinterpret_cast<xdg_surface_toplevel_t*>(view->surface->configure_private);
+			auto xdg_window = xdg_surface_toplevel_t::get(view->surface);
+			if(xdg_window) {
 				if(not xdg_window->master_view().expired()) {
 					set_focus(pointer, xdg_window->master_view().lock());
 				}

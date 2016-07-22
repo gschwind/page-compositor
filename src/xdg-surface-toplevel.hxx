@@ -7,12 +7,14 @@
  *
  */
 
-#ifndef CLIENT_MANAGED_HXX_
-#define CLIENT_MANAGED_HXX_
+#ifndef XDG_SURFACE_TOPLEVEL_HXX_
+#define XDG_SURFACE_TOPLEVEL_HXX_
 
 #include <string>
 #include <vector>
 #include <typeinfo>
+
+#include "tree-types.hxx"
 
 #include "xdg-surface-interface.hxx"
 #include "icon_handler.hxx"
@@ -22,9 +24,8 @@
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_pixmap.hxx"
 
-#include "xdg-surface-toplevel.hxx"
+#include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
-
 
 namespace page {
 
@@ -32,7 +33,7 @@ class page_t;
 
 using namespace std;
 
-struct xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_base_t {
+struct xdg_surface_toplevel_t : public xdg_surface_base_t, public xdg_surface_vtable {
 
 	friend class page::page_t;
 
@@ -55,13 +56,13 @@ struct xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_ba
 
 	} _pending, _current;
 
-	xdg_surface_toplevel_view_w _master_view;
-
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
 
-	list<xdg_surface_toplevel_t *> _transient_chiddren;
-	list<xdg_surface_popup_t *> _popup_childdren;
+	xdg_surface_toplevel_view_w _master_view;
+
+
+	signal_t<xdg_surface_toplevel_t *> destroy;
 
 	/* private to avoid copy */
 	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
@@ -70,13 +71,12 @@ struct xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_ba
 	static void xdg_surface_delete(wl_resource *resource);
 
 	/** called on surface commit */
-	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
+	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
 	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
 
 	xdg_surface_toplevel_t(
 			page_context_t * ctx,
-			xdg_shell_client_t * xdg_shell_client,
 			wl_client * client,
 			weston_surface * surface,
 			uint32_t id);
@@ -96,7 +96,11 @@ struct xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_ba
 	virtual void weston_destroy() override;
 	void destroy_all_views();
 
+	virtual xdg_surface_base_view_p base_master_view();
+
 	void minimize();
+
+	static xdg_surface_toplevel_t * get(weston_surface * surface);
 
 	/**
 	 * xdg-surface-interface (event)
@@ -144,4 +148,4 @@ struct xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_ba
 }
 
 
-#endif /* MANAGED_WINDOW_HXX_ */
+#endif /* XDG_SURFACE_TOPLEVEL_HXX_ */

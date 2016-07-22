@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef CLIENT_NOT_MANAGED_HXX_
-#define CLIENT_NOT_MANAGED_HXX_
+#ifndef XDG_SURFACE_POPUP_HXX_
+#define XDG_SURFACE_POPUP_HXX_
 
 #include <memory>
 #include <libweston-0/compositor.h>
@@ -19,6 +19,7 @@
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_unmanaged_gaussian_shadow.hxx"
 #include "renderable_pixmap.hxx"
+
 #include "xdg-surface-base.hxx"
 
 namespace page {
@@ -37,11 +38,9 @@ struct xdg_surface_popup_t : public xdg_surface_base_t {
 	int32_t x;
 	int32_t y;
 
-	list<xdg_surface_popup_t *> _popup_childdren;
-
 	xdg_surface_popup_view_w _master_view;
 
-	signal_t<xdg_surface_popup_t *> on_destroy;
+	signal_t<xdg_surface_popup_t *> destroy;
 
 	auto create_view() -> xdg_surface_popup_view_p;
 	auto master_view() -> xdg_surface_popup_view_w;
@@ -55,10 +54,9 @@ struct xdg_surface_popup_t : public xdg_surface_base_t {
 	void xdg_popup_destroy(wl_client * client, wl_resource * resource);
 
 	/** called on surface commit */
-	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
+	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
 	xdg_surface_popup_t(page_context_t * ctx,
-			  xdg_shell_client_t * xdg_shell_client,
 			  wl_client * client,
 			  wl_resource * resource,
 			  uint32_t id,
@@ -73,11 +71,14 @@ struct xdg_surface_popup_t : public xdg_surface_base_t {
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
 
 	virtual void weston_destroy() override;
+	virtual xdg_surface_base_view_p base_master_view();
 
 	void destroy_all_views();
+
+	static xdg_surface_popup_t * get(weston_surface * surface);
 
 };
 
 }
 
-#endif /* CLIENT_NOT_MANAGED_HXX_ */
+#endif /* XDG_SURFACE_POPUP_HXX_ */
