@@ -58,22 +58,9 @@ bool notebook_t::add_client(xdg_surface_toplevel_view_p x, bool prefer_activate)
 	connect(x->title_change, this, &notebook_t::_client_title_change);
 
 	if(prefer_activate and not _exposay) {
-		_start_fading();
-
-		/* remove current selected */
-		if (_selected != nullptr) {
-			_children.remove(_selected);
-		}
-
-		/* select the new one */
-		_selected = x;
-		if(_is_visible) {
-			_children.push_back(_selected);
-		}
+		_set_selected(x);
 	}
 
-	update_client_position(_selected);
-	_update_layout();
 	_ctx->sync_tree_view();
 	return true;
 }
@@ -154,15 +141,14 @@ void notebook_t::_set_selected(xdg_surface_toplevel_view_p c) {
 	_stop_exposay();
 	_start_fading();
 
-	if(_selected != nullptr and c != _selected) {
+	if(_selected != nullptr) {
 		_children.remove(_selected);
 	}
 	/** set selected **/
 	_selected = c;
-	if(_is_visible) {
-		_selected->reconfigure();
-		_children.push_back(_selected);
-	}
+	_selected->update_view();
+	_selected->reconfigure();
+	_children.push_back(_selected);
 
 	_layout_is_durty = true;
 }
@@ -1237,7 +1223,7 @@ void notebook_t::append_children(vector<shared_ptr<tree_t>> & out) const {
 }
 
 void notebook_t::hide() {
-	_is_visible = false;
+	//_is_visible = false;
 
 	if(_selected != nullptr) {
 		_selected->hide();
@@ -1380,11 +1366,6 @@ void notebook_t::_set_theme_tab_offset(int x) {
 
 notebook_t::_client_context_t::_client_context_t(notebook_t * nbk,
 		xdg_surface_toplevel_view_p client) : client{client} {
-//	title_change_func = client->on_title_change.connect(nbk,
-//			&notebook_t::_client_title_change);
-//	destoy_func = client->destroy.connect(nbk, &notebook_t::_client_destroy);
-//	focus_change_func = client->on_focus_change.connect(nbk,
-//			&notebook_t::_client_focus_change);
 }
 
 notebook_t::_client_context_t::~_client_context_t() {

@@ -83,9 +83,6 @@ class notebook_t : public page_component_t {
 
 	struct _client_context_t {
 		xdg_surface_toplevel_view_p client;
-		signal_handler_t  title_change_func;
-		signal_handler_t  destoy_func;
-		signal_handler_t  focus_change_func;
 
 		_client_context_t() = delete;
 		_client_context_t(_client_context_t const & x) = default;
