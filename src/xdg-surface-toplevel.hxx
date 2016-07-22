@@ -93,6 +93,9 @@ struct xdg_surface_toplevel_t : public xdg_surface_vtable, public xdg_surface_ba
 	auto create_view() -> xdg_surface_toplevel_view_p;
 	auto master_view() -> xdg_surface_toplevel_view_w;
 
+	virtual void weston_destroy() override;
+	void destroy_all_views();
+
 	/**
 	 * xdg-surface-interface (event)
 	 **/

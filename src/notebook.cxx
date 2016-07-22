@@ -53,6 +53,8 @@ bool notebook_t::add_client(xdg_surface_toplevel_view_p x, bool prefer_activate)
 	_client_context_t client_context{this, x};
 	_clients_tab_order.push_front(client_context);
 
+	connect(x->destroy, this, &notebook_t::_client_destroy);
+
 	if(prefer_activate and not _exposay) {
 		_start_fading();
 
@@ -117,6 +119,7 @@ void notebook_t::_remove_client(xdg_surface_toplevel_view_p x) {
 	}
 
 	// cleanup
+	disconnect(x->destroy);
 	x->clear_parent();
 
 	_clients_tab_order.erase(x_client_context);
@@ -1195,9 +1198,9 @@ void notebook_t::_client_title_change(xdg_surface_toplevel_view_p c) {
 	_layout_is_durty = true;
 }
 
-void notebook_t::_client_destroy(xdg_surface_base_t * c) {
+void notebook_t::_client_destroy(xdg_surface_toplevel_view_t * c) {
 	//throw exception_t("not expected call of %d", __PRETTY_FUNCTION__);
-	//remove(c->shared_from_this());
+	remove(c->shared_from_this());
 }
 
 void notebook_t::_client_focus_change(xdg_surface_toplevel_view_p c, bool v) {
@@ -1374,7 +1377,7 @@ notebook_t::_client_context_t::_client_context_t(notebook_t * nbk,
 		xdg_surface_toplevel_view_p client) : client{client} {
 //	title_change_func = client->on_title_change.connect(nbk,
 //			&notebook_t::_client_title_change);
-//	destoy_func = client->on_destroy.connect(nbk, &notebook_t::_client_destroy);
+//	destoy_func = client->destroy.connect(nbk, &notebook_t::_client_destroy);
 //	focus_change_func = client->on_focus_change.connect(nbk,
 //			&notebook_t::_client_focus_change);
 }

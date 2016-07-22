@@ -3869,13 +3869,12 @@ void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 
 			weston_pointer_set_focus(pointer, view, sx, sy);
 
-			auto xdg_window =
-					dynamic_cast<xdg_surface_toplevel_t*>(reinterpret_cast<xdg_surface_base_t*>(view->surface->configure_private));
-
-			if(xdg_window) {
-				set_focus(pointer, xdg_window->master_view().lock());
+			if(strcmp("xdg_toplevel", view->surface->role_name) == 0) {
+				auto xdg_window = reinterpret_cast<xdg_surface_toplevel_t*>(view->surface->configure_private);
+				if(not xdg_window->master_view().expired()) {
+					set_focus(pointer, xdg_window->master_view().lock());
+				}
 			}
-
 		}
 	}
 

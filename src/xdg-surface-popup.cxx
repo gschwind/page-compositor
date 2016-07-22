@@ -63,6 +63,7 @@ struct xdg_popup_interface xx_xdg_popup_interface = {
 void xdg_surface_popup_t::xdg_popup_delete(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto xs = xdg_surface_popup_t::get(resource);
+	xs->destroy_all_views();
 	xs->_xdg_shell_client->destroy_popup(xs);
 	delete xs;
 }
@@ -134,6 +135,16 @@ auto xdg_surface_popup_t::create_view() -> xdg_surface_popup_view_p {
 
 auto xdg_surface_popup_t::master_view() -> xdg_surface_popup_view_w {
 	return _master_view;
+}
+
+void xdg_surface_popup_t::weston_destroy() {
+	destroy_all_views();
+}
+
+void xdg_surface_popup_t::destroy_all_views() {
+	if(not _master_view.expired()) {
+		_master_view.lock()->signal_destroy();
+	}
 }
 
 }

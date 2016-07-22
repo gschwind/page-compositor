@@ -161,7 +161,7 @@ class notebook_t : public page_component_t {
 	rect _compute_notebook_menu_position() const;
 
 	void _client_title_change(xdg_surface_toplevel_view_p c);
-	void _client_destroy(xdg_surface_base_t * c);
+	void _client_destroy(xdg_surface_toplevel_view_t * c);
 	void _client_focus_change(xdg_surface_toplevel_view_p c, bool v);
 
 	void _update_allocation(rect & allocation);

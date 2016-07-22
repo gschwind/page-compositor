@@ -41,6 +41,8 @@ struct xdg_surface_popup_t : public xdg_surface_base_t {
 
 	xdg_surface_popup_view_w _master_view;
 
+	signal_t<xdg_surface_popup_t *> on_destroy;
+
 	auto create_view() -> xdg_surface_popup_view_p;
 	auto master_view() -> xdg_surface_popup_view_w;
 
@@ -69,6 +71,10 @@ struct xdg_surface_popup_t : public xdg_surface_base_t {
 
 	static void xdg_popup_delete(struct wl_resource *resource);
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
+
+	virtual void weston_destroy() override;
+
+	void destroy_all_views();
 
 };
 

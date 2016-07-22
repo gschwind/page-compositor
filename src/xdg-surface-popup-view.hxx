@@ -29,6 +29,8 @@ private:
 
 public:
 
+	signal_t<xdg_surface_popup_view_t*> destroy;
+
 	void xdg_popup_destroy(wl_client * client, wl_resource * resource);
 
 	/** called on surface commit */
@@ -38,8 +40,11 @@ public:
 	virtual ~xdg_surface_popup_view_t();
 
 	void add_popup_child(xdg_surface_popup_view_p child);
+	void destroy_popup_child(xdg_surface_popup_view_t * c);
 
 	virtual auto get_default_view() const -> weston_view *;
+
+	void signal_destroy();
 
 };
 

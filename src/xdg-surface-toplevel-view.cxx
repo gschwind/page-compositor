@@ -34,6 +34,13 @@ void xdg_surface_toplevel_view_t::add_transient_child(xdg_surface_toplevel_view_
 
 void xdg_surface_toplevel_view_t::add_popup_child(xdg_surface_popup_view_p c) {
 	_popups_childdren->push_back(c);
+	connect(c->destroy, this, &xdg_surface_toplevel_view_t::destroy_popup_child);
+}
+
+void xdg_surface_toplevel_view_t::destroy_popup_child(xdg_surface_popup_view_t * c) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	disconnect(c->destroy);
+	_popups_childdren->remove(c->shared_from_this());
 }
 
 xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
@@ -103,6 +110,10 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 
 xdg_surface_toplevel_view_t::~xdg_surface_toplevel_view_t() {
 	weston_log("DELETE xdg_surface_toplevel_t %p\n", this);
+	if(_default_view) {
+		weston_view_destroy(_default_view);
+		_default_view = nullptr;
+	}
 }
 
 auto xdg_surface_toplevel_view_t::shared_from_this() -> xdg_surface_toplevel_view_p {
@@ -119,11 +130,8 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 		_wished_position = _notebook_wished_position;
 	}
 
-	if(_default_view) {
-		weston_view_set_position(_default_view, _wished_position.x,
-				_wished_position.y);
-		weston_view_geometry_dirty(_default_view);
-	}
+	weston_view_set_position(_default_view, _wished_position.x,
+			_wished_position.y);
 
 	_xdg_surface->_ack_serial = weston_compositor_get_time();
 
@@ -398,6 +406,10 @@ auto xdg_surface_toplevel_view_t::resource() const -> wl_resource * {
 
 auto xdg_surface_toplevel_view_t::get_default_view() const -> weston_view * {
 	return _default_view;
+}
+
+void xdg_surface_toplevel_view_t::signal_destroy() {
+	destroy.signal(this);
 }
 
 }

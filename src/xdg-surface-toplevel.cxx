@@ -149,6 +149,7 @@ static struct xdg_surface_interface _xdg_surface_implementation = {
 void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto xs = xdg_surface_toplevel_t::get(resource);
+	xs->destroy_all_views();
 	xs->_xdg_shell_client->destroy_toplevel(xs);
 	delete xs;
 }
@@ -195,6 +196,16 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 		wl_resource_set_user_data(_resource, nullptr);
 	}
 
+}
+
+void xdg_surface_toplevel_t::weston_destroy() {
+	destroy_all_views();
+}
+
+void xdg_surface_toplevel_t::destroy_all_views() {
+	if(not _master_view.expired()) {
+		_master_view.lock()->signal_destroy();
+	}
 }
 
 void xdg_surface_toplevel_t::send_close() {

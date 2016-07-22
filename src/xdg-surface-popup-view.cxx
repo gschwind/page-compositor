@@ -35,15 +35,29 @@ xdg_surface_popup_view_t::xdg_surface_popup_view_t(xdg_surface_popup_t * p) :
 
 xdg_surface_popup_view_t::~xdg_surface_popup_view_t()
 {
-
+	if(_default_view) {
+		weston_view_destroy(_default_view);
+		_default_view = nullptr;
+	}
 }
 
 void xdg_surface_popup_view_t::add_popup_child(xdg_surface_popup_view_p child) {
 	_children.push_back(child);
+	connect(child->destroy, this, &xdg_surface_popup_view_t::destroy_popup_child);
+}
+
+void xdg_surface_popup_view_t::destroy_popup_child(xdg_surface_popup_view_t * c) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	disconnect(c->destroy);
+	_children.remove(c->shared_from_this());
 }
 
 auto xdg_surface_popup_view_t::get_default_view() const -> weston_view * {
 	return _default_view;
+}
+
+void xdg_surface_popup_view_t::signal_destroy() {
+	destroy.signal(this);
 }
 
 }

@@ -64,8 +64,12 @@ class xdg_surface_toplevel_view_t : public tree_t {
 
 public:
 
+	signal_t<xdg_surface_toplevel_view_t*> destroy;
+
 	void add_transient_child(xdg_surface_toplevel_view_p c);
 	void add_popup_child(xdg_surface_popup_view_p c);
+
+	void destroy_popup_child(xdg_surface_popup_view_t * c);
 
 	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_view_t>;
 
@@ -115,6 +119,8 @@ public:
 	void set_managed_type(managed_window_type_e type);
 	//void grab_button_focused_unsafe();
 	//void grab_button_unfocused_unsafe();
+
+	void signal_destroy();
 
 	void send_close();
 
