@@ -36,6 +36,7 @@
 #include <linux/input.h>
 #include <libweston-0/compositor.h>
 #include <libweston-0/compositor-x11.h>
+#include <libweston-0/compositor-drm.h>
 #include <wayland-client-protocol.h>
 #include <xdg-surface-base.hxx>
 #include <xdg-surface-popup.hxx>
@@ -444,11 +445,22 @@ void page_t::run() {
 	};
 	weston_compositor_set_xkb_rule_names(ec, &names);
 
-	weston_compositor_add_key_binding(ec, KEY_7,
-				          (enum weston_keyboard_modifier)((int)MODIFIER_CTRL | (int)MODIFIER_ALT),
+	weston_compositor_add_key_binding(ec, KEY_J,
+				          MODIFIER_SUPER,
 				          print_tree_binding, this);
 
-	load_x11_backend(ec);
+	weston_compositor_add_key_binding(ec, KEY_Q, MODIFIER_SUPER,
+	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
+		auto ths = reinterpret_cast<page_t *>(data);
+		wl_display_disconnect(ths->_dpy);
+	}, this);
+
+	char * display = getenv("DISPLAY");
+	if(display) {
+		load_x11_backend(ec);
+	} else {
+		load_drm_backend(ec);
+	}
 
 	update_viewport_layout();
 
@@ -3429,6 +3441,44 @@ void page_t::load_x11_backend(weston_compositor* ec) {
 	backend_init(ec, &config.base);
 
 	free(default_output.name);
+
+}
+
+static enum weston_drm_backend_output_mode
+drm_configure_output(struct weston_compositor *c,
+		     bool use_current_mode,
+		     const char *name,
+		     struct weston_drm_backend_output_config *config)
+{
+
+	config->base.scale = 1;
+	config->base.transform = WL_OUTPUT_TRANSFORM_NORMAL;
+
+	return WESTON_DRM_BACKEND_OUTPUT_CURRENT;
+}
+
+
+void page_t::load_drm_backend(weston_compositor* ec) {
+	weston_drm_backend_config config = {{ 0, }};
+
+	config.base.struct_size = sizeof(weston_drm_backend_config);
+	config.base.struct_version = WESTON_DRM_BACKEND_CONFIG_VERSION;
+
+	config.connector = 0;
+	config.tty = 0;
+	config.use_pixman = 0;
+	config.seat_id = 0;
+	config.gbm_format =0;
+	config.configure_output = &drm_configure_output;
+	config.configure_device = 0;
+	config.use_current_mode = 1;
+
+	auto backend_init = reinterpret_cast<backend_init_func>(
+			weston_load_module("drm-backend.so", "backend_init"));
+	if (!backend_init)
+		return;
+
+	backend_init(ec, &config.base);
 
 }
 

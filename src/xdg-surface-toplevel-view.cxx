@@ -158,10 +158,6 @@ void xdg_surface_toplevel_view_t::update_view() {
 		float y = floor(_wished_position.y + (_wished_position.h -
 				_xdg_surface->_surface->height * ratio)/2.0);
 
-		weston_log("ratio = %f, x = %f, y = %f\n", ratio, x, y);
-		weston_log("ratio = %f, x = %d, y = %d\n", ratio, _xdg_surface->_surface->width, _xdg_surface->_surface->height);
-		weston_log("ratio = %f, x = %d, y = %d\n", ratio, _wished_position.w, _wished_position.h);
-
 		weston_view_set_position(_default_view, x, y);
 		weston_view_schedule_repaint(_default_view);
 

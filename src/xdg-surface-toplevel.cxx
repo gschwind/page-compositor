@@ -328,33 +328,12 @@ void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct w
 
 	auto master_view = _master_view.lock();
 	if(master_view->is(MANAGED_NOTEBOOK)) {
-		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view, BTN_LEFT, rect(x, y, 1, 1)});
+		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view,
+			BTN_LEFT, rect(x, y, 1, 1)});
 	} else if(master_view->is(MANAGED_FLOATING)) {
-		_ctx->grab_start(pointer, new grab_floating_move_t{_ctx, master_view, BTN_LEFT, x, y});
+		_ctx->grab_start(pointer, new grab_floating_move_t{_ctx, master_view,
+			BTN_LEFT, x, y});
 	}
-
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//
-//	auto seat = reinterpret_cast<weston_seat*>(wl_resource_get_user_data(seat_resource));
-//	auto xdg_surface = xdg_surface_t::get(resource);
-//	auto pointer = weston_seat_get_pointer(seat);
-//
-//	weston_pointer_grab_move_t * grab_data =
-//			reinterpret_cast<weston_pointer_grab_move_t *>(malloc(sizeof *grab_data));
-//	/** TODO: memory error **/
-//
-//	grab_data->base.interface = &move_grab_interface;
-//	grab_data->base.pointer = nullptr;
-//
-//	/* relative client position from the cursor */
-//	grab_data->origin_x = xdg_surface->view->geometry.x - wl_fixed_to_double(pointer->grab_x);
-//	grab_data->origin_y = xdg_surface->view->geometry.y - wl_fixed_to_double(pointer->grab_y);
-//
-//	wl_list_remove(&(xdg_surface->view->layer_link.link));
-//	wl_list_insert(&(cmp->default_layer.view_list.link),
-//			&(xdg_surface->view->layer_link.link));
-//
-//	weston_pointer_start_grab(seat->pointer_state, &grab_data->base);
 
 }
 

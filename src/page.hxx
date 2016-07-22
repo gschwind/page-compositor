@@ -402,6 +402,7 @@ struct page_t : public page_context_t {
 	void connect_all();
 	void on_output_created(weston_output * output);
 	void load_x11_backend(weston_compositor* ec);
+	void load_drm_backend(weston_compositor* ec);
 	static void bind_xdg_shell(wl_client * client, void * data,
 					      uint32_t version, uint32_t id);
 	static void bind_zzz_buffer_manager(struct wl_client * client, void * data,
