@@ -156,6 +156,7 @@ void notebook_t::_set_selected(xdg_surface_toplevel_view_p c) {
 	/** set selected **/
 	_selected = c;
 	if(_is_visible) {
+		_selected->reconfigure();
 		_children.push_back(_selected);
 	}
 
@@ -163,9 +164,9 @@ void notebook_t::_set_selected(xdg_surface_toplevel_view_p c) {
 }
 
 void notebook_t::update_client_position(xdg_surface_toplevel_view_p c) {
-	/* compute the window placement within notebook */
-	_client_position = _compute_client_size(c);
-	c->set_notebook_wished_position(to_root_position(_client_position));
+	c->set_notebook_wished_position(to_root_position(_client_area));
+	_client_position = _client_area;
+	c->update_view();
 	c->reconfigure();
 }
 

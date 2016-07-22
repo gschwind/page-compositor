@@ -45,6 +45,7 @@ void xdg_surface_toplevel_view_t::destroy_popup_child(xdg_surface_popup_view_t *
 
 xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 		xdg_surface_toplevel_t * xdg_surface) :
+	_ctx{xdg_surface->_ctx},
 	_floating_wished_position{},
 	_notebook_wished_position{},
 	_wished_position{},
@@ -66,6 +67,14 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 	push_back(_popups_childdren);
 	_transient_childdren = make_shared<tree_t>();
 	push_back(_transient_childdren);
+
+	weston_matrix_init(&_transform.matrix);
+	wl_list_init(&_transform.link);
+
+	_default_view = weston_view_create(_xdg_surface->_surface);
+	update_view();
+
+	_is_visible = true;
 
 //	/** if x == 0 then place window at center of the screen **/
 //	if (_floating_wished_position.x == 0 and not is(MANAGED_DOCK)) {
@@ -120,20 +129,66 @@ auto xdg_surface_toplevel_view_t::shared_from_this() -> xdg_surface_toplevel_vie
 	return dynamic_pointer_cast<xdg_surface_toplevel_view_t>(tree_t::shared_from_this());
 }
 
-void xdg_surface_toplevel_view_t::reconfigure() {
-	if(not _default_view)
-		return;
+void xdg_surface_toplevel_view_t::update_view() {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if (is(MANAGED_FLOATING)) {
-		_wished_position = _floating_wished_position;
-	} else {
+	if (is(MANAGED_NOTEBOOK)) {
 		_wished_position = _notebook_wished_position;
+
+		double ratio = compute_ratio_to_fit(_xdg_surface->_surface->width,
+				_xdg_surface->_surface->height, _wished_position.w,
+				_wished_position.h);
+
+		/* if ratio > 1.0 then do not scale, just center */
+		if(ratio >= 1.0) {
+			ratio = 1.0;
+		}
+
+		if(_transform.link.next)
+			wl_list_remove(&_transform.link);
+
+		if(ratio != 1.0) {
+			weston_matrix_init(&_transform.matrix);
+			weston_matrix_scale(&_transform.matrix, ratio, ratio, 1.0);
+			wl_list_insert(&_default_view->geometry.transformation_list, &_transform.link);
+		}
+
+		float x = floor(_wished_position.x + (_wished_position.w -
+				_xdg_surface->_surface->width * ratio))/2.0;
+		float y = floor(_wished_position.y + (_wished_position.h -
+				_xdg_surface->_surface->height * ratio))/2.0;
+
+		weston_log("ratio = %f, x = %f, y = %f\n", ratio, x, y);
+		weston_log("ratio = %f, x = %d, y = %d\n", ratio, _xdg_surface->_surface->width, _xdg_surface->_surface->height);
+		weston_log("ratio = %f, x = %d, y = %d\n", ratio, _wished_position.w, _wished_position.h);
+
+		weston_view_set_position(_default_view, x, y);
+		weston_view_schedule_repaint(_default_view);
+
+	} else {
+		_wished_position = _floating_wished_position;
+
+		if(_transform.link.next)
+			wl_list_remove(&_transform.link);
+
+		weston_view_set_position(_default_view, _floating_wished_position.x,
+				_floating_wished_position.y);
+		weston_view_schedule_repaint(_default_view);
+
 	}
 
-	weston_view_set_position(_default_view, _wished_position.x,
-			_wished_position.y);
 
-	_xdg_surface->_ack_serial = weston_compositor_get_time();
+}
+
+void xdg_surface_toplevel_view_t::reconfigure() {
+
+	if (is(MANAGED_NOTEBOOK)) {
+		_wished_position = _notebook_wished_position;
+	} else {
+		_wished_position = _floating_wished_position;
+	}
+
+	_xdg_surface->_ack_serial = wl_display_next_serial(_ctx->_dpy);
 
 	wl_array array;
 	wl_array_init(&array);
@@ -287,22 +342,22 @@ void xdg_surface_toplevel_view_t::hide() {
 //		_ctx->sync_tree_view();
 //	}
 
-	_is_visible = false;
+//	_is_visible = false;
 }
 
 void xdg_surface_toplevel_view_t::show() {
-	_is_visible = true;
-
-	if(not _default_view) {
-		_default_view = weston_view_create(_xdg_surface->_surface);
-		reconfigure();
-		weston_log("bbXX %p\n", _xdg_surface->_surface->compositor);
-		//_ctx->sync_tree_view();
-	}
-
-//	for(auto x: _children) {
-//		x->show();
+//	_is_visible = true;
+//
+//	if(not _default_view) {
+//		_default_view = weston_view_create(_xdg_surface->_surface);
+//		reconfigure();
+//		weston_log("bbXX %p\n", _xdg_surface->_surface->compositor);
+//		//_ctx->sync_tree_view();
 //	}
+//
+////	for(auto x: _children) {
+////		x->show();
+////	}
 
 }
 
@@ -389,9 +444,7 @@ void xdg_surface_toplevel_view_t::weston_configure(struct weston_surface * es,
 	if(is(MANAGED_UNCONFIGURED)) {
 		_ctx->manage_client(ptr);
 	} else {
-		/* TODO: update the state if necessary */
-		if(_default_view)
-			weston_view_schedule_repaint(_default_view);
+		update_view();
 	}
 
 }

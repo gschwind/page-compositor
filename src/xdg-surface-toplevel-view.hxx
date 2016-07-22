@@ -45,6 +45,8 @@ class xdg_surface_toplevel_view_t : public tree_t {
 	shared_ptr<tree_t> _popups_childdren;
 	map<xdg_surface_base_t *, signal_handler_t> _xsig;
 
+	weston_transform _transform;
+
 	/* handle the state of management: notebook, floating, fullscreen */
 	managed_window_type_e _managed_type;
 
@@ -86,6 +88,8 @@ public:
 	/* read only attributes */
 	auto resource() const -> wl_resource *;
 	auto title() const -> string const &;
+
+	void update_view();
 
 	bool is(managed_window_type_e type);
 	auto get_wished_position() -> rect const &;

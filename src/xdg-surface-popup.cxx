@@ -90,8 +90,8 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 {
 	weston_log("ALLOC xdg_surface_popup_t %p\n", this);
 
-	_resource =
-			wl_resource_create(client, &xdg_popup_interface, 1, id);
+	_resource = wl_resource_create(client,
+			reinterpret_cast<wl_interface const *>(&xdg_popup_interface), 1, id);
 
 	wl_resource_set_implementation(_resource,
 			&xx_xdg_popup_interface,

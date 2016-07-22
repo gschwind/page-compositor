@@ -947,6 +947,16 @@ T * resource_get(wl_resource * r) {
 void weston_surface_state_set_buffer(struct weston_surface_state *state,
 				struct weston_buffer *buffer);
 
+inline double compute_ratio_to_fit(double src_width, double src_height,
+		double target_width, double target_height) {
+	double x_ratio = target_width / src_width;
+	double y_ratio = target_height / src_height;
+	if (x_ratio < y_ratio) {
+		return x_ratio;
+	} else {
+		return y_ratio;
+	}
+}
 
 }
 

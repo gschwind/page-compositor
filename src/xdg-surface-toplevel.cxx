@@ -170,7 +170,8 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 
-	_resource = wl_resource_create(client, &xdg_surface_interface, 1, id);
+	_resource = wl_resource_create(client,
+			reinterpret_cast<wl_interface const *>(&xdg_surface_interface), 1, id);
 
 	wl_resource_set_implementation(_resource,
 			&_xdg_surface_implementation,
@@ -309,6 +310,9 @@ void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct w
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
+	if(master_view().expired())
+		return;
+
 	auto seat = reinterpret_cast<weston_seat*>(
 			wl_resource_get_user_data(seat_resource));
 
@@ -316,8 +320,12 @@ void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct w
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
 
-	_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view().lock(), BTN_LEFT, rect(x, y, 1, 1)});
-
+	auto master_view = _master_view.lock();
+	if(master_view->is(MANAGED_NOTEBOOK)) {
+		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view, BTN_LEFT, rect(x, y, 1, 1)});
+	} else if(master_view->is(MANAGED_FLOATING)) {
+		_ctx->grab_start(pointer, new grab_floating_move_t{_ctx, master_view, BTN_LEFT, x, y});
+	}
 
 //	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
 //

@@ -2157,9 +2157,6 @@ void page_t::notebook_close(notebook_p nbk) {
 //}
 //
 void page_t::insert_in_tree_using_transient_for(xdg_surface_toplevel_view_p c) {
-	bind_window(c, true);
-
-	/* TODO */
 
 //	auto transient_for = c->transient_for();
 //	if(transient_for != nullptr and not transient_for->master_view().expired()) {
@@ -2180,6 +2177,12 @@ void page_t::insert_in_tree_using_transient_for(xdg_surface_toplevel_view_p c) {
 ////			_root->root_subclients->push_back(c);
 ////		}
 //	}
+
+	c->set_managed_type(MANAGED_FLOATING);
+	_root->root_subclients->push_back(c);
+	c->update_view();
+	sync_tree_view();
+
 }
 
 //shared_ptr<xdg_surface_base_t> page_t::get_transient_for(
@@ -2525,7 +2528,11 @@ void page_t::manage_client(xdg_surface_toplevel_view_p mw) {
 //
 //	weston_view_geometry_dirty(view);
 
-	bind_window(mw, true);
+	/** case is notebook window **/
+	//bind_window(mw, true);
+
+	/** case is floating window **/
+	insert_in_tree_using_transient_for(mw);
 
 }
 

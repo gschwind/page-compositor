@@ -35,6 +35,9 @@ grab_split_t::~grab_split_t() {
 void grab_split_t::motion(uint32_t time, weston_pointer_motion_event * event) {
 	auto pointer = base.grab.pointer;
 
+	/** update pointer position **/
+	weston_pointer_move(pointer, event);
+
 	if(_split.expired()) {
 		_ctx->grab_stop(pointer);
 		return;
@@ -43,9 +46,6 @@ void grab_split_t::motion(uint32_t time, weston_pointer_motion_event * event) {
 	/** current global position **/
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
-
-	/** update pointer position **/
-	weston_pointer_move(pointer, event);
 
 	if (_split.lock()->type() == VERTICAL_SPLIT) {
 		_split_ratio = (x - _split_root_allocation.x) / _split_root_allocation.w;
@@ -320,7 +320,7 @@ grab_floating_move_t::grab_floating_move_t(page_context_t * ctx,
 		//pfm{}
 {
 
-	f->activate();
+	//f->activate();
 	//pfm = make_shared<popup_notebook0_t>(_ctx);
 	//pfm->move_resize(popup_original_position);
 	//_ctx->overlay_add(pfm);
@@ -340,6 +340,9 @@ void grab_floating_move_t::motion(uint32_t time,
 {
 	auto pointer = base.grab.pointer;
 
+	/** update pointer position **/
+	weston_pointer_move(pointer, event);
+
 	if(f.expired()) {
 		_ctx->grab_stop(pointer);
 		return;
@@ -349,14 +352,16 @@ void grab_floating_move_t::motion(uint32_t time,
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
 
-	/** update pointer position **/
-	weston_pointer_move(pointer, event);
+	weston_log("x = %f, y = %f\n", x, y);
 
 	/* compute new window position */
 	rect new_position = original_position;
 	new_position.x += x - x_root;
 	new_position.y += y - y_root;
 	final_position = new_position;
+
+	f.lock()->set_floating_wished_position(new_position);
+	f.lock()->update_view();
 
 	rect new_popup_position = popup_original_position;
 	new_popup_position.x += x - x_root;
