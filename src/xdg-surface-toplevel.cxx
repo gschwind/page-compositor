@@ -254,7 +254,12 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 		}
 	}
 
+	if(not _master_view.expired()) {
+		_master_view.lock()->update_view();
+	}
+
 	_current = _pending;
+
 
 }
 

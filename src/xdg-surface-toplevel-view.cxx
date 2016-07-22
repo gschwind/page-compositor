@@ -154,9 +154,9 @@ void xdg_surface_toplevel_view_t::update_view() {
 		}
 
 		float x = floor(_wished_position.x + (_wished_position.w -
-				_xdg_surface->_surface->width * ratio))/2.0;
+				_xdg_surface->_surface->width * ratio)/2.0);
 		float y = floor(_wished_position.y + (_wished_position.h -
-				_xdg_surface->_surface->height * ratio))/2.0;
+				_xdg_surface->_surface->height * ratio)/2.0);
 
 		weston_log("ratio = %f, x = %f, y = %f\n", ratio, x, y);
 		weston_log("ratio = %f, x = %d, y = %d\n", ratio, _xdg_surface->_surface->width, _xdg_surface->_surface->height);
@@ -416,35 +416,7 @@ void xdg_surface_toplevel_view_t::weston_configure(struct weston_surface * es,
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	/* configuration is invalid */
-	if(_xdg_surface->_ack_serial != 0)
-		return;
-
-	auto ptr = shared_from_this();
-
-	if(_xdg_surface->_pending.maximized != _xdg_surface->_current.maximized) {
-		if(_xdg_surface->_pending.maximized) {
-			/* on maximize */
-		} else {
-			/* on unmaximize */
-		}
-	}
-
-	if(_xdg_surface->_pending.minimized != _xdg_surface->_current.minimized) {
-		if(_xdg_surface->_pending.minimized) {
-			/* on minimize */
-		} else {
-			/* on unminimize */
-		}
-	}
-
-	_xdg_surface->_current = _xdg_surface->_pending;
-
-	if(is(MANAGED_UNCONFIGURED)) {
-		_ctx->manage_client(ptr);
-	} else {
-		update_view();
-	}
+	/* IS NEVER CALLED */
 
 }
 

@@ -2529,10 +2529,10 @@ void page_t::manage_client(xdg_surface_toplevel_view_p mw) {
 //	weston_view_geometry_dirty(view);
 
 	/** case is notebook window **/
-	//bind_window(mw, true);
+	bind_window(mw, true);
 
 	/** case is floating window **/
-	insert_in_tree_using_transient_for(mw);
+	//insert_in_tree_using_transient_for(mw);
 
 }
 
