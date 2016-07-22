@@ -68,9 +68,12 @@ public:
 
 	signal_t<xdg_surface_toplevel_view_t*> destroy;
 	signal_t<xdg_surface_toplevel_view_t*> focus_change;
+	signal_t<xdg_surface_toplevel_view_t*> title_change;
 
 	void add_transient_child(xdg_surface_toplevel_view_p c);
 	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);
+
+	void signal_title_change();
 
 	void destroy_popup_child(xdg_surface_popup_view_t * c);
 

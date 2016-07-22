@@ -55,6 +55,7 @@ bool notebook_t::add_client(xdg_surface_toplevel_view_p x, bool prefer_activate)
 
 	connect(x->destroy, this, &notebook_t::_client_destroy);
 	connect(x->focus_change, this, &notebook_t::_client_focus_change);
+	connect(x->title_change, this, &notebook_t::_client_title_change);
 
 	if(prefer_activate and not _exposay) {
 		_start_fading();
@@ -120,6 +121,7 @@ void notebook_t::_remove_client(xdg_surface_toplevel_view_p x) {
 	}
 
 	// cleanup
+	disconnect(x->title_change);
 	disconnect(x->focus_change);
 	disconnect(x->destroy);
 	x->clear_parent();
@@ -1182,20 +1184,20 @@ void notebook_t::_mouse_over_set() {
 	}
 }
 
-void notebook_t::_client_title_change(xdg_surface_toplevel_view_p c) {
+void notebook_t::_client_title_change(xdg_surface_toplevel_view_t * c) {
 	for(auto & x: _client_buttons) {
-		if(c == std::get<1>(x).lock()) {
+		if(c == std::get<1>(x).lock().get()) {
 			std::get<2>(x)->title = c->title();
 		}
 	}
 
 	for(auto & x: _exposay_buttons) {
-		if(c == std::get<1>(x).lock()) {
+		if(c == std::get<1>(x).lock().get()) {
 			//_exposay_thumbnail[std::get<2>(x)]->update_title();
 		}
 	}
 
-	if(c == _selected) {
+	if(c == _selected.get()) {
 		_theme_notebook.selected_client.title = c->title();
 	}
 	_layout_is_durty = true;

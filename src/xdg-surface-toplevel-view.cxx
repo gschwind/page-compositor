@@ -434,6 +434,10 @@ void xdg_surface_toplevel_view_t::weston_configure(struct weston_surface * es,
 
 }
 
+void xdg_surface_toplevel_view_t::signal_title_change() {
+	title_change.signal(this);
+}
+
 auto xdg_surface_toplevel_view_t::get(wl_resource * r) -> xdg_surface_toplevel_t * {
 	return reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(r));
 }

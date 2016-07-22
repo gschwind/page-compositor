@@ -251,6 +251,13 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 
 	}
 
+	if(_pending.title != _current.title) {
+		_current.title = _pending.title;
+		if(not _master_view.expired()) {
+			_master_view.lock()->signal_title_change();
+		}
+	}
+
 	if(not _master_view.expired()) {
 		_master_view.lock()->update_view();
 	}
