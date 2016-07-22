@@ -192,14 +192,28 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 
 	_xdg_surface->_ack_serial = wl_display_next_serial(_ctx->_dpy);
 
+	set<uint32_t> state;
+
+	if(is(MANAGED_NOTEBOOK)) {
+		state.insert(XDG_SURFACE_STATE_MAXIMIZED);
+	}
+
+	if(_has_focus) {
+		state.insert(XDG_SURFACE_STATE_ACTIVATED);
+	}
+
 	wl_array array;
 	wl_array_init(&array);
-	wl_array_add(&array, sizeof(uint32_t));
-	((uint32_t*)array.data)[0] = XDG_SURFACE_STATE_MAXIMIZED;
-	if(_has_focus) {
-		wl_array_add(&array, sizeof(uint32_t));
-		((uint32_t*)array.data)[1] = XDG_SURFACE_STATE_ACTIVATED;
+	wl_array_add(&array, sizeof(uint32_t)*state.size());
+
+	{
+		int i = 0;
+		for(auto x: state) {
+			((uint32_t*)array.data)[i] = x;
+			++i;
+		}
 	}
+
 	xdg_surface_send_configure(_xdg_surface->_resource, _wished_position.w,
 			_wished_position.h, &array, _xdg_surface->_ack_serial);
 	wl_array_release(&array);
