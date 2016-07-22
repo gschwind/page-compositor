@@ -54,6 +54,7 @@ bool notebook_t::add_client(xdg_surface_toplevel_view_p x, bool prefer_activate)
 	_clients_tab_order.push_front(client_context);
 
 	connect(x->destroy, this, &notebook_t::_client_destroy);
+	connect(x->focus_change, this, &notebook_t::_client_focus_change);
 
 	if(prefer_activate and not _exposay) {
 		_start_fading();
@@ -119,6 +120,7 @@ void notebook_t::_remove_client(xdg_surface_toplevel_view_p x) {
 	}
 
 	// cleanup
+	disconnect(x->focus_change);
 	disconnect(x->destroy);
 	x->clear_parent();
 
@@ -1204,9 +1206,9 @@ void notebook_t::_client_destroy(xdg_surface_toplevel_view_t * c) {
 	remove(c->shared_from_this());
 }
 
-void notebook_t::_client_focus_change(xdg_surface_toplevel_view_p c, bool v) {
-	if(c == _selected) {
-		_selected_has_focus = v;
+void notebook_t::_client_focus_change(xdg_surface_toplevel_view_t * c) {
+	if(_selected.get() == c) {
+		_selected_has_focus = c->has_focus();
 	}
 	_layout_is_durty = true;
 }

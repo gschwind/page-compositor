@@ -340,9 +340,8 @@ void xdg_surface_toplevel_view_t::render_finished() {
 }
 
 void xdg_surface_toplevel_view_t::set_focus_state(bool is_focused) {
-	_has_change = true;
 	_has_focus = is_focused;
-	queue_redraw();
+	focus_change.signal(this);
 }
 
 void xdg_surface_toplevel_view_t::hide() {
@@ -422,7 +421,9 @@ string const & xdg_surface_toplevel_view_t::title() const {
 	return _xdg_surface->_current.title;
 }
 
-
+bool xdg_surface_toplevel_view_t::has_focus() {
+	return _has_focus;
+}
 
 void xdg_surface_toplevel_view_t::weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)

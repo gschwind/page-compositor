@@ -44,7 +44,6 @@ class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
 
 	shared_ptr<tree_t> _transient_childdren;
 	shared_ptr<tree_t> _popups_childdren;
-	map<xdg_surface_base_t *, signal_handler_t> _xsig;
 
 	weston_transform _transform;
 
@@ -68,6 +67,7 @@ class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
 public:
 
 	signal_t<xdg_surface_toplevel_view_t*> destroy;
+	signal_t<xdg_surface_toplevel_view_t*> focus_change;
 
 	void add_transient_child(xdg_surface_toplevel_view_p c);
 	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);
@@ -89,6 +89,7 @@ public:
 	/* read only attributes */
 	auto resource() const -> wl_resource *;
 	auto title() const -> string const &;
+	bool has_focus();
 
 	void update_view();
 
