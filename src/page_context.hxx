@@ -86,6 +86,7 @@ public:
 	virtual void sync_tree_view() = 0;
 	virtual void manage_client(xdg_surface_toplevel_view_p mw) = 0;
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p = 0;
+	virtual void bind_window(xdg_surface_toplevel_view_p mw, bool activate) = 0;
 
 };
 

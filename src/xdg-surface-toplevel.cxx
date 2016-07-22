@@ -237,7 +237,8 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 
 	if(_pending.minimized != _current.minimized) {
 		if(_pending.minimized) {
-			/* on minimize */
+			minimize();
+			_pending.minimized = false;
 		} else {
 			/* on unminimize */
 		}
@@ -418,6 +419,17 @@ auto xdg_surface_toplevel_t::create_view() -> xdg_surface_toplevel_view_p {
 
 auto xdg_surface_toplevel_t::master_view() -> xdg_surface_toplevel_view_w {
 	return _master_view;
+}
+
+void xdg_surface_toplevel_t::minimize() {
+	if(_master_view.expired())
+		return;
+	auto master_view = _master_view.lock();
+
+	if(not master_view->is(MANAGED_NOTEBOOK)) {
+		_ctx->bind_window(master_view, true);
+	}
+
 }
 
 

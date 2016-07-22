@@ -177,7 +177,6 @@ void xdg_surface_toplevel_view_t::update_view() {
 
 	}
 
-
 }
 
 void xdg_surface_toplevel_view_t::reconfigure() {
