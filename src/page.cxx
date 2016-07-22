@@ -104,6 +104,18 @@ static void _page_cancel(weston_pointer_grab * grab) {
 	pod->ths->process_cancel(grab);
 }
 
+void page_t::page_start_repaint_loop(weston_output *output_base) {
+	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
+
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	ths->_root->broadcast_trigger_redraw();
+
+	auto func = ths->start_repaint_loop_functions[output_base];
+	output_base->start_repaint_loop = func;
+	(*output_base->start_repaint_loop)(output_base);
+	output_base->start_repaint_loop = &page_t::page_start_repaint_loop;
+
+}
 
 int page_t::page_repaint(struct weston_output *output_base,
 		   pixman_region32_t *damage) {
@@ -333,6 +345,16 @@ page_t::~page_t() {
 	//cairo_debug_reset_static_data();
 }
 
+static int xxvprintf(const char * fmt, va_list args) {
+	static FILE * log = 0;
+	if(not log) {
+		log = fopen("/tmp/page-compositor.log", "w");
+	}
+
+	return vfprintf(log, fmt, args);
+
+}
+
 void page_t::run() {
 
 	/** initialize the empty desktop **/
@@ -385,7 +407,7 @@ void page_t::run() {
 	//_mainloop.run();
 
 
-    weston_log_set_handler(vprintf, vprintf);
+    weston_log_set_handler(&xxvprintf, &xxvprintf);
 
 	/* first create the wayland serveur */
 	_dpy = wl_display_create();
@@ -423,6 +445,7 @@ void page_t::run() {
 	weston_log("weston_compositor = %p\n", ec);
 
 	ec->user_data = this;
+	ec->vt_switching = 1;
 
 	weston_layer_init(&default_layer, &ec->cursor_layer.link);
 
@@ -455,6 +478,18 @@ void page_t::run() {
 		wl_display_disconnect(ths->_dpy);
 	}, this);
 
+	weston_compositor_add_key_binding(ec, KEY_X, MODIFIER_SUPER,
+	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
+		auto ths = reinterpret_cast<page_t *>(data);
+		ths->run_cmd("/usr/bin/weston-terminal");
+	}, this);
+
+	weston_compositor_add_key_binding(ec, KEY_0, MODIFIER_SUPER,
+	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
+		auto ths = reinterpret_cast<page_t *>(data);
+		ths->_root->broadcast_trigger_redraw();
+	}, this);
+
 	char * display = getenv("DISPLAY");
 	if(display) {
 		load_x11_backend(ec);
@@ -476,8 +511,6 @@ void page_t::run() {
 
 	//_dpy->on_visibility_change.remove(on_visibility_change_func);
 	//_mainloop.remove_poll(_dpy->fd());
-
-
 
 	/** destroy the tree **/
 	_root = nullptr;
@@ -3566,8 +3599,12 @@ void page_t::on_output_created(weston_output * output) {
 //	background->timeline.force_refresh = 1;
 //	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
-	repaint_functions[output] = output->repaint;
-	output->repaint = &page_t::page_repaint;
+//	repaint_functions[output] = output->repaint;
+//	output->repaint = &page_t::page_repaint;
+//
+//	start_repaint_loop_functions[output] = output->start_repaint_loop;
+//	output->start_repaint_loop = &page_t::page_start_repaint_loop;
+
 	_outputs.push_back(output);
 	update_viewport_layout();
 

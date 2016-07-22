@@ -282,8 +282,15 @@ void viewport_t::trigger_redraw() {
 /* mark renderable_page for redraw */
 void viewport_t::queue_redraw() {
 	_is_durty = true;
-	if(_pix->get_cairo_surface())
+	if(_pix->get_cairo_surface()) {
 		weston_surface_damage(_pix->wsurface());
+	}
+
+	if(_default_view)
+		weston_view_schedule_repaint(_default_view);
+
+	broadcast_trigger_redraw();
+
 }
 
 region viewport_t::get_damaged() {
@@ -387,7 +394,7 @@ void viewport_t::_on_ack_buffer(pixmap_t * p) {
 	_backbround_surface->timeline.force_refresh = 1;
 	_default_view = weston_view_create(_backbround_surface);
 	weston_view_set_position(_default_view, _effective_area.x, _effective_area.y);
-	weston_view_set_mask_infinite(_default_view);
+	//weston_view_set_mask_infinite(_default_view);
 	weston_view_geometry_dirty(_default_view);
 
 	_ctx->sync_tree_view();

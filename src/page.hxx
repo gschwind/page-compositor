@@ -146,8 +146,10 @@ struct page_t : public page_context_t {
 	xdg_surface_toplevel_view_w _current_focus;
 
 	using repaint_func = int (*)(weston_output *, pixman_region32_t *);
+	using start_repaint_loop_func = void (*)(weston_output *);
 
 	map<weston_output *, repaint_func> repaint_functions;
+	map<weston_output *, start_repaint_loop_func> start_repaint_loop_functions;
 
 	struct _default_grab_interface_t {
 		weston_pointer_grab_interface grab_interface;
@@ -409,6 +411,8 @@ struct page_t : public page_context_t {
 		      uint32_t version, uint32_t id);
 	static void print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
 			  uint32_t key, void *data);
+
+	static void page_start_repaint_loop(struct weston_output *output);
 	static int page_repaint(struct weston_output *output_base,
 			   pixman_region32_t *damage);
 
