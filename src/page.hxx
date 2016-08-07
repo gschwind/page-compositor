@@ -219,6 +219,9 @@ struct page_t : public page_context_t {
 	void client_create_popup(xdg_shell_client_t *, xdg_surface_popup_t *);
 	void client_create_toplevel(xdg_shell_client_t *, xdg_surface_toplevel_t *);
 
+	void switch_focused_to_fullscreen();
+	void switch_focused_to_floating();
+	void switch_focused_to_notebook();
 
 //	void set_default_pop(shared_ptr<notebook_t> x);
 //	display_compositor_t * get_render_context();

@@ -492,6 +492,24 @@ void page_t::run() {
 		ths->_root->broadcast_trigger_redraw();
 	}, this);
 
+	weston_compositor_add_key_binding(ec, KEY_B, MODIFIER_SUPER,
+	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
+		auto ths = reinterpret_cast<page_t *>(data);
+		ths->switch_focused_to_notebook();
+	}, this);
+
+	weston_compositor_add_key_binding(ec, KEY_V, MODIFIER_SUPER,
+	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
+		auto ths = reinterpret_cast<page_t *>(data);
+		ths->switch_focused_to_floating();
+	}, this);
+
+	weston_compositor_add_key_binding(ec, KEY_F, MODIFIER_SUPER,
+	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
+		auto ths = reinterpret_cast<page_t *>(data);
+		ths->switch_focused_to_fullscreen();
+	}, this);
+
 	char * display = getenv("DISPLAY");
 	if(display) {
 		load_x11_backend(ec);
@@ -4020,6 +4038,27 @@ void page_t::client_create_popup(xdg_shell_client_t * c, xdg_surface_popup_t * s
 
 void page_t::client_create_toplevel(xdg_shell_client_t * c, xdg_surface_toplevel_t * s) {
 	/* TODO: manage */
+}
+
+void page_t::switch_focused_to_fullscreen() {
+	if(_current_focus.expired())
+		return;
+	auto current = _current_focus.lock();
+	/* TODO */
+}
+
+void page_t::switch_focused_to_floating() {
+	if(_current_focus.expired())
+		return;
+	auto current = _current_focus.lock();
+	unbind_window(current);
+}
+
+void page_t::switch_focused_to_notebook() {
+	if(_current_focus.expired())
+		return;
+	auto current = _current_focus.lock();
+	bind_window(current, true);
 }
 
 
