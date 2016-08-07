@@ -1393,147 +1393,141 @@ void page_t::run() {
 ////	_root->broadcast_render_finished();
 //}
 
-//void page_t::fullscreen(shared_ptr<xdg_surface_toplevel_t> mw) {
-//
-//	if(mw->is(MANAGED_FULLSCREEN))
-//		return;
-//
-//	shared_ptr<viewport_t> v;
-//	if(mw->is(MANAGED_NOTEBOOK)) {
-//		v = find_viewport_of(mw);
-//	} else if (mw->is(MANAGED_FLOATING)) {
-//		v = get_current_workspace()->get_any_viewport();
-//	} else {
-//		cout << "WARNING: a dock trying to become fullscreen" << endl;
-//		return;
-//	}
-//
-//	fullscreen(mw, v);
-//}
-//
-//void page_t::fullscreen(shared_ptr<xdg_surface_toplevel_t> mw, shared_ptr<viewport_t> v) {
-//	assert(v != nullptr);
-//
-//	if(mw->is(MANAGED_FULLSCREEN))
-//		return;
-//
-//	/* WARNING: Call order is important, change it with caution */
-//
-//	fullscreen_data_t data;
-//
-//	if(mw->is(MANAGED_NOTEBOOK)) {
-//		/**
-//		 * if the current window is managed in notebook:
-//		 *
-//		 * 1. search for the current notebook,
-//		 * 2. search the viewport for this notebook, and use it as default
-//		 *    fullscreen host or use the first available viewport.
-//		 **/
-//		data.revert_type = MANAGED_NOTEBOOK;
-//		data.revert_notebook = find_parent_notebook_for(mw);
-//	} else if (mw->is(MANAGED_FLOATING)) {
-//		data.revert_type = MANAGED_FLOATING;
-//		data.revert_notebook.reset();
-//	} else {
-//		cout << "WARNING: a dock trying to become fullscreen" << endl;
-//		return;
-//	}
-//
-//	auto workspace = find_desktop_of(v);
-//
-//	detach(mw);
-//
-//	// unfullscreen client that already use this screen
-//	for (auto &x : _fullscreen_client_to_viewport) {
-//		if (x.second.viewport.lock() == v) {
-//			unfullscreen(x.second.client.lock());
-//			break;
-//		}
-//	}
-//
-//	data.client = mw;
-//	data.workspace = workspace;
-//	data.viewport = v;
-//
-//	_fullscreen_client_to_viewport[mw.get()] = data;
-//
-//	//mw->net_wm_state_add(_NET_WM_STATE_FULLSCREEN);
-//	mw->set_managed_type(MANAGED_FULLSCREEN);
-//	workspace->attach(mw);
-//
-//	/* it's a trick */
-//	mw->set_notebook_wished_position(v->raw_area());
-//	mw->reconfigure();
-//	mw->normalize();
-//	mw->show();
-//
-//	/* hide the viewport because he is covered by a fullscreen client */
-//	v->hide();
-//	_need_restack = true;
-//}
-//
-//void page_t::unfullscreen(shared_ptr<xdg_surface_toplevel_t> mw) {
-//	/* WARNING: Call order is important, change it with caution */
-//
-//	/** just in case **/
-//	//mw->net_wm_state_remove(_NET_WM_STATE_FULLSCREEN);
-//
-//	if(!has_key(_fullscreen_client_to_viewport, mw.get()))
-//		return;
-//
-//	detach(mw);
-//
-//	fullscreen_data_t data = _fullscreen_client_to_viewport[mw.get()];
-//	_fullscreen_client_to_viewport.erase(mw.get());
-//
-//	shared_ptr<workspace_t> d;
-//
-//	if(data.workspace.expired()) {
-//		d = get_current_workspace();
-//	} else {
-//		d = data.workspace.lock();
-//	}
-//
-//	shared_ptr<viewport_t> v;
-//
-//	if(data.viewport.expired()) {
-//		v = d->get_any_viewport();
-//	} else {
-//		v = data.viewport.lock();
-//	}
-//
-//	if (data.revert_type == MANAGED_NOTEBOOK) {
-//		shared_ptr<notebook_t> n;
-//		if(data.revert_notebook.expired()) {
-//			n = d->default_pop();
-//		} else {
-//			n = data.revert_notebook.lock();
-//		}
-//		mw->set_managed_type(MANAGED_NOTEBOOK);
-//		n->add_client(mw, true);
-//		mw->reconfigure();
-//	} else {
-//		mw->set_managed_type(MANAGED_FLOATING);
-//		insert_in_tree_using_transient_for(mw);
-//		mw->reconfigure();
-//	}
-//
-//	if(d->is_visible() and not v->is_visible()) {
-//		v->show();
-//	}
-//
-//	update_workarea();
-//
-//	_need_restack = true;
-//
-//}
-//
-//void page_t::toggle_fullscreen(shared_ptr<xdg_surface_toplevel_t> c) {
-//	if(c->is(MANAGED_FULLSCREEN))
-//		unfullscreen(c);
-//	else
-//		fullscreen(c);
-//}
+void page_t::fullscreen(xdg_surface_toplevel_view_p mw) {
+
+	if(mw->is(MANAGED_FULLSCREEN))
+		return;
+
+	shared_ptr<viewport_t> v;
+	if(mw->is(MANAGED_NOTEBOOK)) {
+		v = find_viewport_of(mw);
+	} else if (mw->is(MANAGED_FLOATING)) {
+		v = get_current_workspace()->get_any_viewport();
+	} else {
+		cout << "WARNING: a dock trying to become fullscreen" << endl;
+		return;
+	}
+
+	fullscreen(mw, v);
+}
+
+void page_t::fullscreen(xdg_surface_toplevel_view_p mw, shared_ptr<viewport_t> v) {
+	assert(v != nullptr);
+
+	if(mw->is(MANAGED_FULLSCREEN))
+		return;
+
+	/* WARNING: Call order is important, change it with caution */
+
+	fullscreen_data_t data;
+
+	if(mw->is(MANAGED_NOTEBOOK)) {
+		/**
+		 * if the current window is managed in notebook:
+		 *
+		 * 1. search for the current notebook,
+		 * 2. search the viewport for this notebook, and use it as default
+		 *    fullscreen host or use the first available viewport.
+		 **/
+		data.revert_type = MANAGED_NOTEBOOK;
+		data.revert_notebook = find_parent_notebook_for(mw);
+	} else if (mw->is(MANAGED_FLOATING)) {
+		data.revert_type = MANAGED_FLOATING;
+		data.revert_notebook.reset();
+	} else {
+		cout << "WARNING: a dock trying to become fullscreen" << endl;
+		return;
+	}
+
+	auto workspace = find_desktop_of(v);
+
+	detach(mw);
+
+	// unfullscreen client that already use this screen
+	for (auto &x : _fullscreen_client_to_viewport) {
+		if (x.second.viewport.lock() == v) {
+			unfullscreen(x.second.client.lock());
+			break;
+		}
+	}
+
+	data.client = mw;
+	data.workspace = workspace;
+	data.viewport = v;
+
+	_fullscreen_client_to_viewport[mw.get()] = data;
+
+	mw->set_managed_type(MANAGED_FULLSCREEN);
+	workspace->attach(mw);
+
+	/* it's a trick */
+	mw->set_notebook_wished_position(v->raw_area());
+	mw->reconfigure();
+
+	sync_tree_view();
+
+}
+
+void page_t::unfullscreen(xdg_surface_toplevel_view_p mw) {
+	/* WARNING: Call order is important, change it with caution */
+
+	/** just in case **/
+	//mw->net_wm_state_remove(_NET_WM_STATE_FULLSCREEN);
+
+	if(!has_key(_fullscreen_client_to_viewport, mw.get()))
+		return;
+
+	detach(mw);
+
+	fullscreen_data_t data = _fullscreen_client_to_viewport[mw.get()];
+	_fullscreen_client_to_viewport.erase(mw.get());
+
+	shared_ptr<workspace_t> d;
+
+	if(data.workspace.expired()) {
+		d = get_current_workspace();
+	} else {
+		d = data.workspace.lock();
+	}
+
+	shared_ptr<viewport_t> v;
+
+	if(data.viewport.expired()) {
+		v = d->get_any_viewport();
+	} else {
+		v = data.viewport.lock();
+	}
+
+	if (data.revert_type == MANAGED_NOTEBOOK) {
+		shared_ptr<notebook_t> n;
+		if(data.revert_notebook.expired()) {
+			n = d->default_pop();
+		} else {
+			n = data.revert_notebook.lock();
+		}
+		mw->set_managed_type(MANAGED_NOTEBOOK);
+		n->add_client(mw, true);
+		mw->reconfigure();
+	} else {
+		mw->set_managed_type(MANAGED_FLOATING);
+		insert_in_tree_using_transient_for(mw);
+		mw->reconfigure();
+	}
+
+	if(d->is_visible() and not v->is_visible()) {
+		v->show();
+	}
+
+	sync_tree_view();
+
+}
+
+void page_t::toggle_fullscreen(xdg_surface_toplevel_view_p c) {
+	if(c->is(MANAGED_FULLSCREEN))
+		unfullscreen(c);
+	else
+		fullscreen(c);
+}
 
 
 //void page_t::process_event(xcb_generic_event_t const * e) {
@@ -2289,23 +2283,24 @@ void page_t::detach(shared_ptr<tree_t> t) {
 }
 
 void page_t::fullscreen_client_to_viewport(xdg_surface_toplevel_view_p c, viewport_p v) {
-//	if (has_key(_fullscreen_client_to_viewport, c.get())) {
-//		fullscreen_data_t & data = _fullscreen_client_to_viewport[c.get()];
-//		if (v != data.viewport.lock()) {
-//			if(not data.viewport.expired()) {
-//				data.viewport.lock()->show();
-//				data.viewport.lock()->queue_redraw();
-//				//add_global_damage(data.viewport.lock()->raw_area());
-//			}
-//			v->hide();
-//			//add_global_damage(v->raw_area());
-//			data.viewport = v;
-//			//data.workspace = find_desktop_of(v);
-//			c->set_notebook_wished_position(v->raw_area());
-//			c->reconfigure();
-//			//update_desktop_visibility();
-//		}
-//	}
+	detach(c);
+	if (has_key(_fullscreen_client_to_viewport, c.get())) {
+		fullscreen_data_t & data = _fullscreen_client_to_viewport[c.get()];
+		if (v != data.viewport.lock()) {
+			if(not data.viewport.expired()) {
+				//data.viewport.lock()->show();
+				//data.viewport.lock()->queue_redraw();
+				//add_global_damage(data.viewport.lock()->raw_area());
+			}
+			//v->hide();
+			//add_global_damage(v->raw_area());
+			data.viewport = v;
+			data.workspace = find_desktop_of(v);
+			c->set_notebook_wished_position(v->raw_area());
+			c->reconfigure();
+			//update_desktop_visibility();
+		}
+	}
 }
 
 void page_t::bind_window(xdg_surface_toplevel_view_p mw, bool activate) {
@@ -4044,7 +4039,8 @@ void page_t::switch_focused_to_fullscreen() {
 	if(_current_focus.expired())
 		return;
 	auto current = _current_focus.lock();
-	/* TODO */
+	toggle_fullscreen(current);
+
 }
 
 void page_t::switch_focused_to_floating() {

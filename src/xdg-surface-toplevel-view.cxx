@@ -184,7 +184,7 @@ void xdg_surface_toplevel_view_t::update_view() {
 
 void xdg_surface_toplevel_view_t::reconfigure() {
 
-	if (is(MANAGED_NOTEBOOK)) {
+	if (is(MANAGED_NOTEBOOK) or is(MANAGED_FULLSCREEN)) {
 		_wished_position = _notebook_wished_position;
 	} else {
 		_wished_position = _floating_wished_position;
@@ -196,14 +196,14 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 
 	if(is(MANAGED_NOTEBOOK)) {
 		state.insert(XDG_SURFACE_STATE_MAXIMIZED);
+	} else if(is(MANAGED_FULLSCREEN)) {
+		state.insert(XDG_SURFACE_STATE_FULLSCREEN);
 	}
 
 	if(_has_keyboard_focus) {
 		state.insert(XDG_SURFACE_STATE_ACTIVATED);
-		weston_log("activated\n");
-	} else {
-		weston_log("XXXX\n");
 	}
+
 
 	wl_array array;
 	wl_array_init(&array);

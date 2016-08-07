@@ -63,11 +63,11 @@ namespace page {
 using namespace std;
 
 struct fullscreen_data_t {
-	weak_ptr<xdg_surface_toplevel_t> client;
-	weak_ptr<workspace_t> workspace;
-	weak_ptr<viewport_t> viewport;
+	xdg_surface_toplevel_view_w client;
+	workspace_w workspace;
+	viewport_w viewport;
 	managed_window_type_e revert_type;
-	weak_ptr<notebook_t> revert_notebook;
+	notebook_w revert_notebook;
 };
 
 /* process_mode_e define possible state of page */
@@ -113,7 +113,7 @@ struct page_t : public page_context_t {
 	 * Store data to allow proper revert fullscreen window to
 	 * their original positions
 	 **/
-	map<xdg_surface_toplevel_t *, fullscreen_data_t> _fullscreen_client_to_viewport;
+	map<xdg_surface_toplevel_view_t *, fullscreen_data_t> _fullscreen_client_to_viewport;
 
 	string page_base_dir;
 	string _theme_engine;
@@ -286,15 +286,15 @@ struct page_t : public page_context_t {
 //	/* update viewport and childs allocation */
 //	void update_workarea();
 //
-//	/* turn a managed window into fullscreen */
-//	void fullscreen(shared_ptr<xdg_surface_toplevel_t> c);
-//	void fullscreen(shared_ptr<xdg_surface_toplevel_t> c, shared_ptr<viewport_t> v);
-//
-//	/* switch a fullscreened and managed window into floating or notebook window */
-//	void unfullscreen(shared_ptr<xdg_surface_toplevel_t> c);
-//
-//	/* toggle fullscreen */
-//	void toggle_fullscreen(shared_ptr<xdg_surface_toplevel_t> c);
+	/* turn a managed window into fullscreen */
+	void fullscreen(xdg_surface_toplevel_view_p c);
+	void fullscreen(xdg_surface_toplevel_view_p c, shared_ptr<viewport_t> v);
+
+	/* switch a fullscreened and managed window into floating or notebook window */
+	void unfullscreen(xdg_surface_toplevel_view_p c);
+
+	/* toggle fullscreen */
+	void toggle_fullscreen(xdg_surface_toplevel_view_p c);
 //
 //	/* split a notebook into two notebook */
 //	void split(shared_ptr<notebook_t> nbk, split_type_e type);
