@@ -242,7 +242,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 				ctx->insert_window_in_notebook(c, nullptr, true);
 			} else {
 				c->activate();
-				ctx->set_focus(pointer, c);
+				ctx->set_keyboard_focus(pointer, c);
 			}
 
 			ctx->sync_tree_view();

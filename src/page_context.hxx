@@ -72,7 +72,7 @@ public:
 	virtual void split_right(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
 	virtual void split_top(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
 	virtual void split_bottom(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
-	virtual void set_focus(weston_pointer * pointer, xdg_surface_toplevel_view_p w) = 0;
+	virtual void set_keyboard_focus(weston_pointer * pointer, xdg_surface_toplevel_view_p w) = 0;
 	virtual void notebook_close(notebook_p nbk) = 0;
 //	virtual int  left_most_border() = 0;
 //	virtual int  top_most_border() = 0;

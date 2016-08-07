@@ -62,7 +62,7 @@ class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
 	static void xdg_surface_delete(wl_resource *resource);
 
 	bool _has_change;
-	bool _has_focus;
+	bool _has_keyboard_focus;
 
 public:
 

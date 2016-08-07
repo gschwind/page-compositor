@@ -1562,28 +1562,26 @@ void page_t::insert_window_in_notebook(
 //
 //}
 
-void page_t::set_focus(weston_pointer * pointer,
+void page_t::set_keyboard_focus(weston_pointer * pointer,
 		shared_ptr<xdg_surface_toplevel_view_t> new_focus) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	assert(new_focus != nullptr);
 	assert(new_focus->get_default_view() != nullptr);
 
 	if(!_current_focus.expired()) {
+		if(_current_focus.lock() == new_focus)
+			return;
 		_current_focus.lock()->set_focus_state(false);
 	}
+
+	weston_seat_set_keyboard_focus(pointer->seat, new_focus->xdg_surface()->surface());
+
+	_current_focus = new_focus;
 
 	get_current_workspace()->client_focus_history_move_front(new_focus);
 	global_focus_history_move_front(new_focus);
 	new_focus->activate();
 	new_focus->set_focus_state(true);
-	//weston_pointer_set_focus(pointer, new_focus->get_default_view(), 0, 0);
-
-//	auto keyboard = weston_seat_get_keyboard(pointer->seat);
-//	if(keyboard)
-//		weston_keyboard_set_focus(keyboard, new_focus->surface());
-	weston_seat_set_keyboard_focus(pointer->seat, new_focus->xdg_surface()->surface());
-
-	_current_focus = new_focus;
 
 	sync_tree_view();
 
@@ -3522,7 +3520,7 @@ void page_t::connect_all() {
 	destroy.notify = [](wl_listener *l, void *data) { weston_log("compositor::destroy\n"); };
     create_surface.notify = [](wl_listener *l, void *data) { weston_log("compositor::create_surface\n"); };
     activate.notify = [](wl_listener *l, void *data) { weston_log("compositor::activate\n"); };
-    transform.notify = [](wl_listener *l, void *data) { weston_log("compositor::transform\n"); };
+    transform.notify = [](wl_listener *l, void *data) { /*weston_log("compositor::transform\n");*/ };
     kill.notify = [](wl_listener *l, void *data) { weston_log("compositor::kill\n"); };
     idle.notify = [](wl_listener *l, void *data) { weston_log("compositor::idle\n"); };
     wake.notify = [](wl_listener *l, void *data) { weston_log("compositor::wake\n"); };
@@ -3906,7 +3904,7 @@ auto page_t::create_pixmap(uint32_t width, uint32_t height) -> pixmap_p {
 }
 
 void page_t::process_focus(weston_pointer_grab * grab) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	weston_compositor_set_default_pointer_grab(ec, NULL);
 	(*grab->pointer->default_grab.interface->focus)(grab);
@@ -3962,15 +3960,15 @@ void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 		}
 		if (pointer->button_count == 0 &&
 				 state == WL_POINTER_BUTTON_STATE_RELEASED) {
-
-			weston_pointer_set_focus(pointer, view, sx, sy);
-
 			auto xdg_window = xdg_surface_toplevel_t::get(view->surface);
 			if(xdg_window) {
 				if(not xdg_window->master_view().expired()) {
-					set_focus(pointer, xdg_window->master_view().lock());
+					set_keyboard_focus(pointer, xdg_window->master_view().lock());
 				}
 			}
+
+			weston_pointer_set_focus(pointer, view, sx, sy);
+
 		}
 	}
 

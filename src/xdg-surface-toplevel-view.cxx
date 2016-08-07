@@ -56,7 +56,7 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 	_wished_position{},
 	_xdg_surface{xdg_surface},
 	_default_view{nullptr},
-	_has_focus{false},
+	_has_keyboard_focus{false},
 	_has_change{true}
 {
 	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
@@ -198,8 +198,11 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 		state.insert(XDG_SURFACE_STATE_MAXIMIZED);
 	}
 
-	if(_has_focus) {
+	if(_has_keyboard_focus) {
 		state.insert(XDG_SURFACE_STATE_ACTIVATED);
+		weston_log("activated\n");
+	} else {
+		weston_log("XXXX\n");
 	}
 
 	wl_array array;
@@ -340,7 +343,8 @@ void xdg_surface_toplevel_view_t::render_finished() {
 }
 
 void xdg_surface_toplevel_view_t::set_focus_state(bool is_focused) {
-	_has_focus = is_focused;
+	weston_log("set_focus_state(%s) %p\n", is_focused?"true":"false", this);
+	_has_keyboard_focus = is_focused;
 	focus_change.signal(this);
 }
 
@@ -422,7 +426,7 @@ string const & xdg_surface_toplevel_view_t::title() const {
 }
 
 bool xdg_surface_toplevel_view_t::has_focus() {
-	return _has_focus;
+	return _has_keyboard_focus;
 }
 
 void xdg_surface_toplevel_view_t::weston_configure(struct weston_surface * es,
