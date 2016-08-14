@@ -334,8 +334,8 @@ void xdg_surface_toplevel_t::xdg_surface_move(struct wl_client *client, struct w
 		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view,
 			BTN_LEFT, rect(x, y, 1, 1)});
 	} else if(master_view->is(MANAGED_FLOATING)) {
-		_ctx->grab_start(pointer, new grab_floating_move_t{_ctx, master_view,
-			BTN_LEFT, x, y});
+		_ctx->grab_start(pointer, new grab_floating_move_t(_ctx, master_view,
+			BTN_LEFT, x, y));
 	}
 
 }
@@ -344,7 +344,22 @@ void xdg_surface_toplevel_t::xdg_surface_resize(struct wl_client *client, struct
 		   struct wl_resource *seat_resource, uint32_t serial,
 		   uint32_t edges)
 {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
+	if(master_view().expired())
+		return;
+
+	auto seat = reinterpret_cast<weston_seat*>(
+			wl_resource_get_user_data(seat_resource));
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	auto master_view = _master_view.lock();
+	if(master_view->is(MANAGED_FLOATING)) {
+		_ctx->grab_start(pointer, new grab_floating_resize_t(_ctx, master_view,
+			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges)));
+	}
+
 }
 
 void xdg_surface_toplevel_t::xdg_surface_ack_configure(wl_client *client,

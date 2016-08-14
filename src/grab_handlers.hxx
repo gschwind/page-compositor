@@ -147,7 +147,7 @@ struct grab_floating_resize_t : public pointer_grab_handler_t {
 	page_context_t * _ctx;
 	xdg_surface_toplevel_view_w f;
 
-	resize_mode_e mode;
+	xdg_surface_resize_edge mode;
 	int x_root;
 	int y_root;
 	rect original_position;
@@ -160,13 +160,13 @@ public:
 
 	grab_floating_resize_t(page_context_t * _ctx,
 			xdg_surface_toplevel_view_p f, uint32_t button, int x,
-			int y, resize_mode_e mode);
+			int y, xdg_surface_resize_edge mode);
 
 	virtual ~grab_floating_resize_t();
 	virtual void focus() { }
-	virtual void button(uint32_t time, uint32_t button, uint32_t state) = 0;
-	virtual void motion(uint32_t time, weston_pointer_motion_event *event) = 0;
-	virtual void axis(uint32_t time, weston_pointer_axis_event *event) = 0;
+	virtual void button(uint32_t time, uint32_t button, uint32_t state);
+	virtual void motion(uint32_t time, weston_pointer_motion_event *event);
+	virtual void axis(uint32_t time, weston_pointer_axis_event *event) { }
 	virtual void axis_source(uint32_t source) { }
 	virtual void frame() { }
 	virtual void cancel() { }

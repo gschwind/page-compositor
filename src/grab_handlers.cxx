@@ -402,7 +402,7 @@ void grab_floating_move_t::button(uint32_t time, uint32_t button,
 
 grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx,
 		xdg_surface_toplevel_view_p f, uint32_t button,
-		int x, int y, resize_mode_e mode) :
+		int x, int y, xdg_surface_resize_edge mode) :
 		_ctx{ctx},
 		f{f},
 		mode{mode},
@@ -450,31 +450,32 @@ void grab_floating_resize_t::motion(uint32_t time,
 	rect size = original_position;
 
 	switch(mode) {
-	case RESIZE_TOP_LEFT:
+	case XDG_SURFACE_RESIZE_EDGE_NONE:
+	case XDG_SURFACE_RESIZE_EDGE_TOP_LEFT:
 		size.w -= x - x_root;
 		size.h -= y - y_root;
 		break;
-	case RESIZE_TOP:
+	case XDG_SURFACE_RESIZE_EDGE_TOP:
 		size.h -= y - y_root;
 		break;
-	case RESIZE_TOP_RIGHT:
+	case XDG_SURFACE_RESIZE_EDGE_TOP_RIGHT:
 		size.w += x - x_root;
 		size.h -= y - y_root;
 		break;
-	case RESIZE_LEFT:
+	case XDG_SURFACE_RESIZE_EDGE_LEFT:
 		size.w -= x - x_root;
 		break;
-	case RESIZE_RIGHT:
+	case XDG_SURFACE_RESIZE_EDGE_RIGHT:
 		size.w += x - x_root;
 		break;
-	case RESIZE_BOTTOM_LEFT:
+	case XDG_SURFACE_RESIZE_EDGE_BOTTOM_LEFT:
 		size.w -= x - x_root;
 		size.h += y - y_root;
 		break;
-	case RESIZE_BOTTOM:
+	case XDG_SURFACE_RESIZE_EDGE_BOTTOM:
 		size.h += y - y_root;
 		break;
-	case RESIZE_BOTTOM_RIGHT:
+	case XDG_SURFACE_RESIZE_EDGE_BOTTOM_RIGHT:
 		size.w += x - x_root;
 		size.h += y - y_root;
 		break;
@@ -502,27 +503,28 @@ void grab_floating_resize_t::motion(uint32_t time,
 	int y_diff = 0;
 
 	switch(mode) {
-	case RESIZE_TOP_LEFT:
+	case XDG_SURFACE_RESIZE_EDGE_NONE:
+	case XDG_SURFACE_RESIZE_EDGE_TOP_LEFT:
 		x_diff = original_position.w - size.w;
 		y_diff = original_position.h - size.h;
 		break;
-	case RESIZE_TOP:
+	case XDG_SURFACE_RESIZE_EDGE_TOP:
 		y_diff = original_position.h - size.h;
 		break;
-	case RESIZE_TOP_RIGHT:
+	case XDG_SURFACE_RESIZE_EDGE_TOP_RIGHT:
 		y_diff = original_position.h - size.h;
 		break;
-	case RESIZE_LEFT:
+	case XDG_SURFACE_RESIZE_EDGE_LEFT:
 		x_diff = original_position.w - size.w;
 		break;
-	case RESIZE_RIGHT:
+	case XDG_SURFACE_RESIZE_EDGE_RIGHT:
 		break;
-	case RESIZE_BOTTOM_LEFT:
+	case XDG_SURFACE_RESIZE_EDGE_BOTTOM_LEFT:
 		x_diff = original_position.w - size.w;
 		break;
-	case RESIZE_BOTTOM:
+	case XDG_SURFACE_RESIZE_EDGE_BOTTOM:
 		break;
-	case RESIZE_BOTTOM_RIGHT:
+	case XDG_SURFACE_RESIZE_EDGE_BOTTOM_RIGHT:
 		break;
 	}
 
