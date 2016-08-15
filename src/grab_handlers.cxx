@@ -348,6 +348,8 @@ void grab_floating_move_t::motion(uint32_t time,
 		return;
 	}
 
+	auto f = this->f.lock();
+
 	/** current global position **/
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
@@ -360,8 +362,11 @@ void grab_floating_move_t::motion(uint32_t time,
 	new_position.y += y - y_root;
 	final_position = new_position;
 
-	f.lock()->set_floating_wished_position(new_position);
-	f.lock()->update_view();
+	f->set_floating_wished_position(new_position);
+
+	/* moving the window, does not need a buffer resize, thus we do not need
+	 * reconfigure */
+	f->update_view();
 
 	rect new_popup_position = popup_original_position;
 	new_popup_position.x += x - x_root;
@@ -439,6 +444,8 @@ void grab_floating_resize_t::motion(uint32_t time,
 		_ctx->grab_stop(pointer);
 		return;
 	}
+
+	auto f = this->f.lock();
 
 	/** update pointer position **/
 	weston_pointer_move(pointer, event);
@@ -532,15 +539,18 @@ void grab_floating_resize_t::motion(uint32_t time,
 	size.y += y_diff;
 	final_position = size;
 
-	rect popup_new_position = size;
-	if (false) {
-		popup_new_position.x -= _ctx->theme()->floating.margin.left;
-		popup_new_position.y -= _ctx->theme()->floating.margin.top;
-		popup_new_position.w += _ctx->theme()->floating.margin.left
-				+ _ctx->theme()->floating.margin.right;
-		popup_new_position.h += _ctx->theme()->floating.margin.top
-				+ _ctx->theme()->floating.margin.bottom;
-	}
+//	f->set_floating_wished_position(final_position);
+//	f->reconfigure();
+
+//	rect popup_new_position = size;
+//	if (false) {
+//		popup_new_position.x -= _ctx->theme()->floating.margin.left;
+//		popup_new_position.y -= _ctx->theme()->floating.margin.top;
+//		popup_new_position.w += _ctx->theme()->floating.margin.left
+//				+ _ctx->theme()->floating.margin.right;
+//		popup_new_position.h += _ctx->theme()->floating.margin.top
+//				+ _ctx->theme()->floating.margin.bottom;
+//	}
 
 	//pfm->move_resize(popup_new_position);
 

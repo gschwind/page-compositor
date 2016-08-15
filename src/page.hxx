@@ -459,12 +459,6 @@ struct page_t : public page_context_t {
 	virtual void manage_client(xdg_surface_toplevel_view_p mw);
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p;
 
-	/**
-	 * the xdg-popup
-	 **/
-	virtual void xdg_popup_destroy(wl_client * client, wl_resource * resource);
-
-
 };
 
 

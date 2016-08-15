@@ -3895,19 +3895,15 @@ void page_t::sync_tree_view() {
 	for(auto v: lv) {
 		weston_layer_entry_insert(&default_layer.view_list, &v->layer_link);
 		weston_view_geometry_dirty(v);
-		weston_view_update_transform(v);
+		//weston_view_update_transform(v);
 	}
 
-	wl_list_for_each_safe(cur, nxt, &default_layer.view_list.link, link) {
-		weston_view * v = wl_container_of(cur, v, layer_link);
-		weston_log("aaaa %p\n", v->output);
-	}
+//	wl_list_for_each_safe(cur, nxt, &default_layer.view_list.link, link) {
+//		weston_view * v = wl_container_of(cur, v, layer_link);
+//		weston_log("aaaa %p\n", v->output);
+//	}
 
 	weston_compositor_damage_all(ec);
-
-}
-
-void page_t::xdg_popup_destroy(wl_client * client, wl_resource * resource) {
 
 }
 
@@ -3918,11 +3914,73 @@ auto page_t::create_pixmap(uint32_t width, uint32_t height) -> pixmap_p {
 }
 
 void page_t::process_focus(weston_pointer_grab * grab) {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
+	struct weston_pointer *pointer = grab->pointer;
+	struct weston_view *view;
+	wl_fixed_t sx, sy;
 
-	weston_compositor_set_default_pointer_grab(ec, NULL);
-	(*grab->pointer->default_grab.interface->focus)(grab);
-	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+	if (pointer->button_count > 0)
+		return;
+
+	view = weston_compositor_pick_view(pointer->seat->compositor,
+					   pointer->x, pointer->y,
+					   &sx, &sy);
+
+	if (pointer->focus != view || pointer->sx != sx || pointer->sy != sy)
+		weston_pointer_set_focus(pointer, view, sx, sy);
+}
+
+//static void
+//weston_pointer_send_relative_motion(struct weston_pointer *pointer,
+//				    uint32_t time,
+//				    struct weston_pointer_motion_event *event)
+//{
+//	uint64_t time_usec;
+//	double dx, dy, dx_unaccel, dy_unaccel;
+//	wl_fixed_t dxf, dyf, dxf_unaccel, dyf_unaccel;
+//	struct wl_list *resource_list;
+//	struct wl_resource *resource;
+//
+//	if (!pointer->focus_client)
+//		return;
+//
+//	if (!weston_pointer_motion_to_rel(pointer, event,
+//					  &dx, &dy,
+//					  &dx_unaccel, &dy_unaccel))
+//		return;
+//
+//	resource_list = &pointer->focus_client->relative_pointer_resources;
+//	time_usec = event->time_usec;
+//	if (time_usec == 0)
+//		time_usec = time * 1000ULL;
+//
+//	dxf = wl_fixed_from_double(dx);
+//	dyf = wl_fixed_from_double(dy);
+//	dxf_unaccel = wl_fixed_from_double(dx_unaccel);
+//	dyf_unaccel = wl_fixed_from_double(dy_unaccel);
+//
+//	wl_resource_for_each(resource, resource_list) {
+//		zwp_relative_pointer_v1_send_relative_motion(
+//			resource,
+//			(uint32_t) (time_usec >> 32),
+//			(uint32_t) time_usec,
+//			dxf, dyf,
+//			dxf_unaccel, dyf_unaccel);
+//	}
+//}
+
+static void
+weston_pointer_send_motion(struct weston_pointer *pointer, uint32_t time,
+			   wl_fixed_t sx, wl_fixed_t sy)
+{
+	struct wl_list *resource_list;
+	struct wl_resource *resource;
+
+	if (!pointer->focus_client)
+		return;
+
+	resource_list = &pointer->focus_client->pointer_resources;
+	wl_resource_for_each(resource, resource_list)
+		wl_pointer_send_motion(resource, time, sx, sy);
 }
 
 void page_t::process_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event) {
@@ -3930,9 +3988,25 @@ void page_t::process_motion(weston_pointer_grab * grab, uint32_t time, weston_po
 
 	_root->broadcast_motion(grab, time, event);
 
-	weston_compositor_set_default_pointer_grab(ec, NULL);
-	(*grab->pointer->default_grab.interface->motion)(grab, time, event);
-	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
+	struct weston_pointer *pointer = grab->pointer;
+	wl_fixed_t x, y;
+	wl_fixed_t old_sx = pointer->sx;
+	wl_fixed_t old_sy = pointer->sy;
+
+	if (pointer->focus) {
+		weston_pointer_motion_to_abs(pointer, event, &x, &y);
+		weston_view_from_global_fixed(pointer->focus, x, y,
+					      &pointer->sx, &pointer->sy);
+	}
+
+	weston_pointer_move(pointer, event);
+
+	if (old_sx != pointer->sx || old_sy != pointer->sy) {
+		weston_pointer_send_motion(pointer, time,
+					   pointer->sx, pointer->sy);
+	}
+
+	//weston_pointer_send_relative_motion(pointer, time, event);
 
 }
 
@@ -3989,39 +4063,19 @@ void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 }
 
 void page_t::process_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event) {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-	weston_compositor_set_default_pointer_grab(ec, NULL);
-	(*grab->pointer->default_grab.interface->axis)(grab, time, event);
-	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
-
+	weston_pointer_send_axis(grab->pointer, time, event);
 }
 
 void page_t::process_axis_source(weston_pointer_grab * grab, uint32_t source) {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-	weston_compositor_set_default_pointer_grab(ec, NULL);
-	(*grab->pointer->default_grab.interface->axis_source)(grab, source);
-	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
-
+	weston_pointer_send_axis_source(grab->pointer, source);
 }
 
 void page_t::process_frame(weston_pointer_grab * grab) {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-	weston_compositor_set_default_pointer_grab(ec, NULL);
-	(*grab->pointer->default_grab.interface->frame)(grab);
-	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
-
+	weston_pointer_send_frame(grab->pointer);
 }
 
 void page_t::process_cancel(weston_pointer_grab * grab) {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-	weston_compositor_set_default_pointer_grab(ec, NULL);
-	(*grab->pointer->default_grab.interface->cancel)(grab);
-	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
-
+	/* never cancel default grab ? */
 }
 
 void page_t::client_destroy(xdg_shell_client_t * c) {
