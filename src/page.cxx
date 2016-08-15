@@ -3547,7 +3547,7 @@ void page_t::connect_all() {
     output_destroyed.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_destroyed\n"); };
     output_moved.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_moved\n"); };
 
-    //session.notify = [](wl_listener *l, void *data) { weston_log("compositor::session\n"); };
+    session.notify = [](wl_listener *l, void *data) { weston_log("compositor::session\n"); };
 
 
     wl_signal_add(&ec->destroy_signal, &destroy);
@@ -3564,6 +3564,7 @@ void page_t::connect_all() {
 
     wl_signal_add(&ec->output_destroyed_signal, &output_destroyed);
     wl_signal_add(&ec->output_moved_signal, &output_moved);
+
     wl_signal_add(&ec->session_signal, &session);
 }
 
