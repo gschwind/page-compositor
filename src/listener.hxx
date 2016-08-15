@@ -25,12 +25,33 @@ struct listener_t {
 		(*listener->_func)(reinterpret_cast<T*>(data));
 	}
 
+	listener_t() {
+		wl_list_init(&_pod._listener.link);
+		_pod._func = nullptr;
+	}
+
+	~listener_t() {
+		if(not wl_list_empty(&_pod._listener.link)) {
+			wl_list_remove(&_pod._listener.link);
+			wl_list_init(&_pod._listener.link);
+		}
+	}
+
 	template<typename F>
 	void connect(wl_signal* signal, F f) {
 		_func = f;
 		_pod._func = &_func;
 		_pod._listener.notify = &listener_t::_call;
+		if(not wl_list_empty(&_pod._listener.link)) {
+			wl_list_remove(&_pod._listener.link);
+			wl_list_init(&_pod._listener.link);
+		}
 		wl_signal_add(signal, &_pod._listener);
+	}
+
+	template<typename Z>
+	void connect(wl_signal* signal, Z * ths, void(Z::*f)(T*)) {
+		connect(signal, [ths,f](T * o) -> void { (ths->*f)(o); });
 	}
 
 };

@@ -3530,6 +3530,28 @@ void page_t::load_drm_backend(weston_compositor* ec) {
 
 void page_t::connect_all() {
 
+	wl_list_init(&destroy.link);
+
+	wl_list_init(&create_surface.link);
+	wl_list_init(&activate.link);
+	wl_list_init(&transform.link);
+
+	wl_list_init(&kill.link);
+	wl_list_init(&idle.link);
+	wl_list_init(&wake.link);
+
+	wl_list_init(&show_input_panel.link);
+	wl_list_init(&hide_input_panel.link);
+	wl_list_init(&update_input_panel.link);
+
+
+	wl_list_init(&seat_created.link);
+
+	wl_list_init(&output_destroyed.link);
+	wl_list_init(&output_moved.link);
+
+	wl_list_init(&session.link);
+
 	destroy.notify = [](wl_listener *l, void *data) { weston_log("compositor::destroy\n"); };
     create_surface.notify = [](wl_listener *l, void *data) { weston_log("compositor::create_surface\n"); };
     activate.notify = [](wl_listener *l, void *data) { weston_log("compositor::activate\n"); };
@@ -3542,13 +3564,12 @@ void page_t::connect_all() {
     update_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::update_input_panel\n"); };
     seat_created.notify = [](wl_listener *l, void *data) { weston_log("compositor::seat_created\n"); };
 
-    output_created.connect(&ec->output_created_signal, [this](weston_output * o) { this->on_output_created(o);});
+    output_created.connect(&ec->output_created_signal, this, &page_t::on_output_created);
 
     output_destroyed.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_destroyed\n"); };
     output_moved.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_moved\n"); };
 
     session.notify = [](wl_listener *l, void *data) { weston_log("compositor::session\n"); };
-
 
     wl_signal_add(&ec->destroy_signal, &destroy);
     wl_signal_add(&ec->create_surface_signal, &create_surface);
