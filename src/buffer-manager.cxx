@@ -27,10 +27,174 @@
 #include <wayland-client.h>
 #include <libweston-0/compositor.h>
 #include <cairo.h>
+#include <wayland-cursor.h>
+#include <cstdlib>
 
+#include "utils.hxx"
 #include "buffer-manager-client-protocol.h"
 
 namespace page {
+
+
+/*
+ * The following correspondences between file names and cursors was copied
+ * from: https://bugs.kde.org/attachment.cgi?id=67313
+ */
+
+static const char *bottom_left_corners[] = {
+	"bottom_left_corner",
+	"sw-resize",
+	"size_bdiag"
+};
+
+static const char *bottom_right_corners[] = {
+	"bottom_right_corner",
+	"se-resize",
+	"size_fdiag"
+};
+
+static const char *bottom_sides[] = {
+	"bottom_side",
+	"s-resize",
+	"size_ver"
+};
+
+static const char *grabbings[] = {
+	"grabbing",
+	"closedhand",
+	"208530c400c041818281048008011002"
+};
+
+static const char *left_ptrs[] = {
+	"left_ptr",
+	"default",
+	"top_left_arrow",
+	"left-arrow"
+};
+
+static const char *left_sides[] = {
+	"left_side",
+	"w-resize",
+	"size_hor"
+};
+
+static const char *right_sides[] = {
+	"right_side",
+	"e-resize",
+	"size_hor"
+};
+
+static const char *top_left_corners[] = {
+	"top_left_corner",
+	"nw-resize",
+	"size_fdiag"
+};
+
+static const char *top_right_corners[] = {
+	"top_right_corner",
+	"ne-resize",
+	"size_bdiag"
+};
+
+static const char *top_sides[] = {
+	"top_side",
+	"n-resize",
+	"size_ver"
+};
+
+static const char *xterms[] = {
+	"xterm",
+	"ibeam",
+	"text"
+};
+
+static const char *hand1s[] = {
+	"hand1",
+	"pointer",
+	"pointing_hand",
+	"e29285e634086352946a0e7090d73106"
+};
+
+static const char *watches[] = {
+	"watch",
+	"wait",
+	"0426c94ea35c87780ff01dc239897213"
+};
+
+static const char *move_draggings[] = {
+	"dnd-move"
+};
+
+static const char *copy_draggings[] = {
+	"dnd-copy"
+};
+
+static const char *forbidden_draggings[] = {
+	"dnd-none",
+	"dnd-no-drop"
+};
+
+struct cursor_alternatives {
+	const char **names;
+	size_t count;
+};
+
+static const struct cursor_alternatives cursors[] = {
+	{bottom_left_corners, ARRAY_LENGTH(bottom_left_corners)},
+	{bottom_right_corners, ARRAY_LENGTH(bottom_right_corners)},
+	{bottom_sides, ARRAY_LENGTH(bottom_sides)},
+	{grabbings, ARRAY_LENGTH(grabbings)},
+	{left_ptrs, ARRAY_LENGTH(left_ptrs)},
+	{left_sides, ARRAY_LENGTH(left_sides)},
+	{right_sides, ARRAY_LENGTH(right_sides)},
+	{top_left_corners, ARRAY_LENGTH(top_left_corners)},
+	{top_right_corners, ARRAY_LENGTH(top_right_corners)},
+	{top_sides, ARRAY_LENGTH(top_sides)},
+	{xterms, ARRAY_LENGTH(xterms)},
+	{hand1s, ARRAY_LENGTH(hand1s)},
+	{watches, ARRAY_LENGTH(watches)},
+	{move_draggings, ARRAY_LENGTH(move_draggings)},
+	{copy_draggings, ARRAY_LENGTH(copy_draggings)},
+	{forbidden_draggings, ARRAY_LENGTH(forbidden_draggings)},
+};
+
+static void
+create_cursors(buffer_manager_t *bm)
+{
+	unsigned int i, j;
+	struct wl_cursor *cursor;
+
+	bm->cursor_theme = wl_cursor_theme_load(NULL, 32, bm->shm);
+	if (!bm->cursor_theme) {
+		fprintf(stderr, "could not load theme '%s'\n", NULL);
+		return;
+	}
+	bm->cursors = reinterpret_cast<wl_cursor **>(
+		malloc(ARRAY_LENGTH(cursors) * sizeof(bm->cursors[0])));
+
+	for (i = 0; i < ARRAY_LENGTH(cursors); i++) {
+		bm->cursors[i] = NULL;
+		cursor = NULL;
+		for (j = 0; !cursor && j < cursors[i].count; ++j)
+			cursor = wl_cursor_theme_get_cursor(
+			    bm->cursor_theme, cursors[i].names[j]);
+
+		if (!cursor)
+			fprintf(stderr, "could not load cursor '%s'\n",
+				cursors[i].names[0]);
+
+		bm->cursors[i] = cursor;
+	}
+}
+
+static void
+destroy_cursors(buffer_manager_t *bm)
+{
+	wl_cursor_theme_destroy(bm->cursor_theme);
+	free(bm->cursors);
+}
+
+
 
 static
 void pointer_enter(void *data,
@@ -42,9 +206,19 @@ void pointer_enter(void *data,
 	buffer_manager_t * bm = reinterpret_cast<buffer_manager_t*>(data);
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	wl_surface_attach(bm->pointer_data.surface, bm->pointer_data.buffer, 0, 0);
+	auto cursor = bm->cursors[4];
+	auto image = cursor->images[0];
+	auto buffer = wl_cursor_image_get_buffer(image);
+	if (!buffer)
+		return;
+
+	wl_surface_attach(bm->pointer_data.surface, buffer, 0, 0);
+	wl_surface_damage(bm->pointer_data.surface, 0, 0,
+			  image->width, image->height);
 	wl_surface_commit(bm->pointer_data.surface);
-	wl_pointer_set_cursor(bm->pointer, serial, bm->pointer_data.surface, 0, 0);
+	wl_pointer_set_cursor(wl_pointer, serial,
+				  bm->pointer_data.surface,
+			      image->hotspot_x, image->hotspot_y);
 
 }
 
@@ -475,6 +649,8 @@ void buffer_manager_main(int fd) {
 		exit(1);
 	}
 
+	create_cursors(&mgr);
+
 	wl_display_roundtrip(dpy);
 
 
@@ -484,6 +660,8 @@ void buffer_manager_main(int fd) {
 			done = true;
 		}
 	}
+
+	destroy_cursors(&mgr);
 
 }
 

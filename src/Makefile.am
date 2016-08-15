@@ -6,6 +6,7 @@ AM_CXXFLAGS =  \
 	@LTO@ \
 	@WLS_CFLAGS@ \
 	@WLC_CFLAGS@ \
+	@WLX_CFLAGS@ \
 	@WESTON_CFLAGS@ \
 	@PIXMAN_CFLAGS@ \
 	@CAIRO_CFLAGS@ \
@@ -79,6 +80,7 @@ page_compositor_LDADD = \
 	@PIXMAN_LIBS@ \
 	@WLS_LIBS@ \
 	@WLC_LIBS@ \
+	@WLX_LIBS@ \
 	@WESTON_LIBS@ \
 	@CAIRO_LIBS@ \
 	@PANGO_LIBS@ \

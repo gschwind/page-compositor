@@ -23,6 +23,7 @@
 
 #include <map>
 #include <wayland-client.h>
+#include <wayland-cursor.h>
 #include "buffer-manager-client-protocol.h"
 
 namespace page {
@@ -43,6 +44,9 @@ struct buffer_manager_t {
 	wl_shm * shm;
 	wl_region * region;
 	zzz_buffer_manager * buffer_manager;
+
+	wl_cursor_theme * cursor_theme;
+	wl_cursor **cursors;
 
 	bool has_argb;
 

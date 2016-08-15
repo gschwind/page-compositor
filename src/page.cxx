@@ -3913,6 +3913,10 @@ auto page_t::create_pixmap(uint32_t width, uint32_t height) -> pixmap_p {
 	return p;
 }
 
+/**
+ * Called when the cursor enter in the output region or when a refocus maybe
+ * needed.
+ **/
 void page_t::process_focus(weston_pointer_grab * grab) {
 	struct weston_pointer *pointer = grab->pointer;
 	struct weston_view *view;

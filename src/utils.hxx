@@ -51,6 +51,16 @@ static int const LIMITCLIENTS = 256;
 //    return bits - 1;
 //}
 
+/**
+ * Compile-time computation of number of items in a hardcoded array.
+ *
+ * @param a the array being measured.
+ * @return the number of items hardcoded into the array.
+ */
+#ifndef ARRAY_LENGTH
+#define ARRAY_LENGTH(a) (sizeof (a) / sizeof (a)[0])
+#endif
+
 constexpr unsigned ilog2_a(int val) {
 	return val<=0? 0 : ilog2_a(val>>1) + 1;
 }
