@@ -156,9 +156,6 @@ struct page_t : public page_context_t {
 		page_t * ths;
 	} default_grab_pod;
 
-	weston_pointer_grab_interface const * old_grab_interface;
-
-
 	struct _page_clients {
 		xdg_shell_client_t * client;
 		signal_handler_t destroy;

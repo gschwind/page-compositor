@@ -69,37 +69,37 @@
 
 namespace page {
 
-static void _page_focus(weston_pointer_grab * grab) {
+static void _default_grab_focus(weston_pointer_grab * grab) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
 	pod->ths->process_focus(grab);
 }
 
-static void _page_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event) {
+static void _default_grab_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
 	pod->ths->process_motion(grab, time, event);
 }
 
-static void _page_button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state) {
+static void _default_grab_button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
 	pod->ths->process_button(grab, time, button, state);
 }
 
-static void _page_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event) {
+static void _default_grab_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
 	pod->ths->process_axis(grab, time, event);
 }
 
-static void _page_axis_source(weston_pointer_grab * grab, uint32_t source) {
+static void _default_grab_axis_source(weston_pointer_grab * grab, uint32_t source) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
 	pod->ths->process_axis_source(grab, source);
 }
 
-static void _page_frame(weston_pointer_grab * grab) {
+static void _default_grab_frame(weston_pointer_grab * grab) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
 	pod->ths->process_frame(grab);
 }
 
-static void _page_cancel(weston_pointer_grab * grab) {
+static void _default_grab_cancel(weston_pointer_grab * grab) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
 	pod->ths->process_cancel(grab);
 }
@@ -214,6 +214,8 @@ page_t::page_t(int argc, char ** argv)
 
 	char const * conf_file_name = 0;
 
+	_global_xdg_shell = nullptr;
+	_global_buffer_manager = nullptr;
 	configuration._replace_wm = false;
 	configuration._menu_drop_down_shadow = false;
 
@@ -329,13 +331,13 @@ page_t::page_t(int argc, char ** argv)
 	configuration._fade_in_time = _conf.get_long("compositor", "fade_in_time");
 
 
-	default_grab_pod.grab_interface.focus = &_page_focus;
-	default_grab_pod.grab_interface.motion = &_page_motion;
-	default_grab_pod.grab_interface.button = &_page_button;
-	default_grab_pod.grab_interface.axis = &_page_axis;
-	default_grab_pod.grab_interface.axis_source = &_page_axis_source;
-	default_grab_pod.grab_interface.frame = &_page_frame;
-	default_grab_pod.grab_interface.cancel = &_page_cancel;
+	default_grab_pod.grab_interface.focus = &_default_grab_focus;
+	default_grab_pod.grab_interface.motion = &_default_grab_motion;
+	default_grab_pod.grab_interface.button = &_default_grab_button;
+	default_grab_pod.grab_interface.axis = &_default_grab_axis;
+	default_grab_pod.grab_interface.axis_source = &_default_grab_axis_source;
+	default_grab_pod.grab_interface.frame = &_default_grab_frame;
+	default_grab_pod.grab_interface.cancel = &_default_grab_cancel;
 	default_grab_pod.ths = this;
 
 }
@@ -519,7 +521,6 @@ void page_t::run() {
 
 	update_viewport_layout();
 
-	old_grab_interface = ec->default_pointer_grab;
 	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
 
 	weston_compositor_wake(ec);
