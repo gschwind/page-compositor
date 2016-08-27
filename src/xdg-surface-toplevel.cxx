@@ -20,6 +20,8 @@
 #include "grab_handlers.hxx"
 #include "xdg-shell-server-protocol.h"
 #include "xdg-shell-client.hxx"
+#include "wl-shell-client.hxx"
+#include "wl-shell-surface-interface.hxx"
 
 #include "xdg-surface-base-view.hxx"
 #include "xdg-surface-toplevel-view.hxx"
@@ -145,7 +147,90 @@ static struct xdg_surface_interface const _xdg_surface_implementation = {
 	page::_xdg_surface_set_minimized
 };
 
+static void _wl_shell_surface_pong(wl_client *client,
+	     struct wl_resource *resource,
+	     uint32_t serial) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_pong(client, resource, serial);
+}
 
+static void _wl_shell_surface_move(struct wl_client *client,
+	     struct wl_resource *resource,
+	     struct wl_resource *seat,
+	     uint32_t serial) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_move(client, resource, seat, serial);
+}
+
+static void _wl_shell_surface_resize(struct wl_client *client,
+	       struct wl_resource *resource,
+	       struct wl_resource *seat,
+	       uint32_t serial,
+	       uint32_t edges) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_resize(client, resource, seat, serial, edges);
+}
+
+static void _wl_shell_surface_set_toplevel(struct wl_client *client,
+		     struct wl_resource *resource) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_set_toplevel(client, resource);
+}
+
+static void _wl_shell_surface_set_transient(struct wl_client *client,
+		      struct wl_resource *resource,
+		      struct wl_resource *parent,
+		      int32_t x,
+		      int32_t y,
+		      uint32_t flags) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_set_transient(client, resource, parent, x, y, flags);
+}
+
+static void _wl_shell_surface_set_fullscreen(struct wl_client *client,
+		       struct wl_resource *resource,
+		       uint32_t method,
+		       uint32_t framerate,
+		       struct wl_resource *output) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_set_fullscreen(client, resource, method, framerate, output);
+}
+
+static void _wl_shell_surface_set_popup(struct wl_client *client,
+		  struct wl_resource *resource,
+		  struct wl_resource *seat,
+		  uint32_t serial,
+		  struct wl_resource *parent,
+		  int32_t x,
+		  int32_t y,
+		  uint32_t flags) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_set_popup(client, resource, seat, serial, parent, x, y, flags);
+}
+
+static void _wl_shell_surface_set_maximized(struct wl_client *client,
+		      struct wl_resource *resource,
+		      struct wl_resource *output) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_set_maximized(client, resource, output);
+}
+
+static void _wl_shell_surface_set_title(struct wl_client *client,
+		  struct wl_resource *resource,
+		  const char *title) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_set_title(client, resource, title);
+}
+
+static void _wl_shell_surface_set_class(struct wl_client *client,
+		  struct wl_resource *resource,
+		  const char *class_) {
+	xdg_surface_toplevel_t::get(resource)->wl_shell_surface_set_class(client, resource, class_);
+}
+
+static struct wl_shell_surface_interface const _wl_shell_surface_implementation = {
+		page::_wl_shell_surface_pong,
+		page::_wl_shell_surface_move,
+		page::_wl_shell_surface_resize,
+		page::_wl_shell_surface_set_toplevel,
+		page::_wl_shell_surface_set_transient,
+		page::_wl_shell_surface_set_fullscreen,
+		page::_wl_shell_surface_set_popup,
+		page::_wl_shell_surface_set_maximized,
+		page::_wl_shell_surface_set_title,
+		page::_wl_shell_surface_set_class
+};
 
 void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
@@ -170,17 +255,32 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 
-	_resource = wl_resource_create(client,
-			reinterpret_cast<wl_interface const *>(&xdg_surface_interface), 1, id);
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(surface, "xdg_toplevel",
+			_resource, XDG_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
+
+}
+
+void xdg_surface_toplevel_t::set_xdg_surface_implementation() {
+	_resource = wl_resource_create(_client,
+			reinterpret_cast<wl_interface const *>(&xdg_surface_interface), 1,
+			_id);
 
 	wl_resource_set_implementation(_resource,
 			&_xdg_surface_implementation,
 			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
-	/* tell weston how to use this data */
-	if (weston_surface_set_role(surface, "xdg_toplevel",
-			_resource, XDG_SHELL_ERROR_ROLE) < 0)
-		throw "TODO";
+}
+
+void xdg_surface_toplevel_t::set_wl_shell_surface_implementation() {
+	_resource = wl_resource_create(_client,
+			reinterpret_cast<wl_interface const *>(&wl_shell_surface_interface), 1,
+			_id);
+
+	wl_resource_set_implementation(_resource,
+			&_wl_shell_surface_implementation,
+			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
 }
 
@@ -441,6 +541,118 @@ xdg_surface_toplevel_t * xdg_surface_toplevel_t::get(weston_surface * surface) {
 
 xdg_surface_base_view_p xdg_surface_toplevel_t::base_master_view() {
 	return dynamic_pointer_cast<xdg_surface_base_view_t>(_master_view.lock());
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_pong(wl_client *client,
+	     wl_resource *resource,
+	     uint32_t serial) {
+	/* TODO */
+
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_move(wl_client *client,
+	     wl_resource *resource,
+	     wl_resource *seat_resource,
+	     uint32_t serial) {
+
+	if(master_view().expired())
+		return;
+
+	auto seat = reinterpret_cast<weston_seat*>(
+			wl_resource_get_user_data(seat_resource));
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	auto master_view = _master_view.lock();
+	if(master_view->is(MANAGED_NOTEBOOK)) {
+		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view,
+			BTN_LEFT, rect(x, y, 1, 1)});
+	} else if(master_view->is(MANAGED_FLOATING)) {
+		_ctx->grab_start(pointer, new grab_floating_move_t(_ctx, master_view,
+			BTN_LEFT, x, y));
+	}
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_resize(wl_client *client,
+	       wl_resource *resource,
+	       wl_resource *seat_resource,
+	       uint32_t serial,
+	       uint32_t edges) {
+
+	if(master_view().expired())
+		return;
+
+	auto seat = reinterpret_cast<weston_seat*>(
+			wl_resource_get_user_data(seat_resource));
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	auto master_view = _master_view.lock();
+	if(master_view->is(MANAGED_FLOATING)) {
+		_ctx->grab_start(pointer, new grab_floating_resize_t(_ctx, master_view,
+			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges))); // FIXME: map enum edges.
+	}
+
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_set_toplevel(wl_client *client,
+		     wl_resource *resource) {
+
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_set_transient(wl_client *client,
+		      wl_resource *resource,
+		      wl_resource *parent,
+		      int32_t x,
+		      int32_t y,
+		      uint32_t flags) {
+
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_set_fullscreen(wl_client *client,
+		       wl_resource *resource,
+		       uint32_t method,
+		       uint32_t framerate,
+		       wl_resource *output) {
+	_pending.minimized = false;
+	_pending.fullscreen = true;
+	_pending.maximized = false;
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_set_popup(wl_client *client,
+		  wl_resource *resource,
+		  wl_resource *seat,
+		  uint32_t serial,
+		  wl_resource *parent,
+		  int32_t x,
+		  int32_t y,
+		  uint32_t flags) {
+
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_set_maximized(wl_client *client,
+		      wl_resource *resource,
+		      wl_resource *output) {
+	_pending.minimized = false;
+	_pending.fullscreen = false;
+	_pending.maximized = true;
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_set_title(wl_client *client,
+		  wl_resource *resource,
+		  const char *title) {
+	_pending.title = title;
+
+}
+
+void xdg_surface_toplevel_t::wl_shell_surface_set_class(wl_client *client,
+		  wl_resource *resource,
+		  const char *class_) {
+	/* TODO */
 }
 
 

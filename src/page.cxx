@@ -166,13 +166,19 @@ void page_t::bind_xdg_shell(struct wl_client * client, void * data,
 				      uint32_t version, uint32_t id) {
 	page_t * ths = reinterpret_cast<page_t *>(data);
 
-	_page_clients c;
-	c.client = new xdg_shell_client_t{ths, client, id};
-//	c.create_popup = c.client->create_popup.connect(ths, &page_t::client_create_popup);
-//	c.create_toplevel = c.client->create_toplevel.connect(ths, &page_t::client_create_toplevel);
-	c.destroy = c.client->destroy.connect(ths, &page_t::client_destroy);
+	auto c = new xdg_shell_client_t{ths, client, id};
+	ths->connect(c->destroy, ths, &page_t::xdg_shell_client_destroy);
+	ths->_xdg_shell_clients.push_back(c);
 
-	ths->_clients.push_back(c);
+}
+
+void page_t::bind_wl_shell(struct wl_client * client, void * data,
+				      uint32_t version, uint32_t id) {
+	page_t * ths = reinterpret_cast<page_t *>(data);
+
+	auto c = new wl_shell_client_t{ths, client, id};
+	ths->connect(c->destroy, ths, &page_t::wl_shell_client_destroy);
+	ths->_wl_shell_clients.push_back(c);
 
 }
 
@@ -453,6 +459,8 @@ void page_t::run() {
 
 	weston_layer_init(&default_layer, &ec->cursor_layer.link);
 
+	_global_wl_shell = wl_global_create(_dpy, &wl_shell_interface, 1, this,
+			&page_t::bind_wl_shell);
 	_global_xdg_shell = wl_global_create(_dpy, &xdg_shell_interface, 1, this,
 			&page_t::bind_xdg_shell);
 	_global_buffer_manager = wl_global_create(_dpy,
@@ -4105,7 +4113,11 @@ void page_t::process_cancel(weston_pointer_grab * grab) {
 	/* never cancel default grab ? */
 }
 
-void page_t::client_destroy(xdg_shell_client_t * c) {
+void page_t::xdg_shell_client_destroy(xdg_shell_client_t * c) {
+	//_clients.remove_if([c] (xdg_shell_client_t const & x) -> bool { return x.client == c; });
+}
+
+void page_t::wl_shell_client_destroy(wl_shell_client_t * c) {
 	//_clients.remove_if([c] (xdg_shell_client_t const & x) -> bool { return x.client == c; });
 }
 

@@ -17,6 +17,7 @@
 #include "tree-types.hxx"
 
 #include "xdg-surface-interface.hxx"
+#include "wl-shell-surface-interface.hxx"
 #include "icon_handler.hxx"
 #include "theme.hxx"
 
@@ -33,7 +34,10 @@ class page_t;
 
 using namespace std;
 
-struct xdg_surface_toplevel_t : public xdg_surface_base_t, public xdg_surface_vtable {
+struct xdg_surface_toplevel_t :
+	public xdg_surface_base_t,
+	public xdg_surface_vtable,
+	public wl_shell_surface_vtable {
 
 	friend class page::page_t;
 
@@ -69,6 +73,9 @@ struct xdg_surface_toplevel_t : public xdg_surface_base_t, public xdg_surface_vt
 	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &) = delete;
 
 	static void xdg_surface_delete(wl_resource *resource);
+
+	void set_xdg_surface_implementation();
+	void set_wl_shell_surface_implementation();
 
 	/** called on surface commit */
 	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
@@ -141,6 +148,61 @@ struct xdg_surface_toplevel_t : public xdg_surface_base_t, public xdg_surface_vt
 			wl_resource * resource) override;
 	virtual void xdg_surface_set_minimized(wl_client * client,
 			wl_resource * resource) override;
+
+
+	/* wl_shell API */
+
+	virtual void wl_shell_surface_pong(wl_client *client,
+		     wl_resource *resource,
+		     uint32_t serial) override;
+
+	virtual void wl_shell_surface_move(wl_client *client,
+		     wl_resource *resource,
+		     wl_resource *seat,
+		     uint32_t serial) override;
+
+	virtual void wl_shell_surface_resize(wl_client *client,
+		       wl_resource *resource,
+		       wl_resource *seat,
+		       uint32_t serial,
+		       uint32_t edges) override;
+
+	virtual void wl_shell_surface_set_toplevel(wl_client *client,
+			     wl_resource *resource) override;
+
+	virtual void wl_shell_surface_set_transient(wl_client *client,
+			      wl_resource *resource,
+			      wl_resource *parent,
+			      int32_t x,
+			      int32_t y,
+			      uint32_t flags) override;
+
+	virtual void wl_shell_surface_set_fullscreen(wl_client *client,
+			       wl_resource *resource,
+			       uint32_t method,
+			       uint32_t framerate,
+			       wl_resource *output) override;
+
+	virtual void wl_shell_surface_set_popup(wl_client *client,
+			  wl_resource *resource,
+			  wl_resource *seat,
+			  uint32_t serial,
+			  wl_resource *parent,
+			  int32_t x,
+			  int32_t y,
+			  uint32_t flags) override;
+
+	virtual void wl_shell_surface_set_maximized(wl_client *client,
+			      wl_resource *resource,
+			      wl_resource *output) override;
+
+	virtual void wl_shell_surface_set_title(wl_client *client,
+			  wl_resource *resource,
+			  const char *title) override;
+
+	virtual void wl_shell_surface_set_class(wl_client *client,
+			  wl_resource *resource,
+			  const char *class_) override;
 
 };
 

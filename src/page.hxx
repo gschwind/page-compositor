@@ -50,6 +50,7 @@
 #include "mainloop.hxx"
 #include "page_root.hxx"
 #include "listener.hxx"
+#include "wl-shell-client.hxx"
 #include "xdg-shell-client.hxx"
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
@@ -93,7 +94,7 @@ struct key_bind_cmd_t {
 	string cmd;
 };
 
-struct page_t : public page_context_t {
+struct page_t : public page_context_t, public connectable_t {
 	shared_ptr<page_root_t> _root;
 	weston_layer default_layer;
 	theme_t * _theme;
@@ -156,15 +157,10 @@ struct page_t : public page_context_t {
 		page_t * ths;
 	} default_grab_pod;
 
-	struct _page_clients {
-		xdg_shell_client_t * client;
-		signal_handler_t destroy;
-		signal_handler_t create_popup;
-		signal_handler_t create_toplevel;
-	};
+	list<wl_shell_client_t *> _wl_shell_clients;
+	list<xdg_shell_client_t *> _xdg_shell_clients;
 
-	list<_page_clients> _clients;
-
+	wl_global * _global_wl_shell;
 	wl_global * _global_xdg_shell;
 	wl_global * _global_buffer_manager;
 
@@ -212,7 +208,8 @@ struct page_t : public page_context_t {
 	/* run page main loop */
 	void run();
 
-	void client_destroy(xdg_shell_client_t *);
+	void xdg_shell_client_destroy(xdg_shell_client_t *);
+	void wl_shell_client_destroy(wl_shell_client_t *);
 	void client_create_popup(xdg_shell_client_t *, xdg_surface_popup_t *);
 	void client_create_toplevel(xdg_shell_client_t *, xdg_surface_toplevel_t *);
 
@@ -405,6 +402,8 @@ struct page_t : public page_context_t {
 	void on_output_created(weston_output * output);
 	void load_x11_backend(weston_compositor* ec);
 	void load_drm_backend(weston_compositor* ec);
+	static void bind_wl_shell(wl_client * client, void * data,
+					      uint32_t version, uint32_t id);
 	static void bind_xdg_shell(wl_client * client, void * data,
 					      uint32_t version, uint32_t id);
 	static void bind_zzz_buffer_manager(struct wl_client * client, void * data,

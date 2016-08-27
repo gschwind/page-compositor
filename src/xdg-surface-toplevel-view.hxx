@@ -22,7 +22,8 @@ enum managed_window_type_e {
 	MANAGED_FLOATING,
 	MANAGED_NOTEBOOK,
 	MANAGED_FULLSCREEN,
-	MANAGED_DOCK
+	MANAGED_DOCK,
+	MANAGED_POPUP
 };
 
 class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
@@ -94,7 +95,7 @@ public:
 	auto title() const -> string const &;
 	bool has_focus();
 
-	void update_view();
+	void update_view(); // send configure request.
 
 	bool is(managed_window_type_e type);
 	auto get_wished_position() -> rect const &;

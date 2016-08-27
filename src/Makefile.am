@@ -28,6 +28,8 @@ page_compositor_SOURCES = \
 	page.hxx \
 	xdg-shell-client.cxx \
 	xdg-shell-client.hxx \
+	wl-shell-client.cxx \
+	wl-shell-client.hxx \
 	page-context.hxx \
 	xdg-surface-base.cxx \
 	xdg-surface-base.hxx \

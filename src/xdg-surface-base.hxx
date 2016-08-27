@@ -41,7 +41,7 @@ struct xdg_surface_base_t {
 	wl_client *            _client;
 	weston_surface *       _surface;
 	uint32_t               _id;
-	wl_resource *          _resource;
+	struct wl_resource *   _resource;
 	wl_listener            _surface_destroy;
 
 	xdg_surface_base_t(xdg_surface_base_t const &) = delete;

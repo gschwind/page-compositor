@@ -79,6 +79,7 @@ void xdg_shell_client_t::xdg_shell_get_xdg_surface(wl_client * client,
 
 	/* disable shared_ptr, they are managed by wl_resource */
 	auto xdg_surface = new xdg_surface_toplevel_t(_ctx, client, surface, id);
+	xdg_surface->set_xdg_surface_implementation();
 
 	xdg_surface_toplevel_map[id] = xdg_surface;
 	connect(xdg_surface->destroy, this, &xdg_shell_client_t::destroy_toplevel);
