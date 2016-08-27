@@ -15,7 +15,10 @@ AM_CXXFLAGS =  \
 	-fno-strict-aliasing
 
 BUILT_SOURCES = \
-	xdg-shell-server-protocol.h
+	xdg-shell-server-protocol.h \
+	buffer-manager-protocol.c \
+	buffer-manager-server-protocol.h \
+	buffer-manager-client-protocol.h
 
 page_compositor_SOURCES = \
 	pointer-grab-handler.cxx \
@@ -72,10 +75,7 @@ page_compositor_SOURCES = \
 	xdg-shell-protocol.c \
 	xdg-shell-server-protocol.h \
 	buffer-manager.cxx \
-	buffer-manager.hxx \
-	buffer-manager-protocol.c \
-	buffer-manager-server-protocol.h \
-	buffer-manager-client-protocol.h 
+	buffer-manager.hxx
 
 page_compositor_LDADD = \
 	@LTO@ \
