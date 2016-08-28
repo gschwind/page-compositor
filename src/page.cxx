@@ -156,7 +156,7 @@ static void xx_buffer_delete(wl_resource * r) {
 	/* TODO */
 }
 
-static const struct zzz_buffer_manager_interface _zzz_buffer_manager_interface = {
+static const struct zzz_buffer_manager_interface _zzz_buffer_manager_implementation = {
 		ack_buffer
 };
 
@@ -191,15 +191,15 @@ void page_t::bind_zzz_buffer_manager(struct wl_client * client, void * data,
 		throw exception_t{"only one buffer manager is allowed"};
 
 	/* ONLY one those client */
-	ths->_buffer_manager_resource = wl_resource_create(client, &::zzz_buffer_manager_interface, 1,
-			id);
+	ths->_buffer_manager_resource = wl_resource_create(client,
+			&::zzz_buffer_manager_interface, 1, id);
 
 	/**
 	 * Define the implementation of the resource and the user_data,
 	 * i.e. callbacks that must be used for this resource.
 	 **/
 	wl_resource_set_implementation(ths->_buffer_manager_resource,
-			&_zzz_buffer_manager_interface, ths, &xx_buffer_delete);
+			&_zzz_buffer_manager_implementation, ths, &xx_buffer_delete);
 
 
 	for(auto & p: ths->pixmap_list) {

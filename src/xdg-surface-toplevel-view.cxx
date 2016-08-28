@@ -204,23 +204,8 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 		state.insert(XDG_SURFACE_STATE_ACTIVATED);
 	}
 
-
-	wl_array array;
-	wl_array_init(&array);
-	wl_array_add(&array, sizeof(uint32_t)*state.size());
-
-	{
-		int i = 0;
-		for(auto x: state) {
-			((uint32_t*)array.data)[i] = x;
-			++i;
-		}
-	}
-
-	xdg_surface_send_configure(_xdg_surface->_resource, _wished_position.w,
-			_wished_position.h, &array, _xdg_surface->_ack_serial);
-	wl_array_release(&array);
-	wl_client_flush(_xdg_surface->_client);
+	_xdg_surface->surface_send_configure(_wished_position.w,
+			_wished_position.h, state);
 
 }
 

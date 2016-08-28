@@ -271,6 +271,8 @@ void xdg_surface_toplevel_t::set_xdg_surface_implementation() {
 			&_xdg_surface_implementation,
 			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
+	_surface_send_configure = &xdg_surface_toplevel_t::xdg_surface_send_configure;
+
 }
 
 void xdg_surface_toplevel_t::set_wl_shell_surface_implementation() {
@@ -282,6 +284,8 @@ void xdg_surface_toplevel_t::set_wl_shell_surface_implementation() {
 			&_wl_shell_surface_implementation,
 			this, &xdg_surface_toplevel_t::xdg_surface_delete);
 
+	_surface_send_configure = &xdg_surface_toplevel_t::wl_surface_send_configure;
+
 }
 
 xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
@@ -292,6 +296,38 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 //	}
 
 }
+
+void xdg_surface_toplevel_t::xdg_surface_send_configure(int32_t width,
+		int32_t height, set<uint32_t> &states) {
+
+	_ack_serial = wl_display_next_serial(_ctx->_dpy);
+
+	wl_array array;
+	wl_array_init(&array);
+	wl_array_add(&array, sizeof(uint32_t)*states.size());
+
+	{
+		int i = 0;
+		for(auto x: states) {
+			((uint32_t*)array.data)[i] = x;
+			++i;
+		}
+	}
+
+	::xdg_surface_send_configure(_resource, width, height, &array, _ack_serial);
+	wl_array_release(&array);
+	wl_client_flush(_client);
+
+}
+
+void xdg_surface_toplevel_t::wl_surface_send_configure(int32_t width,
+		int32_t height, set<uint32_t> &states) {
+	_ack_serial = 0;
+	::wl_shell_surface_send_configure(_resource,
+			WL_SHELL_SURFACE_RESIZE_TOP_LEFT, width, height);
+	wl_client_flush(_client);
+}
+
 
 void xdg_surface_toplevel_t::weston_destroy() {
 	destroy_all_views();

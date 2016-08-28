@@ -21,6 +21,7 @@ BUILT_SOURCES = \
 	buffer-manager-client-protocol.h
 
 page_compositor_SOURCES = \
+	buffer-manager-protocol.c \
 	pointer-grab-handler.cxx \
 	pointer-grab-handler.hxx \
 	keyboard-grab-handler.cxx \

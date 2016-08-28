@@ -68,6 +68,21 @@ struct xdg_surface_toplevel_t :
 
 	signal_t<xdg_surface_toplevel_t *> destroy;
 
+	void (xdg_surface_toplevel_t::*_surface_send_configure)(int32_t width,
+			int32_t height, set<uint32_t> &states);
+
+	void surface_send_configure(int32_t width,
+			int32_t height, set<uint32_t> &states) {
+		auto func = _surface_send_configure;
+		(this->*func)(width, height, states);
+	}
+
+
+	void xdg_surface_send_configure(int32_t width,
+			int32_t height, set<uint32_t> &states);
+	void wl_surface_send_configure(int32_t width,
+			int32_t height, set<uint32_t> &states);
+
 	/* private to avoid copy */
 	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
 	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &) = delete;
