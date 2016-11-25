@@ -23,7 +23,7 @@
 
 #include <libweston-0/compositor.h>
 
-namespace page {
+namespace wcxx {
 
 struct xdg_surface_vtable {
 
@@ -60,6 +60,9 @@ struct xdg_surface_vtable {
 	virtual void xdg_surface_set_minimized(wl_client * client,
 			wl_resource * resource) = 0;
 
+	virtual void xdg_surface_delete_resource(struct wl_resource * resource) = 0;
+
+	void set_implementation(struct wl_resource * resource);
 
 };
 

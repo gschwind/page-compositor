@@ -47,6 +47,8 @@ page_compositor_SOURCES = \
 	xdg-surface-toplevel-view.hxx \
 	xdg-surface-popup-view.cxx \
 	xdg-surface-popup-view.hxx \
+	xdg-surface-interface.cxx \
+	xdg-surface-interface.hxx \
 	utils.cxx \
 	pixmap.cxx \
 	grab_handlers.cxx \

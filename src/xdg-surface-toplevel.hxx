@@ -32,6 +32,7 @@ namespace page {
 
 class page_t;
 
+using namespace wcxx;
 using namespace std;
 
 struct xdg_surface_toplevel_t :
@@ -87,7 +88,7 @@ struct xdg_surface_toplevel_t :
 	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
 	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &) = delete;
 
-	static void xdg_surface_delete(wl_resource *resource);
+	static void delete_resource(wl_resource *resource);
 
 	void set_xdg_surface_implementation();
 	void set_wl_shell_surface_implementation();
@@ -164,6 +165,7 @@ struct xdg_surface_toplevel_t :
 	virtual void xdg_surface_set_minimized(wl_client * client,
 			wl_resource * resource) override;
 
+	virtual void xdg_surface_delete_resource(wl_resource *resource) override;
 
 	/* wl_shell API */
 

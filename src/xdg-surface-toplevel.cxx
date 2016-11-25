@@ -30,123 +30,6 @@ namespace page {
 
 using namespace std;
 
-static void _xdg_surface_destroy(wl_client * client, wl_resource * resource)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_destroy(client, resource);
-}
-
-static void _xdg_surface_set_parent(wl_client * client, wl_resource * resource,
-		wl_resource * parent_resource)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_parent(client, resource, parent_resource);
-}
-
-static void _xdg_surface_set_app_id(wl_client * client, wl_resource * resource,
-		const char* app_id)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_app_id(client, resource, app_id);
-}
-
-static void _xdg_surface_show_window_menu(wl_client * client,
-		wl_resource * surface_resource, wl_resource * seat_resource,
-		uint32_t serial, int32_t x, int32_t y)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(surface_resource)->xdg_surface_show_window_menu(client, surface_resource, seat_resource,
-			serial, x, y);
-}
-
-static void _xdg_surface_set_title(wl_client * client, wl_resource * resource,
-		char const * title)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_title(client, resource, title);
-}
-
-static void _xdg_surface_move(wl_client * client, wl_resource * resource,
-		wl_resource * seat_resource, uint32_t serial)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_move(client, resource, seat_resource, serial);
-}
-
-static void _xdg_surface_resize(wl_client * client, wl_resource * resource,
-		wl_resource * seat_resource, uint32_t serial, uint32_t edges)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_resize(client, resource, seat_resource, serial, edges);
-}
-
-static void _xdg_surface_ack_configure(wl_client * client,
-		wl_resource * resource, uint32_t serial)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_ack_configure(client, resource, serial);
-}
-
-static void _xdg_surface_set_window_geometry(wl_client * client,
-		wl_resource * resource, int32_t x, int32_t y, int32_t width,
-		int32_t height)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_window_geometry(client, resource, x, y, width, height);
-}
-
-static void _xdg_surface_set_maximized(wl_client * client,
-		wl_resource * resource)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_maximized(client, resource);
-}
-
-static void _xdg_surface_unset_maximized(wl_client * client,
-		wl_resource * resource)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_unset_maximized(client, resource);
-}
-
-static void _xdg_surface_set_fullscreen(wl_client * client,
-		wl_resource * resource, wl_resource * output_resource)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_fullscreen(client, resource, output_resource);
-}
-
-static void _xdg_surface_unset_fullscreen(wl_client * client,
-		wl_resource * resource)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_unset_fullscreen(client, resource);
-}
-
-static void _xdg_surface_set_minimized(wl_client * client,
-		wl_resource * resource)
-{
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_surface_toplevel_t::get(resource)->xdg_surface_set_minimized(client, resource);
-}
-
-static struct xdg_surface_interface const _xdg_surface_implementation = {
-	page::_xdg_surface_destroy,
-	page::_xdg_surface_set_parent,
-	page::_xdg_surface_set_title,
-	page::_xdg_surface_set_app_id,
-	page::_xdg_surface_show_window_menu,
-	page::_xdg_surface_move,
-	page::_xdg_surface_resize,
-	page::_xdg_surface_ack_configure,
-	page::_xdg_surface_set_window_geometry,
-	page::_xdg_surface_set_maximized,
-	page::_xdg_surface_unset_maximized,
-	page::_xdg_surface_set_fullscreen,
-	page::_xdg_surface_unset_fullscreen,
-	page::_xdg_surface_set_minimized
-};
-
 static void _wl_shell_surface_pong(wl_client *client,
 	     struct wl_resource *resource,
 	     uint32_t serial) {
@@ -232,7 +115,15 @@ static struct wl_shell_surface_interface const _wl_shell_surface_implementation 
 		page::_wl_shell_surface_set_class
 };
 
-void xdg_surface_toplevel_t::xdg_surface_delete(struct wl_resource *resource) {
+void xdg_surface_toplevel_t::delete_resource(struct wl_resource *resource) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	auto xs = xdg_surface_toplevel_t::get(resource);
+	xs->destroy_all_views();
+	xs->destroy.signal(xs);
+	delete xs;
+}
+
+void xdg_surface_toplevel_t::xdg_surface_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto xs = xdg_surface_toplevel_t::get(resource);
 	xs->destroy_all_views();
@@ -267,9 +158,7 @@ void xdg_surface_toplevel_t::set_xdg_surface_implementation() {
 			reinterpret_cast<wl_interface const *>(&xdg_surface_interface), 1,
 			_id);
 
-	wl_resource_set_implementation(_resource,
-			&_xdg_surface_implementation,
-			this, &xdg_surface_toplevel_t::xdg_surface_delete);
+	xdg_surface_vtable::set_implementation(_resource);
 
 	_surface_send_configure = &xdg_surface_toplevel_t::xdg_surface_send_configure;
 
@@ -282,7 +171,7 @@ void xdg_surface_toplevel_t::set_wl_shell_surface_implementation() {
 
 	wl_resource_set_implementation(_resource,
 			&_wl_shell_surface_implementation,
-			this, &xdg_surface_toplevel_t::xdg_surface_delete);
+			this, &xdg_surface_toplevel_t::delete_resource);
 
 	_surface_send_configure = &xdg_surface_toplevel_t::wl_surface_send_configure;
 
