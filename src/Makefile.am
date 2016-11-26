@@ -25,7 +25,9 @@ BUILT_SOURCES = \
 	xdg-shell-unstable-v6-protocol.c \
 	xdg-shell-unstable-v6-server-protocol.h \
 	xdg-shell-unstable-v6-interface.cxx \
-	xdg-shell-unstable-v6-interface.hxx
+	xdg-shell-unstable-v6-interface.hxx \
+	wayland-interface.cxx \
+	wayland-interface.hxx
 
 page_compositor_SOURCES = \
 	buffer-manager-protocol.c \
@@ -33,6 +35,7 @@ page_compositor_SOURCES = \
 	xdg-shell-unstable-v5-interface.cxx \
 	xdg-shell-unstable-v6-protocol.c \
 	xdg-shell-unstable-v6-interface.cxx \
+	wayland-interface.cxx \
 	pointer-grab-handler.cxx \
 	pointer-grab-handler.hxx \
 	keyboard-grab-handler.cxx \
@@ -134,4 +137,6 @@ clean-local:
 	rm -f xdg-shell-unstable-v5-server-protocol.h
 	rm -f xdg-shell-unstable-v5-interface.cxx
 	rm -f xdg-shell-unstable-v5-interface.hxx
+	rm -f wayland-interface.cxx
+	rm -f wayland-interface.hxx
 

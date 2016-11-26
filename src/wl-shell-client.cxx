@@ -23,23 +23,6 @@
 
 namespace page {
 
-static void _wl_shell_get_shell_surface(struct wl_client *client,
-			  struct wl_resource *resource,
-			  uint32_t id,
-			  struct wl_resource *surface) {
-
-	wl_shell_client_t::get(resource)->wl_shell_get_shell_surface(client, resource, id, surface);
-
-}
-
-static struct wl_shell_interface const _wl_shell_implementation = {
-		page::_wl_shell_get_shell_surface
-};
-
-wl_shell_client_t * wl_shell_client_t::get(wl_resource * resource) {
-	return reinterpret_cast<wl_shell_client_t *>(wl_resource_get_user_data(resource));
-}
-
 wl_shell_client_t::wl_shell_client_t(page_context_t * ctx, wl_client * client, uint32_t id) :
 		_ctx{ctx},
 		_client{client},
@@ -54,16 +37,13 @@ wl_shell_client_t::wl_shell_client_t(page_context_t * ctx, wl_client * client, u
 	 * Define the implementation of the resource and the user_data,
 	 * i.e. callbacks that must be used for this resource.
 	 **/
-	wl_resource_set_implementation(_wl_shell_resource,
-			&_wl_shell_implementation, this, &wl_shell_delete);
+	wl_shell_vtable::set_implementation(_wl_shell_resource);
 
 }
 
-void wl_shell_client_t::wl_shell_delete(struct wl_resource *resource) {
-
+void wl_shell_client_t::wl_shell_delete_resource(struct wl_resource *resource) {
+	/* TODO */
 }
-
-wl_shell_client_t::~wl_shell_client_t() { }
 
 void wl_shell_client_t::wl_shell_get_shell_surface(struct wl_client *client,
 				  struct wl_resource *resource,

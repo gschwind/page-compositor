@@ -21,11 +21,13 @@
 #ifndef WL_SHELL_CLIENT_HXX_
 #define WL_SHELL_CLIENT_HXX_
 
-#include "wl-shell-interface.hxx"
+#include "wayland-interface.hxx"
 #include "utils.hxx"
 #include "page_context.hxx"
 
 namespace page {
+
+using namespace wcxx;
 
 struct wl_shell_client_t : public connectable_t, public wl_shell_vtable {
 	page_context_t * _ctx;
@@ -37,15 +39,10 @@ struct wl_shell_client_t : public connectable_t, public wl_shell_vtable {
 	wl_resource * _wl_shell_resource;
 
 	wl_shell_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
-	virtual ~wl_shell_client_t();
+	virtual ~wl_shell_client_t() = default;
 
-	virtual void wl_shell_get_shell_surface(struct wl_client *client,
-				  struct wl_resource *resource,
-				  uint32_t id,
-				  struct wl_resource *surface) override;
-
-	static void wl_shell_delete(struct wl_resource *resource);
-	static wl_shell_client_t * get(wl_resource * resource);
+	virtual void wl_shell_get_shell_surface(struct wl_client * client, struct wl_resource * resource, uint32_t id, struct wl_resource * surface) override;
+	virtual void wl_shell_delete_resource(struct wl_resource * resource) override;
 
 };
 

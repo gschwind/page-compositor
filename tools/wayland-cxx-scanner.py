@@ -7,6 +7,8 @@ import argparse
 
 r_invalid = re.compile('(\W+)')
 
+interface_blacklist = set(['wl_registry', 'wl_callback'])
+
 #parser = argparse.ArgumentParser(description='Generate wayland API C++ to C wrapper')
 #parser.add_argument('integers', metavar='N', type=int, nargs='+',
 #        help='an integer for the accumulator')
@@ -42,6 +44,7 @@ maptype = {
  'int': 'int32_t',
  'new_id': 'uint32_t',
  'string': 'const char *',
+ 'fd': 'int',
  'object': None
 }
 
@@ -84,6 +87,8 @@ namespace wcxx {{
  
  for interface in root.findall('interface'):
   interface_name = interface.attrib['name']
+  if interface_name in interface_blacklist:
+   continue
   fo.write("struct {0}_vtable {{\n".format(interface_name))
   fo.write("\tvirtual ~{0}_vtable() = default;\n".format(interface_name))
   funclist = []
@@ -132,6 +137,8 @@ namespace hidden {{
  
  for interface in root.findall('interface'):
   interface_name = interface.attrib['name']
+  if interface_name in interface_blacklist:
+   continue
   fo.write('inline {0}_vtable * {0}_get(struct wl_resource * resource) {{\n'.format(interface_name))
   fo.write('\treturn reinterpret_cast<{0}_vtable *>(wl_resource_get_user_data(resource));\n'.format(interface_name))
   fo.write('}\n\n')
@@ -156,6 +163,8 @@ namespace hidden {{
  
  for interface in root.findall('interface'):
   interface_name = interface.attrib['name']
+  if interface_name in interface_blacklist:
+   continue
   fo.write("""
 void {0}_vtable::set_implementation(
     struct wl_resource * resource) {{
