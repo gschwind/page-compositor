@@ -182,7 +182,7 @@ void page_t::bind_xdg_shell_v6(struct wl_client * client, void * data,
 				      uint32_t version, uint32_t id) {
 	page_t * ths = reinterpret_cast<page_t *>(data);
 
-	auto c = new xdg_shell_client_t{ths, client, id};
+	auto c = new xdg_shell_v6_client_t{ths, client, id};
 	ths->connect(c->destroy, ths, &page_t::xdg_shell_v6_client_destroy);
 	ths->_xdg_shell_v6_clients.push_back(c);
 
@@ -4154,7 +4154,7 @@ void page_t::xdg_shell_v5_client_destroy(xdg_shell_client_t * c) {
 	//_clients.remove_if([c] (xdg_shell_client_t const & x) -> bool { return x.client == c; });
 }
 
-void page_t::xdg_shell_v6_client_destroy(xdg_shell_client_t * c) {
+void page_t::xdg_shell_v6_client_destroy(xdg_shell_v6_client_t * c) {
 	//_clients.remove_if([c] (xdg_shell_client_t const & x) -> bool { return x.client == c; });
 }
 

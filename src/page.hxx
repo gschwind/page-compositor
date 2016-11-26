@@ -59,6 +59,8 @@
 #include "xdg-surface-popup-view.hxx"
 #include "xdg-surface-toplevel-view.hxx"
 
+#include "xdg-shell-v6-client.hxx"
+
 namespace page {
 
 using namespace std;
@@ -160,7 +162,7 @@ struct page_t : public page_context_t, public connectable_t {
 
 	list<wl_shell_client_t *> _wl_shell_clients;
 	list<xdg_shell_client_t *> _xdg_shell_v5_clients;
-	list<xdg_shell_client_t *> _xdg_shell_v6_clients;
+	list<xdg_shell_v6_client_t *> _xdg_shell_v6_clients;
 
 	wl_global * _global_wl_shell;
 	wl_global * _global_xdg_shell_v5;
@@ -212,7 +214,7 @@ struct page_t : public page_context_t, public connectable_t {
 	void run();
 
 	void xdg_shell_v5_client_destroy(xdg_shell_client_t *);
-	void xdg_shell_v6_client_destroy(xdg_shell_client_t *);
+	void xdg_shell_v6_client_destroy(xdg_shell_v6_client_t *);
 	void wl_shell_client_destroy(wl_shell_client_t *);
 	void client_create_popup(xdg_shell_client_t *, xdg_surface_popup_t *);
 	void client_create_toplevel(xdg_shell_client_t *, xdg_surface_toplevel_t *);
