@@ -8,9 +8,13 @@
 #define SRC_XDG_SHELL_V6_CLIENT_HXX_
 
 #include <list>
+#include <map>
 
 #include "xdg-shell-unstable-v6-interface.hxx"
+
 #include "page_context.hxx"
+
+#include "xdg-surface-v6.hxx"
 
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
@@ -28,17 +32,11 @@ struct xdg_shell_v6_client_t : protected connectable_t, public zxdg_shell_v6_vta
 
 	signal_t<xdg_shell_v6_client_t *> destroy;
 
-	map<uint32_t, xdg_surface_toplevel_t *> xdg_surface_toplevel_map;
-	map<uint32_t, xdg_surface_popup_t *> xdg_surface_popup_map;
+	map<uint32_t, xdg_surface_v6_t *> xdg_surface_map;
 
 	xdg_shell_v6_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
-	virtual ~xdg_shell_v6_client_t() { }
 
-	void remove_all_transient(xdg_surface_toplevel_t * s);
-	void remove_all_popup(xdg_surface_popup_t * s);
-
-	void destroy_toplevel(xdg_surface_toplevel_t * s);
-	void destroy_popup(xdg_surface_popup_t * s);
+	virtual ~xdg_shell_v6_client_t() = default;
 
 	/* zxdg_shell_v6_vtable */
 	virtual void zxdg_shell_v6_destroy(struct wl_client * client, struct wl_resource * resource) override;

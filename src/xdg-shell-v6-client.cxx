@@ -5,9 +5,13 @@
  */
 
 
-#include "xdg-shell-v6-client.hxx"
-
 #include "xdg-shell-unstable-v6-server-protocol.h"
+
+#include <compositor.h>
+
+#include "utils.hxx"
+#include "xdg-shell-v6-client.hxx"
+#include "xdg-surface-v6.hxx"
 
 namespace page {
 
@@ -49,7 +53,13 @@ void xdg_shell_v6_client_t::zxdg_shell_v6_create_positioner(struct wl_client * c
 void xdg_shell_v6_client_t::zxdg_shell_v6_get_xdg_surface(struct wl_client * client, struct wl_resource * resource, uint32_t id, struct wl_resource * surface)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+
+	auto s = resource_get<weston_surface>(surface);
+	/* disable shared_ptr, they are managed by wl_resource */
+	auto xdg_surface = new xdg_surface_v6_t(_ctx, client, s, id);
+	xdg_surface_map[id] = xdg_surface;
+
+
 }
 
 void xdg_shell_v6_client_t::zxdg_shell_v6_pong(struct wl_client * client, struct wl_resource * resource, uint32_t serial)
@@ -62,24 +72,6 @@ void xdg_shell_v6_client_t::zxdg_shell_v6_delete_resource(struct wl_resource * r
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	/* TODO */
-}
-
-void xdg_shell_v6_client_t::remove_all_transient(xdg_surface_toplevel_t * s) {
-
-}
-
-void xdg_shell_v6_client_t::remove_all_popup(xdg_surface_popup_t * s) {
-
-}
-
-void xdg_shell_v6_client_t::destroy_toplevel(xdg_surface_toplevel_t * s) {
-	disconnect(s->destroy);
-	xdg_surface_toplevel_map.erase(s->_id);
-}
-
-void xdg_shell_v6_client_t::destroy_popup(xdg_surface_popup_t * s) {
-	disconnect(s->destroy);
-	xdg_surface_popup_map.erase(s->_id);
 }
 
 }
