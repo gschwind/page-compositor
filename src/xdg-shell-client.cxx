@@ -128,7 +128,7 @@ xdg_shell_client_t * xdg_shell_client_t::get(wl_resource * resource) {
 	return reinterpret_cast<xdg_shell_client_t *>(wl_resource_get_user_data(resource));
 }
 
-void xdg_shell_client_t::xdg_shell_delete(struct wl_resource *resource) {
+void xdg_shell_client_t::xdg_shell_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto c = xdg_shell_client_t::get(resource);
 	c->destroy.signal(c);
@@ -152,8 +152,7 @@ xdg_shell_client_t::xdg_shell_client_t(
 	 * Define the implementation of the resource and the user_data,
 	 * i.e. callbacks that must be used for this resource.
 	 **/
-	wl_resource_set_implementation(xdg_shell_resource,
-			&_xdg_shell_implementation, this, &xdg_shell_delete);
+	xdg_shell_vtable::set_implementation(xdg_shell_resource);
 
 }
 

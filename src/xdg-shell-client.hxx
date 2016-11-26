@@ -10,7 +10,7 @@
 
 #include <list>
 
-#include "xdg-shell-interface.hxx"
+#include "xdg-shell-unstable-v5-interface.hxx"
 #include "page_context.hxx"
 
 #include "xdg-surface-base.hxx"
@@ -46,8 +46,6 @@ struct xdg_shell_client_t : protected connectable_t, public xdg_shell_vtable {
 
 	static xdg_shell_client_t * get(wl_resource * resource);
 
-	static void xdg_shell_delete(wl_resource * resource);
-
 	virtual void xdg_shell_destroy(wl_client * client, wl_resource * resource)
 			override;
 	virtual void xdg_shell_use_unstable_version(wl_client * client,
@@ -61,6 +59,8 @@ struct xdg_shell_client_t : protected connectable_t, public xdg_shell_vtable {
 			int32_t x, int32_t y) override;
 	virtual void xdg_shell_pong(wl_client * client, wl_resource * resource,
 			uint32_t serial) override;
+
+	virtual void xdg_shell_delete_resource(wl_resource * resource);
 
 };
 
