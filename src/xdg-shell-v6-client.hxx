@@ -15,6 +15,7 @@
 #include "page_context.hxx"
 
 #include "xdg-surface-v6.hxx"
+#include "xdg-positioner-v6.hxx"
 
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
@@ -33,6 +34,7 @@ struct xdg_shell_v6_client_t : protected connectable_t, public zxdg_shell_v6_vta
 	signal_t<xdg_shell_v6_client_t *> destroy;
 
 	map<uint32_t, xdg_surface_v6_t *> xdg_surface_map;
+	map<uint32_t, xdg_positioner_v6_t *> xdg_positioner_v6_map;
 
 	xdg_shell_v6_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
 

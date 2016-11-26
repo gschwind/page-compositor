@@ -20,7 +20,6 @@ struct xdg_positioner_v6_t : public zxdg_positioner_v6_vtable {
 
 	page_context_t *       _ctx;
 	wl_client *            _client;
-	xdg_surface_v6_t *     _surface;
 	uint32_t               _id;
 	struct wl_resource *   self_resource;
 
@@ -30,7 +29,6 @@ struct xdg_positioner_v6_t : public zxdg_positioner_v6_vtable {
 	xdg_positioner_v6_t(
 			page_context_t * ctx,
 			wl_client * client,
-			xdg_surface_v6_t * surface,
 			uint32_t id);
 
 	virtual ~xdg_positioner_v6_t() = default;
@@ -46,6 +44,12 @@ struct xdg_positioner_v6_t : public zxdg_positioner_v6_vtable {
 
 };
 
+}
+
+#else
+
+namespace page {
+struct xdg_positioner_v6_t;
 }
 
 #endif /* SRC_XDG_POSITIONER_V6_HXX_ */

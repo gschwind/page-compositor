@@ -14,10 +14,8 @@ namespace page {
 xdg_positioner_v6_t::xdg_positioner_v6_t(
 		page_context_t * ctx,
 		wl_client * client,
-		xdg_surface_v6_t * surface,
 		uint32_t id) :
 	self_resource{nullptr},
-	_surface{surface},
 	_id{id},
 	_client{client},
 	_ctx{ctx}

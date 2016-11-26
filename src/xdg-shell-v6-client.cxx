@@ -47,7 +47,9 @@ void xdg_shell_v6_client_t::zxdg_shell_v6_destroy(struct wl_client * client, str
 void xdg_shell_v6_client_t::zxdg_shell_v6_create_positioner(struct wl_client * client, struct wl_resource * resource, uint32_t id)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	auto xdg_positioner = new xdg_positioner_v6_t(_ctx, client, id);
+	xdg_positioner_v6_map[id] = xdg_positioner;
+
 }
 
 void xdg_shell_v6_client_t::zxdg_shell_v6_get_xdg_surface(struct wl_client * client, struct wl_resource * resource, uint32_t id, struct wl_resource * surface)
