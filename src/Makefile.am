@@ -58,6 +58,8 @@ page_compositor_SOURCES = \
 	xdg-positioner-v6.hxx \
 	wl-shell-client.cxx \
 	wl-shell-client.hxx \
+	wl-shell-surface.cxx \
+	wl-shell-surface.hxx \
 	page-context.hxx \
 	xdg-surface-base.cxx \
 	xdg-surface-base.hxx \

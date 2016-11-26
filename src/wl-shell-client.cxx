@@ -19,7 +19,7 @@
  */
 
 #include "wl-shell-client.hxx"
-#include "xdg-surface-toplevel.hxx"
+#include "wl-shell-surface.hxx"
 
 namespace page {
 
@@ -55,8 +55,7 @@ void wl_shell_client_t::wl_shell_get_shell_surface(struct wl_client *client,
 	auto surface = resource_get<weston_surface>(surface_resource);
 
 	/* disable shared_ptr, they are managed by wl_resource */
-	auto xdg_surface = new xdg_surface_toplevel_t(_ctx, client, surface, id);
-	xdg_surface->set_wl_shell_surface_implementation();
+	auto xdg_surface = new wl_shell_surface_t(_ctx, client, surface, id);
 
 	/* TODO */
 	//connect(xdg_surface->destroy, this, &xdg_shell_client_t::destroy_toplevel);
