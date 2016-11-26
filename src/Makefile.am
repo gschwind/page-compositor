@@ -21,12 +21,18 @@ BUILT_SOURCES = \
 	xdg-shell-unstable-v5-protocol.c \
 	xdg-shell-unstable-v5-server-protocol.h \
 	xdg-shell-unstable-v5-interface.cxx \
-	xdg-shell-unstable-v5-interface.hxx
+	xdg-shell-unstable-v5-interface.hxx \
+	xdg-shell-unstable-v6-protocol.c \
+	xdg-shell-unstable-v6-server-protocol.h \
+	xdg-shell-unstable-v6-interface.cxx \
+	xdg-shell-unstable-v6-interface.hxx
 
 page_compositor_SOURCES = \
 	buffer-manager-protocol.c \
 	xdg-shell-unstable-v5-protocol.c \
 	xdg-shell-unstable-v5-interface.cxx \
+	xdg-shell-unstable-v6-protocol.c \
+	xdg-shell-unstable-v6-interface.cxx \
 	pointer-grab-handler.cxx \
 	pointer-grab-handler.hxx \
 	keyboard-grab-handler.cxx \
