@@ -44,4 +44,10 @@ struct xdg_popup_v6_t : public zxdg_popup_v6_vtable {
 
 }
 
-#endif /* SRC_XDG_TOPLEVEL_V6_HXX_ */
+#else
+
+namespace page {
+struct xdg_popup_v6_t;
+}
+
+#endif /* SRC_XDG_POPUP_V6_HXX_ */

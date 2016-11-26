@@ -31,6 +31,7 @@
 #include "page_context.hxx"
 
 #include "xdg-toplevel-v6.hxx"
+#include "xdg-popup-v6.hxx"
 
 namespace page {
 
@@ -51,6 +52,7 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 	wl_listener            _surface_destroy;
 
 	map<uint32_t, xdg_toplevel_v6_t *> xdg_toplevel_v6_map;
+	map<uint32_t, xdg_popup_v6_t *> xdg_popup_v6_map;
 
 	xdg_surface_v6_t(xdg_surface_v6_t const &) = delete;
 	xdg_surface_v6_t & operator=(xdg_surface_v6_t const &) = delete;

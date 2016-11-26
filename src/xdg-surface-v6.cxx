@@ -75,7 +75,6 @@ void xdg_surface_v6_t::zxdg_surface_v6_get_toplevel(struct wl_client * client, s
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	/* disable shared_ptr, they are managed by wl_resource */
 	auto xdg_surface = new xdg_toplevel_v6_t(_ctx, client, this, id);
 	xdg_toplevel_v6_map[id] = xdg_surface;
 
@@ -84,7 +83,10 @@ void xdg_surface_v6_t::zxdg_surface_v6_get_toplevel(struct wl_client * client, s
 void xdg_surface_v6_t::zxdg_surface_v6_get_popup(struct wl_client * client, struct wl_resource * resource, uint32_t id, struct wl_resource * parent, struct wl_resource * positioner)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+
+	auto xdg_surface = new xdg_popup_v6_t(_ctx, client, this, id);
+	xdg_popup_v6_map[id] = xdg_surface;
+
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_set_window_geometry(struct wl_client * client, struct wl_resource * resource, int32_t x, int32_t y, int32_t width, int32_t height)
