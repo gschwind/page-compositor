@@ -174,7 +174,8 @@ int32_t xdg_surface_popup_t::height() const {
 }
 
 string const & xdg_surface_popup_t::title() const {
-	return string{"noname"};
+	static string const s{"noname"};
+	return s;
 }
 
 void xdg_surface_popup_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {

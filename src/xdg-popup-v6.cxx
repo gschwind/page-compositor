@@ -64,7 +64,8 @@ int32_t xdg_popup_v6_t::height() const {
 }
 
 string const & xdg_popup_v6_t::title() const {
-	return string{"noname"};
+	static string const s{"noname"};
+	return s;
 }
 
 void xdg_popup_v6_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
