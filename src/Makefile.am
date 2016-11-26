@@ -47,6 +47,8 @@ page_compositor_SOURCES = \
 	xdg-shell-v6-client.hxx \
 	xdg-surface-v6.cxx \
 	xdg-surface-v6.hxx \
+	xdg-toplevel-v6.cxx \
+	xdg-toplevel-v6.hxx \
 	wl-shell-client.cxx \
 	wl-shell-client.hxx \
 	page-context.hxx \
