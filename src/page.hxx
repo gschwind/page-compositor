@@ -55,7 +55,7 @@
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
 #include "xdg-surface-toplevel.hxx"
-#include "xdg-surface-base-view.hxx"
+#include "view-base.hxx"
 #include "xdg-surface-popup-view.hxx"
 #include "xdg-surface-toplevel-view.hxx"
 

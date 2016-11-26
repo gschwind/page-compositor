@@ -5,7 +5,7 @@
  *      Author: gschwind
  */
 
-#include "xdg-surface-base-view.hxx"
+#include "view-base.hxx"
 
 
 namespace page {

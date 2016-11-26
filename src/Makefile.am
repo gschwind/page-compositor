@@ -67,8 +67,8 @@ page_compositor_SOURCES = \
 	xdg-surface-toplevel.hxx \
 	xdg-surface-popup.cxx \
 	xdg-surface-popup.hxx \
-	xdg-surface-base-view.cxx \
-	xdg-surface-base-view.hxx \
+	view-base.cxx \
+	view-base.hxx \
 	xdg-surface-toplevel-view.cxx \
 	xdg-surface-toplevel-view.hxx \
 	xdg-surface-popup-view.cxx \

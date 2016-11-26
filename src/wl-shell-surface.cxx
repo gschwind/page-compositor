@@ -31,7 +31,7 @@
 #include "grab_handlers.hxx"
 #include "wl-shell-client.hxx"
 
-#include "xdg-surface-base-view.hxx"
+#include "view-base.hxx"
 #include "xdg-surface-toplevel-view.hxx"
 
 namespace page {

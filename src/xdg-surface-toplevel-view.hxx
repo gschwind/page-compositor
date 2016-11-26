@@ -8,7 +8,7 @@
 #ifndef SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_
 #define SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_
 
-#include "xdg-surface-base-view.hxx"
+#include "view-base.hxx"
 #include "page-surface-interface.hxx"
 
 namespace page {

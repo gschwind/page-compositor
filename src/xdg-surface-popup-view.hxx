@@ -9,7 +9,7 @@
 #define SRC_XDG_SURFACE_POPUP_VIEW_HXX_
 
 #include "tree-types.hxx"
-#include "xdg-surface-base-view.hxx"
+#include "view-base.hxx"
 #include "page-surface-interface.hxx"
 
 namespace page {
