@@ -8,8 +8,8 @@
 #ifndef SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_
 #define SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_
 
-#include "xdg-surface-toplevel.hxx"
 #include "xdg-surface-base-view.hxx"
+#include "page-surface-interface.hxx"
 
 namespace page {
 
@@ -30,7 +30,7 @@ class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
 
 	friend class page_t;
 	page_context_t * _ctx;
-	xdg_surface_toplevel_t * _xdg_surface;
+	__attribute__ ((deprecated)) page_surface_interface * _xdg_surface;
 
 	/** hold floating position **/
 	rect _floating_wished_position;
@@ -76,6 +76,8 @@ public:
 
 	void signal_title_change();
 
+	weston_surface * surface() const;
+
 	void destroy_popup_child(xdg_surface_popup_view_t * c);
 
 	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_view_t>;
@@ -83,15 +85,11 @@ public:
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
-	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
-
-	xdg_surface_toplevel_view_t(xdg_surface_toplevel_t * s);
+	xdg_surface_toplevel_view_t(page_context_t * ctx, page_surface_interface * s);
 	virtual ~xdg_surface_toplevel_view_t();
 
-	auto xdg_surface() -> xdg_surface_toplevel_t *;
-
 	/* read only attributes */
-	auto resource() const -> wl_resource *;
+	auto resource() const -> wl_resource * __attribute__((deprecated));
 	auto title() const -> string const &;
 	bool has_focus();
 

@@ -12,6 +12,8 @@
 #include <typeinfo>
 
 #include <linux/input.h>
+#include <compositor.h>
+
 #include <xdg-surface-toplevel.hxx>
 
 #include "renderable_floating_outer_gradien.hxx"
@@ -186,7 +188,7 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 }
 
 void xdg_surface_toplevel_t::xdg_surface_send_configure(int32_t width,
-		int32_t height, set<uint32_t> &states) {
+		int32_t height, set<uint32_t> const & states) {
 
 	_ack_serial = wl_display_next_serial(_ctx->_dpy);
 
@@ -209,7 +211,7 @@ void xdg_surface_toplevel_t::xdg_surface_send_configure(int32_t width,
 }
 
 void xdg_surface_toplevel_t::wl_surface_send_configure(int32_t width,
-		int32_t height, set<uint32_t> &states) {
+		int32_t height, set<uint32_t> const & states) {
 	_ack_serial = 0;
 	::wl_shell_surface_send_configure(_resource,
 			WL_SHELL_SURFACE_RESIZE_TOP_LEFT, width, height);
@@ -235,11 +237,6 @@ void xdg_surface_toplevel_t::destroy_all_views() {
 		master_view->signal_destroy();
 	}
 }
-
-void xdg_surface_toplevel_t::send_close() {
-	xdg_surface_send_close(_resource);
-}
-
 
 void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)
@@ -438,7 +435,7 @@ void xdg_surface_toplevel_t::xdg_surface_set_minimized(struct wl_client *client,
 }
 
 auto xdg_surface_toplevel_t::create_view() -> xdg_surface_toplevel_view_p {
-	auto view = make_shared<xdg_surface_toplevel_view_t>(this);
+	auto view = make_shared<xdg_surface_toplevel_view_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }
@@ -577,6 +574,34 @@ void xdg_surface_toplevel_t::wl_shell_surface_set_class(wl_client *client,
 		  wl_resource *resource,
 		  const char *class_) {
 	/* TODO */
+}
+
+weston_surface * xdg_surface_toplevel_t::surface() const {
+	return _surface;
+}
+
+weston_view * xdg_surface_toplevel_t::create_weston_view() {
+	return weston_view_create(_surface);
+}
+
+int32_t xdg_surface_toplevel_t::width() const {
+	return _surface->width;
+}
+
+int32_t xdg_surface_toplevel_t::height() const {
+	return _surface->height;
+}
+
+string const & xdg_surface_toplevel_t::title() const {
+	return _current.title;
+}
+
+void xdg_surface_toplevel_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
+	(this->*_surface_send_configure)(width, height, states);
+}
+
+void xdg_surface_toplevel_t::send_close() {
+	xdg_surface_send_close(_resource);
 }
 
 

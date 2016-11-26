@@ -23,10 +23,6 @@ namespace page {
 
 using namespace std;
 
-auto xdg_surface_toplevel_view_t::xdg_surface() -> xdg_surface_toplevel_t * {
-	return _xdg_surface;
-}
-
 void xdg_surface_toplevel_view_t::add_transient_child(xdg_surface_toplevel_view_p c) {
 	_transient_childdren->push_back(c);
 }
@@ -48,8 +44,9 @@ void xdg_surface_toplevel_view_t::destroy_popup_child(xdg_surface_popup_view_t *
 }
 
 xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
-		xdg_surface_toplevel_t * xdg_surface) :
-	_ctx{xdg_surface->_ctx},
+		page_context_t * ctx,
+		page_surface_interface * xdg_surface) :
+	_ctx{ctx},
 	_floating_wished_position{},
 	_notebook_wished_position{},
 	_wished_position{},
@@ -60,7 +57,7 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 {
 	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
 
-	rect pos{0,0,_xdg_surface->surface()->width, _xdg_surface->surface()->height};
+	rect pos{0, 0, _xdg_surface->width(), _xdg_surface->height()};
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 
@@ -77,7 +74,7 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 	weston_matrix_init(&_transform.matrix);
 	wl_list_init(&_transform.link);
 
-	_default_view = weston_view_create(_xdg_surface->_surface);
+	_default_view = _xdg_surface->create_weston_view();
 	update_view();
 
 	_is_visible = true;
@@ -141,8 +138,8 @@ void xdg_surface_toplevel_view_t::update_view() {
 	if (is(MANAGED_NOTEBOOK)) {
 		_wished_position = _notebook_wished_position;
 
-		double ratio = compute_ratio_to_fit(_xdg_surface->_surface->width,
-				_xdg_surface->_surface->height, _wished_position.w,
+		double ratio = compute_ratio_to_fit(_xdg_surface->width(),
+				_xdg_surface->height(), _wished_position.w,
 				_wished_position.h);
 
 		/* if ratio > 1.0 then do not scale, just center */
@@ -160,9 +157,9 @@ void xdg_surface_toplevel_view_t::update_view() {
 		}
 
 		float x = floor(_wished_position.x + (_wished_position.w -
-				_xdg_surface->_surface->width * ratio)/2.0);
+				_xdg_surface->width() * ratio)/2.0);
 		float y = floor(_wished_position.y + (_wished_position.h -
-				_xdg_surface->_surface->height * ratio)/2.0);
+				_xdg_surface->height() * ratio)/2.0);
 
 		weston_view_set_position(_default_view, x, y);
 		weston_view_schedule_repaint(_default_view);
@@ -189,7 +186,7 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 		_wished_position = _floating_wished_position;
 	}
 
-	_xdg_surface->_ack_serial = wl_display_next_serial(_ctx->_dpy);
+	//_xdg_surface->_ack_serial = wl_display_next_serial(_ctx->_dpy);
 
 	set<uint32_t> state;
 
@@ -203,7 +200,7 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 		state.insert(XDG_SURFACE_STATE_ACTIVATED);
 	}
 
-	_xdg_surface->surface_send_configure(_wished_position.w,
+	_xdg_surface->send_configure(_wished_position.w,
 			_wished_position.h, state);
 
 }
@@ -402,11 +399,11 @@ void xdg_surface_toplevel_view_t::trigger_redraw() {
 }
 
 void xdg_surface_toplevel_view_t::send_close() {
-	xdg_surface_send_close(_xdg_surface->_resource);
+	_xdg_surface->send_close();
 }
 
 string const & xdg_surface_toplevel_view_t::title() const {
-	return _xdg_surface->_current.title;
+	return _xdg_surface->title();
 }
 
 bool xdg_surface_toplevel_view_t::has_focus() {
@@ -430,16 +427,16 @@ auto xdg_surface_toplevel_view_t::get(wl_resource * r) -> xdg_surface_toplevel_t
 	return reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(r));
 }
 
-auto xdg_surface_toplevel_view_t::resource() const -> wl_resource * {
-	return _xdg_surface->_resource;
-}
-
 auto xdg_surface_toplevel_view_t::get_default_view() const -> weston_view * {
 	return _default_view;
 }
 
 void xdg_surface_toplevel_view_t::signal_destroy() {
 	destroy.signal(this);
+}
+
+weston_surface * xdg_surface_toplevel_view_t::surface() const {
+	return _xdg_surface->surface();
 }
 
 }

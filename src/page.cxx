@@ -1613,7 +1613,7 @@ void page_t::set_keyboard_focus(weston_pointer * pointer,
 		_current_focus.lock()->set_focus_state(false);
 	}
 
-	weston_seat_set_keyboard_focus(pointer->seat, new_focus->xdg_surface()->surface());
+	weston_seat_set_keyboard_focus(pointer->seat, new_focus->surface());
 
 	_current_focus = new_focus;
 

@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <typeinfo>
+#include <compositor.h>
 
 #include "tree-types.hxx"
 
@@ -27,6 +28,7 @@
 
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
+#include "page-surface-interface.hxx"
 
 namespace page {
 
@@ -38,7 +40,8 @@ using namespace std;
 struct xdg_surface_toplevel_t :
 	public xdg_surface_base_t,
 	public xdg_surface_vtable,
-	public wl_shell_surface_vtable {
+	public wl_shell_surface_vtable,
+	public page_surface_interface {
 
 	friend class page::page_t;
 
@@ -70,19 +73,19 @@ struct xdg_surface_toplevel_t :
 	signal_t<xdg_surface_toplevel_t *> destroy;
 
 	void (xdg_surface_toplevel_t::*_surface_send_configure)(int32_t width,
-			int32_t height, set<uint32_t> &states);
+			int32_t height, set<uint32_t> const & states);
 
 	void surface_send_configure(int32_t width,
-			int32_t height, set<uint32_t> &states) {
+			int32_t height, set<uint32_t> const & states) {
 		auto func = _surface_send_configure;
 		(this->*func)(width, height, states);
 	}
 
 
 	void xdg_surface_send_configure(int32_t width,
-			int32_t height, set<uint32_t> &states);
+			int32_t height, set<uint32_t> const & states);
 	void wl_surface_send_configure(int32_t width,
-			int32_t height, set<uint32_t> &states);
+			int32_t height, set<uint32_t> const & states);
 
 	/* private to avoid copy */
 	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
@@ -107,7 +110,6 @@ struct xdg_surface_toplevel_t :
 
 	/* read only attributes */
 	auto resource() const -> wl_resource *;
-	auto title() const -> string const &;
 
 	void set_title(char const *);
 	void set_transient_for(xdg_surface_toplevel_t * s);
@@ -124,11 +126,6 @@ struct xdg_surface_toplevel_t :
 	void minimize();
 
 	static xdg_surface_toplevel_t * get(weston_surface * surface);
-
-	/**
-	 * xdg-surface-interface (event)
-	 **/
-	void send_close();
 
 	/**
 	 * xdg-surface-interface (request)
@@ -220,6 +217,15 @@ struct xdg_surface_toplevel_t :
 	virtual void wl_shell_surface_set_class(wl_client *client,
 			  wl_resource *resource,
 			  const char *class_) override;
+
+	/* page_surface_interface */
+	virtual weston_surface * surface() const override;
+	virtual weston_view * create_weston_view() override;
+	virtual int32_t width() const override;
+	virtual int32_t height() const override;
+	virtual string const & title() const override;
+	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) override;
+	virtual void send_close() override;
 
 };
 
