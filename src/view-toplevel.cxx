@@ -5,7 +5,7 @@
  *
  */
 
-#include "xdg-surface-toplevel-view.hxx"
+#include "view-toplevel.hxx"
 
 #include <typeinfo>
 

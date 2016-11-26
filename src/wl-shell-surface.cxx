@@ -32,7 +32,7 @@
 #include "wl-shell-client.hxx"
 
 #include "view-base.hxx"
-#include "xdg-surface-toplevel-view.hxx"
+#include "view-toplevel.hxx"
 
 namespace page {
 

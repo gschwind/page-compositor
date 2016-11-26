@@ -7,7 +7,7 @@
 
 #include "xdg-surface-popup-view.hxx"
 
-#include "xdg-surface-toplevel-view.hxx"
+#include "view-toplevel.hxx"
 
 namespace page {
 

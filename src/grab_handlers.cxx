@@ -9,7 +9,7 @@
 
 #include "grab_handlers.hxx"
 #include "page_context.hxx"
-#include "xdg-surface-toplevel-view.hxx"
+#include "view-toplevel.hxx"
 
 namespace page {
 
