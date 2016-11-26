@@ -29,6 +29,58 @@ xdg_toplevel_v6_t::xdg_toplevel_v6_t(
 
 }
 
+void xdg_toplevel_v6_t::surface_commited(weston_surface * es, int32_t sx, int32_t sy) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+//	if(_master_view.expired()) {
+//		_ctx->manage_client(create_view());
+//	}
+
+	/* configuration is invalid */
+	if(_ack_serial != 0)
+		return;
+
+	if(_pending.maximized != _current.maximized) {
+		if(_pending.maximized) {
+			/* on maximize */
+		} else {
+			/* on unmaximize */
+		}
+	}
+
+	if(_pending.minimized != _current.minimized) {
+		if(_pending.minimized) {
+			//minimize();
+			_pending.minimized = false;
+		} else {
+			/* on unminimize */
+		}
+	}
+
+	if(_pending.transient_for != _current.transient_for) {
+
+	}
+
+	if(_pending.title != _current.title) {
+		_current.title = _pending.title;
+		if(not _master_view.expired()) {
+			_master_view.lock()->signal_title_change();
+		}
+	}
+
+	if(not _master_view.expired()) {
+		_master_view.lock()->update_view();
+	}
+
+	_current = _pending;
+}
+
+auto xdg_toplevel_v6_t::create_view() -> xdg_surface_toplevel_view_p {
+	auto view = make_shared<xdg_surface_toplevel_view_t>(_ctx, this);
+	_master_view = view;
+	return view;
+}
+
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
@@ -117,6 +169,52 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_delete_resource(struct wl_resource * re
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	/* TODO */
+}
+
+weston_surface * xdg_toplevel_v6_t::surface() const {
+	return _surface->_surface;
+}
+
+weston_view * xdg_toplevel_v6_t::create_weston_view() {
+	return weston_view_create(_surface->_surface);
+}
+
+int32_t xdg_toplevel_v6_t::width() const {
+	return _surface->_surface->width;
+}
+
+int32_t xdg_toplevel_v6_t::height() const {
+	return _surface->_surface->height;
+}
+
+string const & xdg_toplevel_v6_t::title() const {
+	return _current.title;
+}
+
+void xdg_toplevel_v6_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
+	_ack_serial = wl_display_next_serial(_ctx->_dpy);
+
+	wl_array array;
+	wl_array_init(&array);
+	wl_array_add(&array, sizeof(uint32_t)*states.size());
+
+	{
+		int i = 0;
+		for(auto x: states) {
+			((uint32_t*)array.data)[i] = x;
+			++i;
+		}
+	}
+
+	zxdg_toplevel_v6_send_configure(self_resource, width, height, &array);
+	zxdg_surface_v6_send_configure(_surface->_resource, _ack_serial);
+	wl_array_release(&array);
+	wl_client_flush(_client);
+}
+
+void xdg_toplevel_v6_t::send_close() {
+	zxdg_toplevel_v6_send_close(self_resource);
+	wl_client_flush(_client);
 }
 
 }

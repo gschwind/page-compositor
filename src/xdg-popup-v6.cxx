@@ -47,5 +47,33 @@ void xdg_popup_v6_t::zxdg_popup_v6_delete_resource(struct wl_resource * resource
 	/* TODO */
 }
 
+weston_surface * xdg_popup_v6_t::surface() const {
+	return _surface->_surface;
+}
+
+weston_view * xdg_popup_v6_t::create_weston_view() {
+	return weston_view_create(_surface->_surface);
+}
+
+int32_t xdg_popup_v6_t::width() const {
+	return _surface->_surface->width;
+}
+
+int32_t xdg_popup_v6_t::height() const {
+	return _surface->_surface->height;
+}
+
+string const & xdg_popup_v6_t::title() const {
+	return string{"noname"};
+}
+
+void xdg_popup_v6_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
+	/* disable */
+}
+
+void xdg_popup_v6_t::send_close() {
+	/* disable */
+}
+
 }
 

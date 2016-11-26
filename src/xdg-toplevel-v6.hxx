@@ -10,19 +10,46 @@
 
 #include "xdg-shell-unstable-v6-interface.hxx"
 #include "xdg-surface-v6.hxx"
+#include "xdg-surface-toplevel-view.hxx"
 
 namespace page {
 
 using namespace std;
 using namespace wcxx;
 
-struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable {
+struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_interface {
 
 	page_context_t *       _ctx;
 	wl_client *            _client;
 	xdg_surface_v6_t *     _surface;
 	uint32_t               _id;
 	struct wl_resource *   self_resource;
+
+	struct _state {
+		std::string title;
+		bool fullscreen;
+		bool maximized;
+		bool minimized;
+		wl_resource * transient_for;
+		rect geometry;
+
+		_state() {
+			fullscreen = false;
+			maximized = false;
+			minimized = false;
+			title = "";
+			transient_for = nullptr;
+			geometry = rect{0,0,0,0};
+		}
+
+	} _pending, _current;
+
+	/* 0 if ack by client, otherwise the last serial sent */
+	uint32_t _ack_serial;
+
+	xdg_surface_toplevel_view_w _master_view;
+
+	signal_t<xdg_toplevel_v6_t *> destroy;
 
 	xdg_toplevel_v6_t(xdg_toplevel_v6_t const &) = delete;
 	xdg_toplevel_v6_t & operator=(xdg_toplevel_v6_t const &) = delete;
@@ -32,6 +59,9 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable {
 			wl_client * client,
 			xdg_surface_v6_t * surface,
 			uint32_t id);
+
+	void surface_commited(weston_surface * es, int32_t sx, int32_t sy);
+	auto create_view() -> xdg_surface_toplevel_view_p;
 
 	virtual ~xdg_toplevel_v6_t() = default;
 
@@ -52,6 +82,14 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable {
 	virtual void zxdg_toplevel_v6_set_minimized(struct wl_client * client, struct wl_resource * resource) override;
 	virtual void zxdg_toplevel_v6_delete_resource(struct wl_resource * resource) override;
 
+	/* page_surface_interface */
+	virtual weston_surface * surface() const override;
+	virtual weston_view * create_weston_view() override;
+	virtual int32_t width() const override;
+	virtual int32_t height() const override;
+	virtual string const & title() const override;
+	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) override;
+	virtual void send_close() override;
 
 };
 

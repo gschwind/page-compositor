@@ -54,6 +54,10 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 	map<uint32_t, xdg_toplevel_v6_t *> xdg_toplevel_v6_map;
 	map<uint32_t, xdg_popup_v6_t *> xdg_popup_v6_map;
 
+	static void surface_commited_callback(weston_surface * es, int32_t sx, int32_t sy);
+
+	void surface_commited(weston_surface * es, int32_t sx, int32_t sy);
+
 	xdg_surface_v6_t(xdg_surface_v6_t const &) = delete;
 	xdg_surface_v6_t & operator=(xdg_surface_v6_t const &) = delete;
 
