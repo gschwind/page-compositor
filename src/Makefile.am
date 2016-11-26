@@ -15,15 +15,18 @@ AM_CXXFLAGS =  \
 	-fno-strict-aliasing
 
 BUILT_SOURCES = \
-	xdg-shell-server-protocol.h \
 	buffer-manager-protocol.c \
 	buffer-manager-server-protocol.h \
-	buffer-manager-client-protocol.h
+	buffer-manager-client-protocol.h \
+	xdg-shell-unstable-v5-protocol.c \
+	xdg-shell-unstable-v5-server-protocol.h \
+	xdg-shell-unstable-v5-interface.cxx \
+	xdg-shell-unstable-v5-interface.hxx
 
 page_compositor_SOURCES = \
 	buffer-manager-protocol.c \
+	xdg-shell-unstable-v5-protocol.c \
 	xdg-shell-unstable-v5-interface.cxx \
-	xdg-shell-unstable-v5-interface.hxx \
 	pointer-grab-handler.cxx \
 	pointer-grab-handler.hxx \
 	keyboard-grab-handler.cxx \
@@ -75,8 +78,6 @@ page_compositor_SOURCES = \
 	mainloop.hxx \
 	page.hxx \
 	utils.hxx \
-	xdg-shell-protocol.c \
-	xdg-shell-server-protocol.h \
 	buffer-manager.cxx \
 	buffer-manager.hxx
 
@@ -113,6 +114,8 @@ clean-local:
 	rm -f buffer-manager-protocol.c
 	rm -f buffer-manager-server-protocol.h
 	rm -f buffer-manager-client-protocol.h
+	rm -f xdg-shell-unstable-v5-protocol.c
+	rm -f xdg-shell-unstable-v5-server-protocol.h
 	rm -f xdg-shell-unstable-v5-interface.cxx
 	rm -f xdg-shell-unstable-v5-interface.hxx
 

@@ -17,7 +17,6 @@
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
-#include "xdg-shell-server-protocol.h"
 #include "xdg-surface-toplevel.hxx"
 
 namespace page {

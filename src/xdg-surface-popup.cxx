@@ -9,13 +9,13 @@
 
 #include "xdg-surface-popup.hxx"
 
-#include "xdg-shell-server-protocol.h"
-
 #include "xdg-shell-client.hxx"
 #include "xdg-surface-popup.hxx"
 #include "xdg-surface-toplevel.hxx"
 #include "xdg-surface-popup-view.hxx"
 #include "xdg-surface-toplevel-view.hxx"
+
+#include "xdg-shell-unstable-v5-server-protocol.h"
 
 namespace page {
 

@@ -6,7 +6,8 @@
  */
 
 #include "xdg-shell-client.hxx"
-#include "xdg-shell-server-protocol.h"
+
+#include "xdg-shell-unstable-v5-server-protocol.h"
 
 namespace page {
 

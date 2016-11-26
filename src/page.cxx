@@ -39,12 +39,16 @@
 #include <compositor-drm.h>
 #include <windowed-output-api.h>
 #include <wayland-client-protocol.h>
+
+#include "xdg-shell-unstable-v5-server-protocol.h"
+
 #include <xdg-surface-base.hxx>
 #include <xdg-surface-popup.hxx>
 #include <xdg-surface-toplevel.hxx>
-#include "xdg-shell-server-protocol.h"
 #include "buffer-manager-server-protocol.h"
 #include "buffer-manager-client-protocol.h"
+
+#include "xdg-shell-client.hxx"
 
 #include "utils.hxx"
 

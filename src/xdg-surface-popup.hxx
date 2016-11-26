@@ -13,7 +13,6 @@
 
 #include <memory>
 #include <compositor.h>
-#include "xdg-shell-server-protocol.h"
 
 #include "renderable.hxx"
 #include "renderable_floating_outer_gradien.hxx"

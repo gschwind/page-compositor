@@ -8,12 +8,13 @@
 #ifndef SRC_GRAB_HANDLERS_HXX_
 #define SRC_GRAB_HANDLERS_HXX_
 
+#include "xdg-shell-unstable-v5-server-protocol.h"
+
 #include "split.hxx"
 #include "workspace.hxx"
 #include "popup_split.hxx"
 #include "popup_notebook0.hxx"
 #include "popup_alt_tab.hxx"
-
 
 namespace page {
 

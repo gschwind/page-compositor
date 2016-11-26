@@ -18,7 +18,6 @@
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
-#include "xdg-shell-server-protocol.h"
 #include "xdg-shell-client.hxx"
 #include "wl-shell-client.hxx"
 #include "wl-shell-surface-interface.hxx"
