@@ -10,7 +10,7 @@
 
 #include "tree-types.hxx"
 #include "xdg-surface-base-view.hxx"
-#include "xdg-surface-popup.hxx"
+#include "page-surface-interface.hxx"
 
 namespace page {
 
@@ -19,7 +19,7 @@ private:
 
 	weston_view * _default_view;
 
-	xdg_surface_popup_t * _xdg_surface_popup;
+	__attribute__ ((deprecated)) page_surface_interface * _xdg_surface_popup;
 
 	/* avoid copy */
 	xdg_surface_popup_view_t(xdg_surface_popup_view_t const &) = delete;
@@ -36,7 +36,7 @@ public:
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
-	xdg_surface_popup_view_t(xdg_surface_popup_t * p);
+	xdg_surface_popup_view_t(page_context_t * ctx, page_surface_interface * p);
 	virtual ~xdg_surface_popup_view_t();
 
 	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);

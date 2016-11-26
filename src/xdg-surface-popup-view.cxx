@@ -11,10 +11,10 @@
 
 namespace page {
 
-xdg_surface_popup_view_t::xdg_surface_popup_view_t(xdg_surface_popup_t * p) :
+xdg_surface_popup_view_t::xdg_surface_popup_view_t(page_context_t * ctx, page_surface_interface * p) :
 		_xdg_surface_popup{p}
 {
-	_default_view = weston_view_create(_xdg_surface_popup->_surface);
+	_default_view = weston_view_create(_xdg_surface_popup->surface());
 }
 
 xdg_surface_popup_view_t::~xdg_surface_popup_view_t()

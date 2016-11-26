@@ -78,7 +78,7 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 		  int32_t x, int32_t y) :
 		xdg_surface_base_t{ctx, client, surface, id},
 		id{id},
-		surface{surface},
+		_surface{surface},
 		parent{parent},
 		seat{seat},
 		serial{serial},
@@ -119,7 +119,7 @@ void xdg_surface_popup_t::xdg_popup_destroy(wl_client * client, wl_resource * re
 }
 
 auto xdg_surface_popup_t::create_view() -> xdg_surface_popup_view_p {
-	auto view = make_shared<xdg_surface_popup_view_t>(this);
+	auto view = make_shared<xdg_surface_popup_view_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }
@@ -153,6 +153,36 @@ xdg_surface_popup_t * xdg_surface_popup_t::get(weston_surface * surface) {
 
 xdg_surface_base_view_p xdg_surface_popup_t::base_master_view() {
 	return dynamic_pointer_cast<xdg_surface_base_view_t>(_master_view.lock());
+}
+
+
+/* page_surface_interface */
+weston_surface * xdg_surface_popup_t::surface() const {
+	return _surface;
+}
+
+weston_view * xdg_surface_popup_t::create_weston_view() {
+	return weston_view_create(_surface);
+}
+
+int32_t xdg_surface_popup_t::width() const {
+	return _surface->width;
+}
+
+int32_t xdg_surface_popup_t::height() const {
+	return _surface->height;
+}
+
+string const & xdg_surface_popup_t::title() const {
+	return string{"noname"};
+}
+
+void xdg_surface_popup_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
+	/* disabled */
+}
+
+void xdg_surface_popup_t::send_close() {
+	/* disabled */
 }
 
 }

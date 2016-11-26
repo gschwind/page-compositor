@@ -423,10 +423,6 @@ void xdg_surface_toplevel_view_t::signal_title_change() {
 	title_change.signal(this);
 }
 
-auto xdg_surface_toplevel_view_t::get(wl_resource * r) -> xdg_surface_toplevel_t * {
-	return reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(r));
-}
-
 auto xdg_surface_toplevel_view_t::get_default_view() const -> weston_view * {
 	return _default_view;
 }
