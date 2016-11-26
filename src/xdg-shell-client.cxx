@@ -13,53 +13,6 @@ namespace page {
 
 using namespace std;
 
-
-static void _xdg_shell_destroy(wl_client * client, wl_resource * resource)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_shell_client_t::get(resource)->xdg_shell_destroy(client, resource);
-}
-
-static void _xdg_shell_use_unstable_version(wl_client * client,
-		wl_resource * resource, int32_t version)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_shell_client_t::get(resource)->xdg_shell_use_unstable_version(client, resource, version);
-}
-
-static void _xdg_shell_get_xdg_surface(wl_client * client,
-		wl_resource * resource, uint32_t id, wl_resource* surface_resource)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_shell_client_t::get(resource)->xdg_shell_get_xdg_surface(client, resource, id, surface_resource);
-}
-
-static void _xdg_shell_get_xdg_popup(wl_client * client, wl_resource * resource,
-		uint32_t id, wl_resource * surface_resource,
-		wl_resource * parent_resource, wl_resource * seat_resource,
-		uint32_t serial, int32_t x, int32_t y)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_shell_client_t::get(resource)->xdg_shell_get_xdg_popup(client, resource, id, surface_resource,
-			parent_resource, seat_resource, serial, x, y);
-}
-
-static void _xdg_shell_pong(wl_client * client, wl_resource * resource,
-		uint32_t serial)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	xdg_shell_client_t::get(resource)->xdg_shell_pong(client, resource, serial);
-}
-
-static struct xdg_shell_interface _xdg_shell_implementation = {
-	page::_xdg_shell_destroy,
-	page::_xdg_shell_use_unstable_version,
-	page::_xdg_shell_get_xdg_surface,
-	page::_xdg_shell_get_xdg_popup,
-	page::_xdg_shell_pong
-};
-
-
 void xdg_shell_client_t::xdg_shell_destroy(wl_client * client,
 		wl_resource * resource)
 {
