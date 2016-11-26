@@ -74,7 +74,11 @@ void xdg_surface_v6_t::zxdg_surface_v6_destroy(struct wl_client * client, struct
 void xdg_surface_v6_t::zxdg_surface_v6_get_toplevel(struct wl_client * client, struct wl_resource * resource, uint32_t id)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+
+	/* disable shared_ptr, they are managed by wl_resource */
+	auto xdg_surface = new xdg_toplevel_v6_t(_ctx, client, this, id);
+	xdg_toplevel_v6_map[id] = xdg_surface;
+
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_get_popup(struct wl_client * client, struct wl_resource * resource, uint32_t id, struct wl_resource * parent, struct wl_resource * positioner)

@@ -57,4 +57,10 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable {
 
 }
 
+#else
+
+namespace page {
+struct xdg_toplevel_v6_t;
+}
+
 #endif /* SRC_XDG_TOPLEVEL_V6_HXX_ */
