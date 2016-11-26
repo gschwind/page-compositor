@@ -159,10 +159,10 @@ struct page_t : public page_context_t, public connectable_t {
 	} default_grab_pod;
 
 	list<wl_shell_client_t *> _wl_shell_clients;
-	list<xdg_shell_client_t *> _xdg_shell_clients;
+	list<xdg_shell_client_t *> _xdg_shell_v5_clients;
 
 	wl_global * _global_wl_shell;
-	wl_global * _global_xdg_shell;
+	wl_global * _global_xdg_shell_v5;
 	wl_global * _global_buffer_manager;
 
 //	key_desc_t bind_page_quit;
@@ -209,7 +209,7 @@ struct page_t : public page_context_t, public connectable_t {
 	/* run page main loop */
 	void run();
 
-	void xdg_shell_client_destroy(xdg_shell_client_t *);
+	void xdg_shell_v5_client_destroy(xdg_shell_client_t *);
 	void wl_shell_client_destroy(wl_shell_client_t *);
 	void client_create_popup(xdg_shell_client_t *, xdg_surface_popup_t *);
 	void client_create_toplevel(xdg_shell_client_t *, xdg_surface_toplevel_t *);
@@ -406,7 +406,7 @@ struct page_t : public page_context_t, public connectable_t {
 	void load_drm_backend(weston_compositor* ec);
 	static void bind_wl_shell(wl_client * client, void * data,
 					      uint32_t version, uint32_t id);
-	static void bind_xdg_shell(wl_client * client, void * data,
+	static void bind_xdg_shell_v5(wl_client * client, void * data,
 					      uint32_t version, uint32_t id);
 	static void bind_zzz_buffer_manager(struct wl_client * client, void * data,
 		      uint32_t version, uint32_t id);

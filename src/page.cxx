@@ -167,13 +167,13 @@ static const struct zzz_buffer_manager_interface _zzz_buffer_manager_implementat
 
 //time64_t const page_t::default_wait{1000000000L / 120L};
 
-void page_t::bind_xdg_shell(struct wl_client * client, void * data,
+void page_t::bind_xdg_shell_v5(struct wl_client * client, void * data,
 				      uint32_t version, uint32_t id) {
 	page_t * ths = reinterpret_cast<page_t *>(data);
 
 	auto c = new xdg_shell_client_t{ths, client, id};
-	ths->connect(c->destroy, ths, &page_t::xdg_shell_client_destroy);
-	ths->_xdg_shell_clients.push_back(c);
+	ths->connect(c->destroy, ths, &page_t::xdg_shell_v5_client_destroy);
+	ths->_xdg_shell_v5_clients.push_back(c);
 
 }
 
@@ -225,7 +225,7 @@ page_t::page_t(int argc, char ** argv)
 
 	char const * conf_file_name = 0;
 
-	_global_xdg_shell = nullptr;
+	_global_xdg_shell_v5 = nullptr;
 	_global_buffer_manager = nullptr;
 	configuration._replace_wm = false;
 	configuration._menu_drop_down_shadow = false;
@@ -466,8 +466,8 @@ void page_t::run() {
 
 	_global_wl_shell = wl_global_create(_dpy, &wl_shell_interface, 1, this,
 			&page_t::bind_wl_shell);
-	_global_xdg_shell = wl_global_create(_dpy, &xdg_shell_interface, 1, this,
-			&page_t::bind_xdg_shell);
+	_global_xdg_shell_v5 = wl_global_create(_dpy, &xdg_shell_interface, 1, this,
+			&page_t::bind_xdg_shell_v5);
 	_global_buffer_manager = wl_global_create(_dpy,
 			&zzz_buffer_manager_interface, 1, this,
 			&page_t::bind_zzz_buffer_manager);
@@ -4137,7 +4137,7 @@ void page_t::process_cancel(weston_pointer_grab * grab) {
 	/* never cancel default grab ? */
 }
 
-void page_t::xdg_shell_client_destroy(xdg_shell_client_t * c) {
+void page_t::xdg_shell_v5_client_destroy(xdg_shell_client_t * c) {
 	//_clients.remove_if([c] (xdg_shell_client_t const & x) -> bool { return x.client == c; });
 }
 
