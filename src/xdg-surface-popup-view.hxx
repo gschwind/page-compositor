@@ -19,7 +19,7 @@ private:
 
 	weston_view * _default_view;
 
-	__attribute__ ((deprecated)) page_surface_interface * _xdg_surface_popup;
+	page_surface_interface * _page_surface;
 
 	/* avoid copy */
 	xdg_surface_popup_view_t(xdg_surface_popup_view_t const &) = delete;

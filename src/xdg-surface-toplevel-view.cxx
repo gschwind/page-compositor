@@ -50,14 +50,14 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 	_floating_wished_position{},
 	_notebook_wished_position{},
 	_wished_position{},
-	_xdg_surface{xdg_surface},
+	_page_surface{xdg_surface},
 	_default_view{nullptr},
 	_has_keyboard_focus{false},
 	_has_change{true}
 {
 	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
 
-	rect pos{0, 0, _xdg_surface->width(), _xdg_surface->height()};
+	rect pos{0, 0, _page_surface->width(), _page_surface->height()};
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 
@@ -74,7 +74,7 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 	weston_matrix_init(&_transform.matrix);
 	wl_list_init(&_transform.link);
 
-	_default_view = _xdg_surface->create_weston_view();
+	_default_view = _page_surface->create_weston_view();
 	update_view();
 
 	_is_visible = true;
@@ -138,8 +138,8 @@ void xdg_surface_toplevel_view_t::update_view() {
 	if (is(MANAGED_NOTEBOOK)) {
 		_wished_position = _notebook_wished_position;
 
-		double ratio = compute_ratio_to_fit(_xdg_surface->width(),
-				_xdg_surface->height(), _wished_position.w,
+		double ratio = compute_ratio_to_fit(_page_surface->width(),
+				_page_surface->height(), _wished_position.w,
 				_wished_position.h);
 
 		/* if ratio > 1.0 then do not scale, just center */
@@ -157,9 +157,9 @@ void xdg_surface_toplevel_view_t::update_view() {
 		}
 
 		float x = floor(_wished_position.x + (_wished_position.w -
-				_xdg_surface->width() * ratio)/2.0);
+				_page_surface->width() * ratio)/2.0);
 		float y = floor(_wished_position.y + (_wished_position.h -
-				_xdg_surface->height() * ratio)/2.0);
+				_page_surface->height() * ratio)/2.0);
 
 		weston_view_set_position(_default_view, x, y);
 		weston_view_schedule_repaint(_default_view);
@@ -200,7 +200,7 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 		state.insert(XDG_SURFACE_STATE_ACTIVATED);
 	}
 
-	_xdg_surface->send_configure(_wished_position.w,
+	_page_surface->send_configure(_wished_position.w,
 			_wished_position.h, state);
 
 }
@@ -399,11 +399,11 @@ void xdg_surface_toplevel_view_t::trigger_redraw() {
 }
 
 void xdg_surface_toplevel_view_t::send_close() {
-	_xdg_surface->send_close();
+	_page_surface->send_close();
 }
 
 string const & xdg_surface_toplevel_view_t::title() const {
-	return _xdg_surface->title();
+	return _page_surface->title();
 }
 
 bool xdg_surface_toplevel_view_t::has_focus() {
@@ -432,7 +432,7 @@ void xdg_surface_toplevel_view_t::signal_destroy() {
 }
 
 weston_surface * xdg_surface_toplevel_view_t::surface() const {
-	return _xdg_surface->surface();
+	return _page_surface->surface();
 }
 
 }

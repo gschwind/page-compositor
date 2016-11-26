@@ -30,7 +30,7 @@ class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
 
 	friend class page_t;
 	page_context_t * _ctx;
-	__attribute__ ((deprecated)) page_surface_interface * _xdg_surface;
+	page_surface_interface * _page_surface;
 
 	/** hold floating position **/
 	rect _floating_wished_position;
