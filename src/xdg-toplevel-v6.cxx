@@ -7,7 +7,11 @@
 
 
 #include "xdg-toplevel-v6.hxx"
+
+#include <linux/input.h>
+
 #include "xdg-shell-unstable-v6-server-protocol.h"
+#include "grab_handlers.hxx"
 
 namespace page {
 
@@ -85,18 +89,19 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_destroy(struct wl_client * client, stru
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	/* TODO */
+	wl_resource_destroy(self_resource);
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_parent(struct wl_client * client, struct wl_resource * resource, struct wl_resource * parent)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_pending.transient_for = parent;
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_title(struct wl_client * client, struct wl_resource * resource, const char * title)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_pending.title = title;
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_app_id(struct wl_client * client, struct wl_resource * resource, const char * app_id)
@@ -111,16 +116,47 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_show_window_menu(struct wl_client * cli
 	/* TODO */
 }
 
-void xdg_toplevel_v6_t::zxdg_toplevel_v6_move(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat, uint32_t serial)
+void xdg_toplevel_v6_t::zxdg_toplevel_v6_move(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat_resource, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	if(_master_view.expired())
+		return;
+
+	auto seat = reinterpret_cast<weston_seat*>(
+			wl_resource_get_user_data(seat_resource));
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	auto master_view = _master_view.lock();
+	if(master_view->is(MANAGED_NOTEBOOK)) {
+		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view,
+			BTN_LEFT, rect(x, y, 1, 1)});
+	} else if(master_view->is(MANAGED_FLOATING)) {
+		_ctx->grab_start(pointer, new grab_floating_move_t(_ctx, master_view,
+			BTN_LEFT, x, y));
+	}
 }
 
-void xdg_toplevel_v6_t::zxdg_toplevel_v6_resize(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat, uint32_t serial, uint32_t edges)
+void xdg_toplevel_v6_t::zxdg_toplevel_v6_resize(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat_resource, uint32_t serial, uint32_t edges)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	if(_master_view.expired())
+		return;
+
+	auto seat = reinterpret_cast<weston_seat*>(
+			wl_resource_get_user_data(seat_resource));
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	auto master_view = _master_view.lock();
+	if(master_view->is(MANAGED_FLOATING)) {
+		_ctx->grab_start(pointer, new grab_floating_resize_t(_ctx, master_view,
+			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges)));
+	}
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_max_size(struct wl_client * client, struct wl_resource * resource, int32_t width, int32_t height)
@@ -138,31 +174,31 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_min_size(struct wl_client * client,
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_maximized(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_pending.maximized = true;
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_unset_maximized(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_pending.maximized = false;
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_fullscreen(struct wl_client * client, struct wl_resource * resource, struct wl_resource * output)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_pending.fullscreen = true;
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_unset_fullscreen(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_pending.fullscreen = false;
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_minimized(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_pending.minimized = true;
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_delete_resource(struct wl_resource * resource)
