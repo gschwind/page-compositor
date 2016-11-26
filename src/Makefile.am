@@ -51,6 +51,8 @@ page_compositor_SOURCES = \
 	xdg-toplevel-v6.hxx \
 	xdg-popup-v6.cxx \
 	xdg-popup-v6.hxx \
+	xdg-positioner-v6.cxx \
+	xdg-positioner-v6.hxx \
 	wl-shell-client.cxx \
 	wl-shell-client.hxx \
 	page-context.hxx \
