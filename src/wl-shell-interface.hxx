@@ -21,7 +21,7 @@
 #ifndef WL_SHELL_INTERFACE_HXX_
 #define WL_SHELL_INTERFACE_HXX_
 
-#include "libweston-0/compositor.h"
+#include "compositor.h"
 
 namespace page {
 

@@ -1,7 +1,7 @@
 /*
  * client_base.cxx
  *
- *  Created on: 5 août 2015
+ *  Created on: 5 ao��t 2015
  *      Author: gschwind
  */
 
@@ -28,8 +28,8 @@ xdg_surface_base_t::xdg_surface_base_t(
 	 * xdg_surface_popup_t. To avoid mistake configure_private always store
 	 * xdg_surface_base, allowing dynamic_cast.
 	 **/
-	_surface->configure_private = this;
-	_surface->configure = &xdg_surface_base_t::_weston_configure;
+	_surface->committed_private = this;
+	_surface->committed = &xdg_surface_base_t::_weston_configure;
 
 	_surface_destroy.notify = [] (wl_listener *l, void *data) {
 		auto surface = reinterpret_cast<weston_surface*>(data);
@@ -45,8 +45,8 @@ xdg_surface_base_t::~xdg_surface_base_t() {
 
 	if(_surface) {
 		wl_list_remove(&_surface_destroy.link);
-		_surface->configure_private = nullptr;
-		_surface->configure = nullptr;
+		_surface->committed_private = nullptr;
+		_surface->committed = nullptr;
 		_surface = nullptr;
 	}
 
@@ -61,7 +61,7 @@ void xdg_surface_base_t::_weston_configure(weston_surface * es, int32_t sx,
 
 xdg_surface_base_t * xdg_surface_base_t::get(weston_surface * surface)
 {
-	return reinterpret_cast<xdg_surface_base_t *>(surface->configure_private);
+	return reinterpret_cast<xdg_surface_base_t *>(surface->committed_private);
 }
 
 

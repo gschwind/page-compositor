@@ -136,6 +136,7 @@ struct page_t : public page_context_t, public connectable_t {
 
 	wl_listener seat_created;
 	listener_t<weston_output> output_created;
+	listener_t<weston_output> output_pending;
 	wl_listener output_destroyed;
 	wl_listener output_moved;
 
@@ -400,6 +401,7 @@ struct page_t : public page_context_t, public connectable_t {
 
 	void connect_all();
 	void on_output_created(weston_output * output);
+	void on_output_pending(weston_output * output);
 	void load_x11_backend(weston_compositor* ec);
 	void load_drm_backend(weston_compositor* ec);
 	static void bind_wl_shell(wl_client * client, void * data,

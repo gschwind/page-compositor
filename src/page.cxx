@@ -34,9 +34,10 @@
 #include <sys/socket.h>
 
 #include <linux/input.h>
-#include <libweston-0/compositor.h>
-#include <libweston-0/compositor-x11.h>
-#include <libweston-0/compositor-drm.h>
+#include <compositor.h>
+#include <compositor-x11.h>
+#include <compositor-drm.h>
+#include <windowed-output-api.h>
 #include <wayland-client-protocol.h>
 #include <xdg-surface-base.hxx>
 #include <xdg-surface-popup.hxx>
@@ -3471,21 +3472,22 @@ using backend_init_func =
 
 void page_t::load_x11_backend(weston_compositor* ec) {
 	weston_x11_backend_config config = {{ 0, }};
-	weston_x11_backend_output_config default_output = { 0, };
-
-	default_output.height = 1600;
-	default_output.width = 1600;
-	default_output.name = strdup("Wayland output");
-	default_output.scale = 1;
-	default_output.transform = WL_OUTPUT_TRANSFORM_NORMAL;
+	struct weston_windowed_output_api const * api;
+//	weston_x11_backend_output_config default_output = { 0, };
+//
+//	default_output.height = 1600;
+//	default_output.width = 1600;
+//	default_output.name = strdup("Wayland output");
+//	default_output.scale = 1;
+//	default_output.transform = WL_OUTPUT_TRANSFORM_NORMAL;
 
 	config.base.struct_size = sizeof(weston_x11_backend_config);
 	config.base.struct_version = WESTON_X11_BACKEND_CONFIG_VERSION;
 
 	config.fullscreen = 0;
 	config.no_input = 0;
-	config.num_outputs = 1;
-	config.outputs = &default_output;
+//	config.num_outputs = 1;
+//	config.outputs = &default_output;
 	config.use_pixman = 0;
 
 	auto backend_init = reinterpret_cast<backend_init_func>(
@@ -3495,22 +3497,27 @@ void page_t::load_x11_backend(weston_compositor* ec) {
 
 	backend_init(ec, &config.base);
 
-	free(default_output.name);
+    output_created.connect(&ec->output_created_signal, this, &page_t::on_output_created);
+    output_pending.connect(&ec->output_pending_signal, this, &page_t::on_output_pending);
+
+	api = weston_windowed_output_get_api(ec);
+	api->output_create(ec, "Wayland output");
+//	free(default_output.name);
 
 }
 
-static enum weston_drm_backend_output_mode
-drm_configure_output(struct weston_compositor *c,
-		     bool use_current_mode,
-		     const char *name,
-		     struct weston_drm_backend_output_config *config)
-{
-
-	config->base.scale = 1;
-	config->base.transform = WL_OUTPUT_TRANSFORM_NORMAL;
-
-	return WESTON_DRM_BACKEND_OUTPUT_CURRENT;
-}
+//static enum weston_drm_backend_output_mode
+//drm_configure_output(struct weston_compositor *c,
+//		     bool use_current_mode,
+//		     const char *name,
+//		     struct weston_drm_backend_output_config *config)
+//{
+//
+//	config->base.scale = 1;
+//	config->base.transform = WL_OUTPUT_TRANSFORM_NORMAL;
+//
+//	return WESTON_DRM_BACKEND_OUTPUT_CURRENT;
+//}
 
 
 void page_t::load_drm_backend(weston_compositor* ec) {
@@ -3524,7 +3531,7 @@ void page_t::load_drm_backend(weston_compositor* ec) {
 	config.use_pixman = 0;
 	config.seat_id = 0;
 	config.gbm_format =0;
-	config.configure_output = &drm_configure_output;
+//	config.configure_output = &drm_configure_output;
 	config.configure_device = 0;
 	config.use_current_mode = 1;
 
@@ -3572,8 +3579,6 @@ void page_t::connect_all() {
     hide_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::hide_input_panel\n"); };
     update_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::update_input_panel\n"); };
     seat_created.notify = [](wl_listener *l, void *data) { weston_log("compositor::seat_created\n"); };
-
-    output_created.connect(&ec->output_created_signal, this, &page_t::on_output_created);
 
     output_destroyed.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_destroyed\n"); };
     output_moved.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_moved\n"); };
@@ -3654,6 +3659,21 @@ void page_t::on_output_created(weston_output * output) {
 	update_viewport_layout();
 
 }
+
+void page_t::on_output_pending(weston_output * output) {
+	weston_log("%s\n", __PRETTY_FUNCTION__);
+
+	const struct weston_windowed_output_api *api =
+		weston_windowed_output_get_api(ec);
+
+	weston_output_set_scale(output, 1);
+	weston_output_set_transform(output, WL_OUTPUT_TRANSFORM_NORMAL);
+	api->output_set_size(output, 1600, 1600);
+
+	weston_output_enable(output);
+
+}
+
 //
 //void page_t::xdg_shell_destroy(wl_client * client,
 //		  wl_resource * resource) {

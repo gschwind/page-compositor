@@ -8,7 +8,7 @@
 #ifndef PIXMAP_HXX_
 #define PIXMAP_HXX_
 
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 #include <cairo/cairo.h>
 #include <memory>
 

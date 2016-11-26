@@ -20,7 +20,7 @@
 #include <sstream>
 #include <iostream>
 
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 
 #include "color.hxx"
 #include "box.hxx"

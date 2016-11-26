@@ -21,7 +21,7 @@
 #ifndef SRC_XDG_SURFACE_INTERFACE_HXX_
 #define SRC_XDG_SURFACE_INTERFACE_HXX_
 
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 
 namespace wcxx {
 

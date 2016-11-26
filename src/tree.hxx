@@ -14,7 +14,7 @@
 #include <iostream>
 #include <map>
 
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 
 #include "utils.hxx"
 #include "renderable.hxx"

@@ -25,7 +25,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <wayland-client.h>
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 #include <cairo.h>
 #include <wayland-cursor.h>
 #include <cstdlib>

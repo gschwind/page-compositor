@@ -12,7 +12,7 @@
 #define XDG_SURFACE_POPUP_HXX_
 
 #include <memory>
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 #include "xdg-shell-server-protocol.h"
 
 #include "renderable.hxx"

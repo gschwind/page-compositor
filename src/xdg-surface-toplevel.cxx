@@ -223,8 +223,8 @@ void xdg_surface_toplevel_t::weston_destroy() {
 
 	if(_surface) {
 		wl_list_remove(&_surface_destroy.link);
-		_surface->configure_private = nullptr;
-		_surface->configure = nullptr;
+		_surface->committed_private = nullptr;
+		_surface->committed = nullptr;
 		_surface = nullptr;
 	}
 

@@ -22,7 +22,7 @@
 #define WL_SHELL_SURFACE_INTERFACE_HXX_
 
 #include <typeinfo>
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 
 namespace page {
 

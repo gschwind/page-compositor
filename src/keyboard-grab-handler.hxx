@@ -21,7 +21,7 @@
 #ifndef SRC_KEYBOARD_GRAB_HANDLER_HXX_
 #define SRC_KEYBOARD_GRAB_HANDLER_HXX_
 
-#include <libweston-0/compositor.h>
+#include <compositor.h>
 
 namespace page {
 
