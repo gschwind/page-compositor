@@ -22,6 +22,8 @@ BUILT_SOURCES = \
 
 page_compositor_SOURCES = \
 	buffer-manager-protocol.c \
+	xdg-shell-unstable-v5-interface.cxx \
+	xdg-shell-unstable-v5-interface.hxx \
 	pointer-grab-handler.cxx \
 	pointer-grab-handler.hxx \
 	keyboard-grab-handler.cxx \
@@ -47,8 +49,6 @@ page_compositor_SOURCES = \
 	xdg-surface-toplevel-view.hxx \
 	xdg-surface-popup-view.cxx \
 	xdg-surface-popup-view.hxx \
-	xdg-surface-interface.cxx \
-	xdg-surface-interface.hxx \
 	utils.cxx \
 	pixmap.cxx \
 	grab_handlers.cxx \
@@ -101,10 +101,18 @@ page_compositor_LDADD = \
 %-client-protocol.h : $(top_srcdir)/protocol/%.xml
 	@wayland_scanner@ client-header < $< > $@
 
+%-interface.hxx : $(top_srcdir)/protocol/%.xml
+	$(top_srcdir)/tools/wayland-cxx-scanner.py header $< > $@
+
+%-interface.cxx : $(top_srcdir)/protocol/%.xml %-interface.hxx
+	$(top_srcdir)/tools/wayland-cxx-scanner.py code $< > $@
+
 clean-local:
 	rm -f xdg-shell-protocol.c
 	rm -f xdg-shell-server-protocol.h
 	rm -f buffer-manager-protocol.c
 	rm -f buffer-manager-server-protocol.h
 	rm -f buffer-manager-client-protocol.h
+	rm -f xdg-shell-unstable-v5-interface.cxx
+	rm -f xdg-shell-unstable-v5-interface.hxx
 

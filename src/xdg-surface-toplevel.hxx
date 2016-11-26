@@ -16,7 +16,7 @@
 
 #include "tree-types.hxx"
 
-#include "xdg-surface-interface.hxx"
+#include "xdg-shell-unstable-v5-interface.hxx"
 #include "wl-shell-surface-interface.hxx"
 #include "icon_handler.hxx"
 #include "theme.hxx"
