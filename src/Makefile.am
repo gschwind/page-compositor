@@ -71,8 +71,8 @@ page_compositor_SOURCES = \
 	view-base.hxx \
 	view-toplevel.cxx \
 	view-toplevel.hxx \
-	xdg-surface-popup-view.cxx \
-	xdg-surface-popup-view.hxx \
+	view-popup.cxx \
+	view-popup.hxx \
 	utils.cxx \
 	pixmap.cxx \
 	grab_handlers.cxx \

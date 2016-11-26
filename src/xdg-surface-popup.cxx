@@ -12,7 +12,7 @@
 #include "xdg-shell-client.hxx"
 #include "xdg-surface-popup.hxx"
 #include "xdg-surface-toplevel.hxx"
-#include "xdg-surface-popup-view.hxx"
+#include "view-popup.hxx"
 #include "view-toplevel.hxx"
 
 #include "xdg-shell-unstable-v5-server-protocol.h"

@@ -5,7 +5,7 @@
  *      Author: gschwind
  */
 
-#include "xdg-surface-popup-view.hxx"
+#include "view-popup.hxx"
 
 #include "view-toplevel.hxx"
 

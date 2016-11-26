@@ -12,7 +12,7 @@
 #include <cairo.h>
 #include <linux/input.h>
 
-#include "xdg-surface-popup-view.hxx"
+#include "view-popup.hxx"
 #include "renderable_floating_outer_gradien.hxx"
 #include "notebook.hxx"
 #include "utils.hxx"
