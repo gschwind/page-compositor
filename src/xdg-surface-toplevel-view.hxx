@@ -26,7 +26,7 @@ enum managed_window_type_e {
 	MANAGED_POPUP
 };
 
-class xdg_surface_toplevel_view_t : public view_base_t {
+class view_toplevel_t : public view_base_t {
 
 	friend class page_t;
 	page_context_t * _ctx;
@@ -52,8 +52,8 @@ class xdg_surface_toplevel_view_t : public view_base_t {
 	managed_window_type_e _managed_type;
 
 	/* private to avoid copy */
-	xdg_surface_toplevel_view_t(xdg_surface_toplevel_view_t const &) = delete;
-	xdg_surface_toplevel_view_t & operator=(xdg_surface_toplevel_view_t const &) = delete;
+	view_toplevel_t(view_toplevel_t const &) = delete;
+	view_toplevel_t & operator=(view_toplevel_t const &) = delete;
 
 	void set_wished_position(rect const & position);
 	rect const & get_wished_position() const;
@@ -67,11 +67,11 @@ class xdg_surface_toplevel_view_t : public view_base_t {
 
 public:
 
-	signal_t<xdg_surface_toplevel_view_t*> destroy;
-	signal_t<xdg_surface_toplevel_view_t*> focus_change;
-	signal_t<xdg_surface_toplevel_view_t*> title_change;
+	signal_t<view_toplevel_t*> destroy;
+	signal_t<view_toplevel_t*> focus_change;
+	signal_t<view_toplevel_t*> title_change;
 
-	void add_transient_child(xdg_surface_toplevel_view_p c);
+	void add_transient_child(view_toplevel_p c);
 	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);
 
 	void signal_title_change();
@@ -80,13 +80,13 @@ public:
 
 	void destroy_popup_child(xdg_surface_popup_view_t * c);
 
-	auto shared_from_this() -> shared_ptr<xdg_surface_toplevel_view_t>;
+	auto shared_from_this() -> shared_ptr<view_toplevel_t>;
 
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
-	xdg_surface_toplevel_view_t(page_context_t * ctx, page_surface_interface * s);
-	virtual ~xdg_surface_toplevel_view_t();
+	view_toplevel_t(page_context_t * ctx, page_surface_interface * s);
+	virtual ~view_toplevel_t();
 
 	/* read only attributes */
 	auto resource() const -> wl_resource * __attribute__((deprecated));

@@ -65,18 +65,18 @@ public:
 	virtual void grab_start(weston_pointer * pointer, pointer_grab_handler_t * handler) = 0;
 	virtual void grab_stop(weston_pointer * pointer) = 0;
 	virtual void detach(tree_p t) = 0;
-	virtual void insert_window_in_notebook(xdg_surface_toplevel_view_p x, notebook_p n, bool prefer_activate) = 0;
-	virtual void fullscreen_client_to_viewport(xdg_surface_toplevel_view_p c, viewport_p v) = 0;
-	virtual void unbind_window(xdg_surface_toplevel_view_p mw) = 0;
-	virtual void split_left(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
-	virtual void split_right(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
-	virtual void split_top(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
-	virtual void split_bottom(notebook_p nbk, xdg_surface_toplevel_view_p c) = 0;
-	virtual void set_keyboard_focus(weston_pointer * pointer, xdg_surface_toplevel_view_p w) = 0;
+	virtual void insert_window_in_notebook(view_toplevel_p x, notebook_p n, bool prefer_activate) = 0;
+	virtual void fullscreen_client_to_viewport(view_toplevel_p c, viewport_p v) = 0;
+	virtual void unbind_window(view_toplevel_p mw) = 0;
+	virtual void split_left(notebook_p nbk, view_toplevel_p c) = 0;
+	virtual void split_right(notebook_p nbk, view_toplevel_p c) = 0;
+	virtual void split_top(notebook_p nbk, view_toplevel_p c) = 0;
+	virtual void split_bottom(notebook_p nbk, view_toplevel_p c) = 0;
+	virtual void set_keyboard_focus(weston_pointer * pointer, view_toplevel_p w) = 0;
 	virtual void notebook_close(notebook_p nbk) = 0;
 //	virtual int  left_most_border() = 0;
 //	virtual int  top_most_border() = 0;
-	virtual auto global_client_focus_history() -> list<xdg_surface_toplevel_view_w> = 0;
+	virtual auto global_client_focus_history() -> list<view_toplevel_w> = 0;
 //	virtual auto net_client_list() -> list<shared_ptr<xdg_surface_toplevel_t>> = 0;
 //	virtual auto keymap() const -> keymap_t const * = 0;
 //	virtual void switch_to_desktop(unsigned int desktop) = 0;
@@ -84,9 +84,9 @@ public:
 //	virtual void make_surface_stats(int & size, int & count) = 0;
 //	virtual auto mainloop() -> mainloop_t * = 0;
 	virtual void sync_tree_view() = 0;
-	virtual void manage_client(xdg_surface_toplevel_view_p mw) = 0;
+	virtual void manage_client(view_toplevel_p mw) = 0;
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p = 0;
-	virtual void bind_window(xdg_surface_toplevel_view_p mw, bool activate) = 0;
+	virtual void bind_window(view_toplevel_p mw, bool activate) = 0;
 
 };
 

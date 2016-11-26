@@ -46,9 +46,9 @@ class xdg_surface_popup_view_t;
 using xdg_surface_popup_view_p = shared_ptr<xdg_surface_popup_view_t>;
 using xdg_surface_popup_view_w = weak_ptr<xdg_surface_popup_view_t>;
 
-class xdg_surface_toplevel_view_t;
-using xdg_surface_toplevel_view_p = shared_ptr<xdg_surface_toplevel_view_t>;
-using xdg_surface_toplevel_view_w = weak_ptr<xdg_surface_toplevel_view_t>;
+class view_toplevel_t;
+using view_toplevel_p = shared_ptr<view_toplevel_t>;
+using view_toplevel_w = weak_ptr<view_toplevel_t>;
 
 class xdg_shell_client_t;
 using xdg_shell_client_p = shared_ptr<xdg_shell_client_t>;

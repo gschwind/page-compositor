@@ -41,7 +41,7 @@ workspace_t::workspace_t(page_context_t * ctx, unsigned id) :
 }
 
 static bool is_dock(shared_ptr<tree_t> const & x) {
-	auto c = dynamic_pointer_cast<xdg_surface_toplevel_view_t>(x);
+	auto c = dynamic_pointer_cast<view_toplevel_t>(x);
 	if(c != nullptr) {
 		return c->is(MANAGED_DOCK);
 	}
@@ -144,7 +144,7 @@ void workspace_t::update_default_pop() {
 	}
 }
 
-void workspace_t::attach(xdg_surface_toplevel_view_p c) {
+void workspace_t::attach(view_toplevel_p c) {
 	assert(c != nullptr);
 
 	if(c->is(MANAGED_FULLSCREEN)) {
@@ -234,7 +234,7 @@ void workspace_t::show() {
 	}
 }
 
-bool workspace_t::client_focus_history_front(xdg_surface_toplevel_view_p & out) {
+bool workspace_t::client_focus_history_front(view_toplevel_p & out) {
 	if(not client_focus_history_is_empty()) {
 		out = _client_focus_history.front().lock();
 		return true;
@@ -242,11 +242,11 @@ bool workspace_t::client_focus_history_front(xdg_surface_toplevel_view_p & out) 
 	return false;
 }
 
-void workspace_t::client_focus_history_remove(xdg_surface_toplevel_view_p in) {
+void workspace_t::client_focus_history_remove(view_toplevel_p in) {
 	_client_focus_history.remove_if([in](tree_w w) { return w.expired() or w.lock() == in; });
 }
 
-void workspace_t::client_focus_history_move_front(xdg_surface_toplevel_view_p in) {
+void workspace_t::client_focus_history_move_front(view_toplevel_p in) {
 	move_front(_client_focus_history, in);
 }
 

@@ -79,8 +79,8 @@ void xdg_toplevel_v6_t::surface_commited(weston_surface * es, int32_t sx, int32_
 	_current = _pending;
 }
 
-auto xdg_toplevel_v6_t::create_view() -> xdg_surface_toplevel_view_p {
-	auto view = make_shared<xdg_surface_toplevel_view_t>(_ctx, this);
+auto xdg_toplevel_v6_t::create_view() -> view_toplevel_p {
+	auto view = make_shared<view_toplevel_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }

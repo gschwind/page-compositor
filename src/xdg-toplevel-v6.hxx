@@ -47,7 +47,7 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_i
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
 
-	xdg_surface_toplevel_view_w _master_view;
+	view_toplevel_w _master_view;
 
 	signal_t<xdg_toplevel_v6_t *> destroy;
 
@@ -61,7 +61,7 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_i
 			uint32_t id);
 
 	void surface_commited(weston_surface * es, int32_t sx, int32_t sy);
-	auto create_view() -> xdg_surface_toplevel_view_p;
+	auto create_view() -> view_toplevel_p;
 
 	virtual ~xdg_toplevel_v6_t() = default;
 

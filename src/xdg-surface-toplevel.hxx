@@ -65,7 +65,7 @@ struct xdg_surface_toplevel_t :
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
 
-	xdg_surface_toplevel_view_w _master_view;
+	view_toplevel_w _master_view;
 
 
 	signal_t<xdg_surface_toplevel_t *> destroy;
@@ -104,8 +104,8 @@ struct xdg_surface_toplevel_t :
 	void set_transient_for(xdg_surface_toplevel_t * s);
 	auto transient_for() const -> xdg_surface_toplevel_t *;
 
-	auto create_view() -> xdg_surface_toplevel_view_p;
-	auto master_view() -> xdg_surface_toplevel_view_w;
+	auto create_view() -> view_toplevel_p;
+	auto master_view() -> view_toplevel_w;
 
 	virtual void weston_destroy() override;
 	void destroy_all_views();

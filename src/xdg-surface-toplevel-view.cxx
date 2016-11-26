@@ -23,27 +23,27 @@ namespace page {
 
 using namespace std;
 
-void xdg_surface_toplevel_view_t::add_transient_child(xdg_surface_toplevel_view_p c) {
+void view_toplevel_t::add_transient_child(view_toplevel_p c) {
 	_transient_childdren->push_back(c);
 }
 
-void xdg_surface_toplevel_view_t::add_popup_child(xdg_surface_popup_view_p c,
+void view_toplevel_t::add_popup_child(xdg_surface_popup_view_p c,
 		int x, int y)
 {
 	_popups_childdren->push_back(c);
-	connect(c->destroy, this, &xdg_surface_toplevel_view_t::destroy_popup_child);
+	connect(c->destroy, this, &view_toplevel_t::destroy_popup_child);
 	weston_view_set_transform_parent(c->get_default_view(), _default_view);
 	weston_view_set_position(c->get_default_view(), x, y);
 	weston_view_schedule_repaint(c->get_default_view());
 }
 
-void xdg_surface_toplevel_view_t::destroy_popup_child(xdg_surface_popup_view_t * c) {
+void view_toplevel_t::destroy_popup_child(xdg_surface_popup_view_t * c) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	disconnect(c->destroy);
 	_popups_childdren->remove(c->shared_from_this());
 }
 
-xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
+view_toplevel_t::view_toplevel_t(
 		page_context_t * ctx,
 		page_surface_interface * xdg_surface) :
 	_ctx{ctx},
@@ -120,7 +120,7 @@ xdg_surface_toplevel_view_t::xdg_surface_toplevel_view_t(
 
 }
 
-xdg_surface_toplevel_view_t::~xdg_surface_toplevel_view_t() {
+view_toplevel_t::~view_toplevel_t() {
 	weston_log("DELETE xdg_surface_toplevel_t %p\n", this);
 	if(_default_view) {
 		weston_view_destroy(_default_view);
@@ -128,11 +128,11 @@ xdg_surface_toplevel_view_t::~xdg_surface_toplevel_view_t() {
 	}
 }
 
-auto xdg_surface_toplevel_view_t::shared_from_this() -> xdg_surface_toplevel_view_p {
-	return dynamic_pointer_cast<xdg_surface_toplevel_view_t>(tree_t::shared_from_this());
+auto view_toplevel_t::shared_from_this() -> view_toplevel_p {
+	return dynamic_pointer_cast<view_toplevel_t>(tree_t::shared_from_this());
 }
 
-void xdg_surface_toplevel_view_t::update_view() {
+void view_toplevel_t::update_view() {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	if (is(MANAGED_NOTEBOOK)) {
@@ -178,7 +178,7 @@ void xdg_surface_toplevel_view_t::update_view() {
 
 }
 
-void xdg_surface_toplevel_view_t::reconfigure() {
+void view_toplevel_t::reconfigure() {
 
 	if (is(MANAGED_NOTEBOOK) or is(MANAGED_FULLSCREEN)) {
 		_wished_position = _notebook_wished_position;
@@ -206,21 +206,21 @@ void xdg_surface_toplevel_view_t::reconfigure() {
 }
 
 
-void xdg_surface_toplevel_view_t::set_managed_type(managed_window_type_e type)
+void view_toplevel_t::set_managed_type(managed_window_type_e type)
 {
 	_managed_type = type;
 	reconfigure();
 }
 
-rect xdg_surface_toplevel_view_t::get_base_position() const {
+rect view_toplevel_t::get_base_position() const {
 	return _wished_position;
 }
 
-managed_window_type_e xdg_surface_toplevel_view_t::get_type() {
+managed_window_type_e view_toplevel_t::get_type() {
 	return _managed_type;
 }
 
-bool xdg_surface_toplevel_view_t::is(managed_window_type_e type) {
+bool view_toplevel_t::is(managed_window_type_e type) {
 	return _managed_type == type;
 }
 
@@ -244,7 +244,7 @@ bool xdg_surface_toplevel_view_t::is(managed_window_type_e type) {
 //
 //}
 
-bool xdg_surface_toplevel_view_t::is_fullscreen() {
+bool view_toplevel_t::is_fullscreen() {
 	return _managed_type == MANAGED_FULLSCREEN;
 }
 
@@ -278,19 +278,19 @@ bool xdg_surface_toplevel_view_t::is_fullscreen() {
 //	//_client_proxy->delete_wm_state();
 //}
 
-void xdg_surface_toplevel_view_t::set_floating_wished_position(rect const & pos) {
+void view_toplevel_t::set_floating_wished_position(rect const & pos) {
 	_floating_wished_position = pos;
 }
 
-void xdg_surface_toplevel_view_t::set_notebook_wished_position(rect const & pos) {
+void view_toplevel_t::set_notebook_wished_position(rect const & pos) {
 	_notebook_wished_position = pos;
 }
 
-rect const & xdg_surface_toplevel_view_t::get_wished_position() {
+rect const & view_toplevel_t::get_wished_position() {
 	return _wished_position;
 }
 
-rect const & xdg_surface_toplevel_view_t::get_floating_wished_position() {
+rect const & view_toplevel_t::get_floating_wished_position() {
 	return _floating_wished_position;
 }
 //
@@ -298,7 +298,7 @@ rect const & xdg_surface_toplevel_view_t::get_floating_wished_position() {
 //	return false;
 //}
 
-string xdg_surface_toplevel_view_t::get_node_name() const {
+string view_toplevel_t::get_node_name() const {
 	string s = _get_node_name<'M'>();
 	ostringstream oss;
 	oss << s << " " << (void*)nullptr << " " << title();
@@ -313,23 +313,23 @@ string xdg_surface_toplevel_view_t::get_node_name() const {
 //	return _wished_position;
 //}
 
-void xdg_surface_toplevel_view_t::update_layout(time64_t const time) {
+void view_toplevel_t::update_layout(time64_t const time) {
 	if(not _is_visible)
 		return;
 
 }
 
-void xdg_surface_toplevel_view_t::render_finished() {
+void view_toplevel_t::render_finished() {
 
 }
 
-void xdg_surface_toplevel_view_t::set_focus_state(bool is_focused) {
+void view_toplevel_t::set_focus_state(bool is_focused) {
 	weston_log("set_focus_state(%s) %p\n", is_focused?"true":"false", this);
 	_has_keyboard_focus = is_focused;
 	focus_change.signal(this);
 }
 
-void xdg_surface_toplevel_view_t::hide() {
+void view_toplevel_t::hide() {
 
 //	for(auto x: _children) {
 //		x->hide();
@@ -345,7 +345,7 @@ void xdg_surface_toplevel_view_t::hide() {
 //	_is_visible = false;
 }
 
-void xdg_surface_toplevel_view_t::show() {
+void view_toplevel_t::show() {
 //	_is_visible = true;
 //
 //	if(not _default_view) {
@@ -373,7 +373,7 @@ void xdg_surface_toplevel_view_t::show() {
 //	return false;
 //}
 
-void xdg_surface_toplevel_view_t::activate() {
+void view_toplevel_t::activate() {
 	if(_parent != nullptr) {
 		_parent->activate(shared_from_this());
 	}
@@ -381,7 +381,7 @@ void xdg_surface_toplevel_view_t::activate() {
 	queue_redraw();
 }
 
-void xdg_surface_toplevel_view_t::queue_redraw() {
+void view_toplevel_t::queue_redraw() {
 
 	if(_default_view) {
 		weston_view_schedule_repaint(_default_view);
@@ -394,23 +394,23 @@ void xdg_surface_toplevel_view_t::queue_redraw() {
 	}
 }
 
-void xdg_surface_toplevel_view_t::trigger_redraw() {
+void view_toplevel_t::trigger_redraw() {
 
 }
 
-void xdg_surface_toplevel_view_t::send_close() {
+void view_toplevel_t::send_close() {
 	_page_surface->send_close();
 }
 
-string const & xdg_surface_toplevel_view_t::title() const {
+string const & view_toplevel_t::title() const {
 	return _page_surface->title();
 }
 
-bool xdg_surface_toplevel_view_t::has_focus() {
+bool view_toplevel_t::has_focus() {
 	return _has_keyboard_focus;
 }
 
-void xdg_surface_toplevel_view_t::weston_configure(struct weston_surface * es,
+void view_toplevel_t::weston_configure(struct weston_surface * es,
 		int32_t sx, int32_t sy)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
@@ -419,19 +419,19 @@ void xdg_surface_toplevel_view_t::weston_configure(struct weston_surface * es,
 
 }
 
-void xdg_surface_toplevel_view_t::signal_title_change() {
+void view_toplevel_t::signal_title_change() {
 	title_change.signal(this);
 }
 
-auto xdg_surface_toplevel_view_t::get_default_view() const -> weston_view * {
+auto view_toplevel_t::get_default_view() const -> weston_view * {
 	return _default_view;
 }
 
-void xdg_surface_toplevel_view_t::signal_destroy() {
+void view_toplevel_t::signal_destroy() {
 	destroy.signal(this);
 }
 
-weston_surface * xdg_surface_toplevel_view_t::surface() const {
+weston_surface * view_toplevel_t::surface() const {
 	return _page_surface->surface();
 }
 

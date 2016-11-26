@@ -189,13 +189,13 @@ auto wl_shell_surface_t::resource() const -> wl_resource * {
 	return _resource;
 }
 
-auto wl_shell_surface_t::create_view() -> xdg_surface_toplevel_view_p {
-	auto view = make_shared<xdg_surface_toplevel_view_t>(_ctx, this);
+auto wl_shell_surface_t::create_view() -> view_toplevel_p {
+	auto view = make_shared<view_toplevel_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }
 
-auto wl_shell_surface_t::master_view() -> xdg_surface_toplevel_view_w {
+auto wl_shell_surface_t::master_view() -> view_toplevel_w {
 	return _master_view;
 }
 

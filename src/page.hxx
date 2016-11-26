@@ -66,7 +66,7 @@ namespace page {
 using namespace std;
 
 struct fullscreen_data_t {
-	xdg_surface_toplevel_view_w client;
+	view_toplevel_w client;
 	workspace_w workspace;
 	viewport_w viewport;
 	managed_window_type_e revert_type;
@@ -116,7 +116,7 @@ struct page_t : public page_context_t, public connectable_t {
 	 * Store data to allow proper revert fullscreen window to
 	 * their original positions
 	 **/
-	map<xdg_surface_toplevel_view_t *, fullscreen_data_t> _fullscreen_client_to_viewport;
+	map<view_toplevel_t *, fullscreen_data_t> _fullscreen_client_to_viewport;
 
 	string page_base_dir;
 	string _theme_engine;
@@ -147,7 +147,7 @@ struct page_t : public page_context_t, public connectable_t {
 	wl_resource * _buffer_manager_resource;
 	list<pixmap_p> pixmap_list;
 
-	xdg_surface_toplevel_view_w _current_focus;
+	view_toplevel_w _current_focus;
 
 	using repaint_func = int (*)(weston_output *, pixman_region32_t *);
 	using start_repaint_loop_func = void (*)(weston_output *);
@@ -196,8 +196,8 @@ struct page_t : public page_context_t, public connectable_t {
 	//xcb_timestamp_t _last_button_press;
 
 	/** store all client in mapping order, older first **/
-	list<xdg_surface_toplevel_view_w> _net_client_list;
-	list<xdg_surface_toplevel_view_w> _global_focus_history;
+	list<view_toplevel_w> _net_client_list;
+	list<view_toplevel_w> _global_focus_history;
 
 //	int _left_most_border;
 //	int _top_most_border;
@@ -287,14 +287,14 @@ struct page_t : public page_context_t, public connectable_t {
 //	void update_workarea();
 //
 	/* turn a managed window into fullscreen */
-	void fullscreen(xdg_surface_toplevel_view_p c);
-	void fullscreen(xdg_surface_toplevel_view_p c, shared_ptr<viewport_t> v);
+	void fullscreen(view_toplevel_p c);
+	void fullscreen(view_toplevel_p c, shared_ptr<viewport_t> v);
 
 	/* switch a fullscreened and managed window into floating or notebook window */
-	void unfullscreen(xdg_surface_toplevel_view_p c);
+	void unfullscreen(view_toplevel_p c);
 
 	/* toggle fullscreen */
-	void toggle_fullscreen(xdg_surface_toplevel_view_p c);
+	void toggle_fullscreen(view_toplevel_p c);
 //
 //	/* split a notebook into two notebook */
 //	void split(shared_ptr<notebook_t> nbk, split_type_e type);
@@ -306,7 +306,7 @@ struct page_t : public page_context_t, public connectable_t {
 //
 //	void process_net_vm_state_client_message(xcb_window_t c, long type, xcb_atom_t state_properties);
 //
-	void insert_in_tree_using_transient_for(xdg_surface_toplevel_view_p c);
+	void insert_in_tree_using_transient_for(view_toplevel_p c);
 //
 //	void safe_update_transient_for(shared_ptr<xdg_surface_base_t> c);
 //
@@ -314,14 +314,14 @@ struct page_t : public page_context_t, public connectable_t {
 //	void logical_raise(shared_ptr<xdg_surface_base_t> c);
 //
 //	/* attach floating window in a notebook */
-	void bind_window(shared_ptr<xdg_surface_toplevel_view_t> mw, bool activate);
+	void bind_window(shared_ptr<view_toplevel_t> mw, bool activate);
 //	void grab_pointer();
 //	/* if grab is linked to a given window remove this grab */
 //	void cleanup_grab();
 //	/* find a valid notebook, that is in subtree base and that is no nbk */
 	shared_ptr<notebook_t> get_another_notebook(shared_ptr<tree_t> base, shared_ptr<tree_t> nbk);
 //	/* find where the managed window is */
-	static shared_ptr<notebook_t> find_parent_notebook_for(shared_ptr<xdg_surface_toplevel_view_t> mw);
+	static shared_ptr<notebook_t> find_parent_notebook_for(shared_ptr<view_toplevel_t> mw);
 //	shared_ptr<xdg_surface_toplevel_t> find_managed_window_with(xcb_window_t w);
 	static shared_ptr<viewport_t> find_viewport_of(shared_ptr<tree_t> n);
 	static shared_ptr<workspace_t> find_desktop_of(shared_ptr<tree_t> n);
@@ -386,9 +386,9 @@ struct page_t : public page_context_t, public connectable_t {
 //
 //	void process_pending_events();
 //
-	bool global_focus_history_front(shared_ptr<xdg_surface_toplevel_view_t> & out);
-	void global_focus_history_remove(shared_ptr<xdg_surface_toplevel_view_t> in);
-	void global_focus_history_move_front(shared_ptr<xdg_surface_toplevel_view_t> in);
+	bool global_focus_history_front(shared_ptr<view_toplevel_t> & out);
+	void global_focus_history_remove(shared_ptr<view_toplevel_t> in);
+	void global_focus_history_move_front(shared_ptr<view_toplevel_t> in);
 	bool global_focus_history_is_empty();
 //
 //	void on_visibility_change_handler(xcb_window_t xid, bool visible);
@@ -424,7 +424,7 @@ struct page_t : public page_context_t, public connectable_t {
 	static int page_repaint(struct weston_output *output_base,
 			   pixman_region32_t *damage);
 
-	void configure_surface(xdg_surface_toplevel_view_p,
+	void configure_surface(view_toplevel_p,
 			int32_t sx, int32_t sy);
 
 //	/**
@@ -443,25 +443,25 @@ struct page_t : public page_context_t, public connectable_t {
 	virtual void grab_start(weston_pointer * pointer, pointer_grab_handler_t * handler);
 	virtual void grab_stop(weston_pointer * pointer);
 	virtual void detach(tree_p t);
-	virtual void insert_window_in_notebook(xdg_surface_toplevel_view_p x, notebook_p n, bool prefer_activate);
-	virtual void fullscreen_client_to_viewport(xdg_surface_toplevel_view_p c, viewport_p v);
-	virtual void unbind_window(xdg_surface_toplevel_view_p mw);
-	virtual void split_left(notebook_p nbk, xdg_surface_toplevel_view_p c);
-	virtual void split_right(notebook_p nbk, xdg_surface_toplevel_view_p c);
-	virtual void split_top(notebook_p nbk, xdg_surface_toplevel_view_p c);
-	virtual void split_bottom(notebook_p nbk, xdg_surface_toplevel_view_p c);
-	virtual void set_keyboard_focus(weston_pointer * pointer, xdg_surface_toplevel_view_p w);
+	virtual void insert_window_in_notebook(view_toplevel_p x, notebook_p n, bool prefer_activate);
+	virtual void fullscreen_client_to_viewport(view_toplevel_p c, viewport_p v);
+	virtual void unbind_window(view_toplevel_p mw);
+	virtual void split_left(notebook_p nbk, view_toplevel_p c);
+	virtual void split_right(notebook_p nbk, view_toplevel_p c);
+	virtual void split_top(notebook_p nbk, view_toplevel_p c);
+	virtual void split_bottom(notebook_p nbk, view_toplevel_p c);
+	virtual void set_keyboard_focus(weston_pointer * pointer, view_toplevel_p w);
 	virtual void notebook_close(notebook_p nbk);
 //	virtual int  left_most_border();
 //	virtual int  top_most_border();
-	virtual auto global_client_focus_history() -> list<xdg_surface_toplevel_view_w>;
+	virtual auto global_client_focus_history() -> list<view_toplevel_w>;
 //	virtual auto net_client_list() -> list<shared_ptr<xdg_surface_toplevel_t>>;
 //	virtual auto keymap() const -> keymap_t const *;
 //	virtual auto create_view(xcb_window_t w) -> shared_ptr<client_view_t>;
 //	virtual void make_surface_stats(int & size, int & count);
 //	virtual auto mainloop() -> mainloop_t *;
 	virtual void sync_tree_view();
-	virtual void manage_client(xdg_surface_toplevel_view_p mw);
+	virtual void manage_client(view_toplevel_p mw);
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p;
 
 };
