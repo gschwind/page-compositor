@@ -28,7 +28,7 @@ struct view_base_t : public tree_t {
 	view_base_t();
 	virtual ~view_base_t();
 
-	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y) = 0;
+	virtual void add_popup_child(view_popup_p child, int x, int y) = 0;
 
 };
 

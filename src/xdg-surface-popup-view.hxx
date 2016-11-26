@@ -14,7 +14,7 @@
 
 namespace page {
 
-class xdg_surface_popup_view_t : public view_base_t {
+class view_popup_t : public view_base_t {
 private:
 
 	weston_view * _default_view;
@@ -22,25 +22,25 @@ private:
 	page_surface_interface * _page_surface;
 
 	/* avoid copy */
-	xdg_surface_popup_view_t(xdg_surface_popup_view_t const &) = delete;
-	xdg_surface_popup_view_t & operator=(xdg_surface_popup_view_t const &) = delete;
+	view_popup_t(view_popup_t const &) = delete;
+	view_popup_t & operator=(view_popup_t const &) = delete;
 
 	static void _weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
 public:
 
-	signal_t<xdg_surface_popup_view_t*> destroy;
+	signal_t<view_popup_t*> destroy;
 
 	void xdg_popup_destroy(wl_client * client, wl_resource * resource);
 
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
-	xdg_surface_popup_view_t(page_context_t * ctx, page_surface_interface * p);
-	virtual ~xdg_surface_popup_view_t();
+	view_popup_t(page_context_t * ctx, page_surface_interface * p);
+	virtual ~view_popup_t();
 
-	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);
-	void destroy_popup_child(xdg_surface_popup_view_t * c);
+	virtual void add_popup_child(view_popup_p child, int x, int y);
+	void destroy_popup_child(view_popup_t * c);
 
 	virtual auto get_default_view() const -> weston_view *;
 

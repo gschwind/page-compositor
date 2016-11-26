@@ -27,7 +27,7 @@ void view_toplevel_t::add_transient_child(view_toplevel_p c) {
 	_transient_childdren->push_back(c);
 }
 
-void view_toplevel_t::add_popup_child(xdg_surface_popup_view_p c,
+void view_toplevel_t::add_popup_child(view_popup_p c,
 		int x, int y)
 {
 	_popups_childdren->push_back(c);
@@ -37,7 +37,7 @@ void view_toplevel_t::add_popup_child(xdg_surface_popup_view_p c,
 	weston_view_schedule_repaint(c->get_default_view());
 }
 
-void view_toplevel_t::destroy_popup_child(xdg_surface_popup_view_t * c) {
+void view_toplevel_t::destroy_popup_child(view_popup_t * c) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	disconnect(c->destroy);
 	_popups_childdren->remove(c->shared_from_this());

@@ -38,12 +38,12 @@ struct xdg_surface_popup_t : public xdg_surface_base_t, public page_surface_inte
 	int32_t x;
 	int32_t y;
 
-	xdg_surface_popup_view_w _master_view;
+	view_popup_w _master_view;
 
 	signal_t<xdg_surface_popup_t *> destroy;
 
-	auto create_view() -> xdg_surface_popup_view_p;
-	auto master_view() -> xdg_surface_popup_view_w;
+	auto create_view() -> view_popup_p;
+	auto master_view() -> view_popup_w;
 
 	/* avoid copy */
 	xdg_surface_popup_t(xdg_surface_popup_t const &) = delete;

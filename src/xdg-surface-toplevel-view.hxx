@@ -72,13 +72,13 @@ public:
 	signal_t<view_toplevel_t*> title_change;
 
 	void add_transient_child(view_toplevel_p c);
-	virtual void add_popup_child(xdg_surface_popup_view_p child, int x, int y);
+	virtual void add_popup_child(view_popup_p child, int x, int y);
 
 	void signal_title_change();
 
 	weston_surface * surface() const;
 
-	void destroy_popup_child(xdg_surface_popup_view_t * c);
+	void destroy_popup_child(view_popup_t * c);
 
 	auto shared_from_this() -> shared_ptr<view_toplevel_t>;
 

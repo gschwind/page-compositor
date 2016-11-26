@@ -118,13 +118,13 @@ void xdg_surface_popup_t::xdg_popup_destroy(wl_client * client, wl_resource * re
 	wl_resource_destroy(resource);
 }
 
-auto xdg_surface_popup_t::create_view() -> xdg_surface_popup_view_p {
-	auto view = make_shared<xdg_surface_popup_view_t>(_ctx, this);
+auto xdg_surface_popup_t::create_view() -> view_popup_p {
+	auto view = make_shared<view_popup_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }
 
-auto xdg_surface_popup_t::master_view() -> xdg_surface_popup_view_w {
+auto xdg_surface_popup_t::master_view() -> view_popup_w {
 	return _master_view;
 }
 
