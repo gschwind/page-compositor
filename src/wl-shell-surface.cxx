@@ -215,8 +215,8 @@ wl_shell_surface_t * wl_shell_surface_t::get(weston_surface * surface) {
 			xdg_surface_base_t::get(surface));
 }
 
-xdg_surface_base_view_p wl_shell_surface_t::base_master_view() {
-	return dynamic_pointer_cast<xdg_surface_base_view_t>(_master_view.lock());
+view_base_p wl_shell_surface_t::base_master_view() {
+	return dynamic_pointer_cast<view_base_t>(_master_view.lock());
 }
 
 void wl_shell_surface_t::wl_shell_surface_pong(wl_client *client,

@@ -14,7 +14,7 @@
 
 namespace page {
 
-class xdg_surface_popup_view_t : public xdg_surface_base_view_t {
+class xdg_surface_popup_view_t : public view_base_t {
 private:
 
 	weston_view * _default_view;

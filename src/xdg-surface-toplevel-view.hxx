@@ -26,7 +26,7 @@ enum managed_window_type_e {
 	MANAGED_POPUP
 };
 
-class xdg_surface_toplevel_view_t : public xdg_surface_base_view_t {
+class xdg_surface_toplevel_view_t : public view_base_t {
 
 	friend class page_t;
 	page_context_t * _ctx;

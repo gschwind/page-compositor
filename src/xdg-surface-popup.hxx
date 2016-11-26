@@ -71,7 +71,7 @@ struct xdg_surface_popup_t : public xdg_surface_base_t, public page_surface_inte
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
 
 	virtual void weston_destroy() override;
-	virtual xdg_surface_base_view_p base_master_view();
+	virtual view_base_p base_master_view();
 
 	void destroy_all_views();
 

@@ -120,7 +120,7 @@ struct wl_shell_surface_t :
 	virtual void weston_destroy() override;
 	void destroy_all_views();
 
-	virtual xdg_surface_base_view_p base_master_view();
+	virtual view_base_p base_master_view();
 
 	void minimize();
 

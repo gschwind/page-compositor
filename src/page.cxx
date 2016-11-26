@@ -2742,7 +2742,7 @@ shared_ptr<viewport_t> page_t::find_mouse_viewport(int x, int y) const {
 //	return nullptr;
 //}
 
-void page_t::remove_client(xdg_surface_base_view_p c) {
+void page_t::remove_client(view_base_p c) {
 	auto parent = c->parent()->shared_from_this();
 	detach(c);
 	for(auto i: c->children()) {

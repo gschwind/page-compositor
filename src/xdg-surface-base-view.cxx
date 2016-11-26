@@ -12,12 +12,12 @@ namespace page {
 
 using namespace std;
 
-xdg_surface_base_view_t::xdg_surface_base_view_t()
+view_base_t::view_base_t()
 {
 
 }
 
-xdg_surface_base_view_t::~xdg_surface_base_view_t() {
+view_base_t::~view_base_t() {
 
 }
 

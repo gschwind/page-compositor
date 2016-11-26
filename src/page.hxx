@@ -338,7 +338,7 @@ struct page_t : public page_context_t, public connectable_t {
 //	void set_desktop_geometry(long width, long height);
 //	shared_ptr<xdg_surface_base_t> find_client_with(xcb_window_t w);
 //	shared_ptr<xdg_surface_base_t> find_client(xcb_window_t w);
-	void remove_client(xdg_surface_base_view_p c);
+	void remove_client(view_base_p c);
 //
 //	void raise_child(shared_ptr<tree_t> t);
 //	void process_notebook_client_menu(shared_ptr<xdg_surface_toplevel_t> c, int selected);

@@ -38,9 +38,9 @@ class notebook_t;
 using notebook_p = shared_ptr<notebook_t>;
 using notebook_w = weak_ptr<notebook_t>;
 
-class xdg_surface_base_view_t;
-using xdg_surface_base_view_p = shared_ptr<xdg_surface_base_view_t>;
-using xdg_surface_base_view_w = weak_ptr<xdg_surface_base_view_t>;
+class view_base_t;
+using view_base_p = shared_ptr<view_base_t>;
+using view_base_w = weak_ptr<view_base_t>;
 
 class xdg_surface_popup_view_t;
 using xdg_surface_popup_view_p = shared_ptr<xdg_surface_popup_view_t>;
