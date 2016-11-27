@@ -57,6 +57,7 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 	static void surface_commited_callback(weston_surface * es, int32_t sx, int32_t sy);
 
 	void surface_commited(weston_surface * es, int32_t sx, int32_t sy);
+	void surface_destroyed();
 
 	xdg_surface_v6_t(xdg_surface_v6_t const &) = delete;
 	xdg_surface_v6_t & operator=(xdg_surface_v6_t const &) = delete;
