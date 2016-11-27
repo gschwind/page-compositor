@@ -57,7 +57,7 @@ view_toplevel_t::view_toplevel_t(
 {
 	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
 
-	rect pos{0, 0, _page_surface->width(), _page_surface->height()};
+	rect pos{0, 0, std::max(_page_surface->width(), 1), std::max(_page_surface->height(), 1)};
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 

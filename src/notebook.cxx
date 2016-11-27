@@ -48,6 +48,7 @@ bool notebook_t::add_client(view_toplevel_p x, bool prefer_activate) {
 	assert(x != nullptr);
 
 	x->set_parent(this);
+	x->set_notebook_wished_position(to_root_position(_client_area));
 	x->set_managed_type(MANAGED_NOTEBOOK);
 
 	_client_context_t client_context{this, x};

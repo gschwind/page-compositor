@@ -23,7 +23,7 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 	_client{client},
 	_surface{surface},
 	_id{id},
-	_ack_config{0}
+	_ack_config{0xffffffff}
 {
 	
 	/* allocate a wayland resource for the provided 'id' */
@@ -106,7 +106,8 @@ void xdg_surface_v6_t::zxdg_surface_v6_set_window_geometry(struct wl_client * cl
 void xdg_surface_v6_t::zxdg_surface_v6_ack_configure(struct wl_client * client, struct wl_resource * resource, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	_ack_config = serial;
+	if(_ack_config == serial)
+		_ack_config = 0;
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_delete_resource(struct wl_resource * resource)

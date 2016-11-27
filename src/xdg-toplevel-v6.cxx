@@ -55,7 +55,6 @@ void xdg_toplevel_v6_t::surface_commited(weston_surface * s) {
 	/* configuration is invalid */
 	if(_surface->_ack_config != 0)
 		return;
-	_surface->_ack_config = 0;
 
 	if(_pending.maximized != _current.maximized) {
 		if(_pending.maximized) {
@@ -241,7 +240,7 @@ string const & xdg_toplevel_v6_t::title() const {
 }
 
 void xdg_toplevel_v6_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
-	_surface->_ack_config = wl_display_next_serial(_ctx->_dpy);
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	wl_array array;
 	wl_array_init(&array);
@@ -255,13 +254,17 @@ void xdg_toplevel_v6_t::send_configure(int32_t width, int32_t height, set<uint32
 		}
 	}
 
+	weston_log("width=%d, height=%d\n", width, height);
 	zxdg_toplevel_v6_send_configure(self_resource, width, height, &array);
+
+	_surface->_ack_config = wl_display_next_serial(_ctx->_dpy);
 	zxdg_surface_v6_send_configure(_surface->_resource, _surface->_ack_config);
 	wl_array_release(&array);
 	wl_client_flush(_client);
 }
 
 void xdg_toplevel_v6_t::send_close() {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	zxdg_toplevel_v6_send_close(self_resource);
 	wl_client_flush(_client);
 }
