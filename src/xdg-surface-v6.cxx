@@ -36,16 +36,10 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 	 **/
 	zxdg_surface_v6_vtable::set_implementation(_resource);
 	
+	on_surface_destroy.connect(&_surface->destroy_signal, this,
+			&xdg_surface_v6_t::surface_destroyed);
 	on_surface_commit.connect(&_surface->commit_signal, this,
 			&xdg_surface_v6_t::surface_commited);
-
-	_surface_destroy.notify = [] (wl_listener *l, void *data) {
-		auto surface = reinterpret_cast<weston_surface*>(data);
-		auto ths = reinterpret_cast<xdg_surface_v6_t*>(surface->committed_private);
-		ths->surface_destroyed();
-	};
-
-	wl_signal_add(&surface->destroy_signal, &_surface_destroy);
 
 }
 
@@ -56,15 +50,12 @@ void xdg_surface_v6_t::surface_commited(weston_surface * s) {
 	}
 }
 
-void xdg_surface_v6_t::surface_destroyed() {
+void xdg_surface_v6_t::surface_destroyed(weston_surface * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	destroy_all_views();
-
 	if(_surface) {
-		wl_list_remove(&_surface_destroy.link);
-		_surface->committed_private = nullptr;
-		_surface->committed = nullptr;
-		_surface = nullptr;
+		on_surface_destroy.disconnect();
+		on_surface_commit.disconnect();
 	}
 }
 
@@ -76,14 +67,10 @@ void xdg_surface_v6_t::destroy_all_views() {
 }
 
 xdg_surface_v6_t::~xdg_surface_v6_t() {
-
 	if(_surface) {
-		wl_list_remove(&_surface_destroy.link);
-		_surface->committed_private = nullptr;
-		_surface->committed = nullptr;
-		_surface = nullptr;
+		on_surface_destroy.disconnect();
+		on_surface_commit.disconnect();
 	}
-
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_destroy(struct wl_client * client, struct wl_resource * resource)

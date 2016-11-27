@@ -31,10 +31,7 @@ struct listener_t {
 	}
 
 	~listener_t() {
-		if(not wl_list_empty(&_pod._listener.link)) {
-			wl_list_remove(&_pod._listener.link);
-			wl_list_init(&_pod._listener.link);
-		}
+		disconnect();
 	}
 
 	template<typename F>
@@ -52,6 +49,13 @@ struct listener_t {
 	template<typename Z>
 	void connect(wl_signal* signal, Z * ths, void(Z::*f)(T*)) {
 		connect(signal, [ths,f](T * o) -> void { (ths->*f)(o); });
+	}
+
+	void disconnect() {
+		if(not wl_list_empty(&_pod._listener.link)) {
+			wl_list_remove(&_pod._listener.link);
+			wl_list_init(&_pod._listener.link);
+		}
 	}
 
 };

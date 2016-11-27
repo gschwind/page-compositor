@@ -50,8 +50,8 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 	weston_surface *       _surface;
 	uint32_t               _id;
 	struct wl_resource *   _resource;
-	wl_listener            _surface_destroy;
 
+	listener_t<weston_surface> on_surface_destroy;
 	listener_t<weston_surface> on_surface_commit;
 
 	uint32_t _ack_config;
@@ -60,7 +60,7 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 	map<uint32_t, xdg_popup_v6_t *> xdg_popup_v6_map;
 
 	void surface_commited(weston_surface * s);
-	void surface_destroyed();
+	void surface_destroyed(weston_surface * s);
 	void destroy_all_views();
 
 	xdg_surface_v6_t(xdg_surface_v6_t const &) = delete;
