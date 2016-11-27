@@ -20,6 +20,7 @@
 #include <memory>
 #include <map>
 
+#include "listener.hxx"
 #include "tree-types.hxx"
 
 #include "utils.hxx"
@@ -51,13 +52,16 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 	struct wl_resource *   _resource;
 	wl_listener            _surface_destroy;
 
+	listener_t<weston_surface> on_surface_commit;
+
+	uint32_t _ack_config;
+
 	map<uint32_t, xdg_toplevel_v6_t *> xdg_toplevel_v6_map;
 	map<uint32_t, xdg_popup_v6_t *> xdg_popup_v6_map;
 
-	static void surface_commited_callback(weston_surface * es, int32_t sx, int32_t sy);
-
-	void surface_commited(weston_surface * es, int32_t sx, int32_t sy);
+	void surface_commited(weston_surface * s);
 	void surface_destroyed();
+	void destroy_all_views();
 
 	xdg_surface_v6_t(xdg_surface_v6_t const &) = delete;
 	xdg_surface_v6_t & operator=(xdg_surface_v6_t const &) = delete;

@@ -27,22 +27,35 @@ xdg_toplevel_v6_t::xdg_toplevel_v6_t(
 	_ctx{ctx}
 {
 
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(surface->_surface, "xdg_toplevel_v6",
+			surface->_resource, XDG_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
+
 	self_resource = wl_resource_create(client,
 			reinterpret_cast<wl_interface const *>(&zxdg_toplevel_v6_interface), 1, id);
 	zxdg_toplevel_v6_vtable::set_implementation(self_resource);
 
 }
 
-void xdg_toplevel_v6_t::surface_commited(weston_surface * es, int32_t sx, int32_t sy) {
+void xdg_toplevel_v6_t::destroy_all_views() {
+	if(not _master_view.expired()) {
+		auto master_view = _master_view.lock();
+		master_view->signal_destroy();
+	}
+}
+
+void xdg_toplevel_v6_t::surface_commited(weston_surface * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-//	if(_master_view.expired()) {
-//		_ctx->manage_client(create_view());
-//	}
+	if(_master_view.expired()) {
+		_ctx->manage_client(create_view());
+	}
 
 	/* configuration is invalid */
-	if(_ack_serial != 0)
+	if(_surface->_ack_config != 0)
 		return;
+	_surface->_ack_config = 0;
 
 	if(_pending.maximized != _current.maximized) {
 		if(_pending.maximized) {
@@ -228,7 +241,7 @@ string const & xdg_toplevel_v6_t::title() const {
 }
 
 void xdg_toplevel_v6_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
-	_ack_serial = wl_display_next_serial(_ctx->_dpy);
+	_surface->_ack_config = wl_display_next_serial(_ctx->_dpy);
 
 	wl_array array;
 	wl_array_init(&array);
@@ -243,7 +256,7 @@ void xdg_toplevel_v6_t::send_configure(int32_t width, int32_t height, set<uint32
 	}
 
 	zxdg_toplevel_v6_send_configure(self_resource, width, height, &array);
-	zxdg_surface_v6_send_configure(_surface->_resource, _ack_serial);
+	zxdg_surface_v6_send_configure(_surface->_resource, _surface->_ack_config);
 	wl_array_release(&array);
 	wl_client_flush(_client);
 }

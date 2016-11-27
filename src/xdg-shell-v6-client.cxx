@@ -25,7 +25,7 @@ xdg_shell_v6_client_t::xdg_shell_v6_client_t(
 		self_resource{nullptr},
 		client{client}
 {
-
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	/* allocate a wayland resource for the provided 'id' */
 	self_resource = wl_resource_create(client,
 			reinterpret_cast<wl_interface const *>(&zxdg_shell_v6_interface), 1, id);

@@ -22,7 +22,8 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 	_resource{nullptr},
 	_client{client},
 	_surface{surface},
-	_id{id}
+	_id{id},
+	_ack_config{0}
 {
 	
 	/* allocate a wayland resource for the provided 'id' */
@@ -35,14 +36,8 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 	 **/
 	zxdg_surface_v6_vtable::set_implementation(_resource);
 	
-	/**
-	 * weston_surface are used for wl_surface, but those surfaces can have
-	 * several role, configure_private may hold xdg_surface_toplevel or
-	 * xdg_surface_popup_t. To avoid mistake configure_private always store
-	 * xdg_surface_base, allowing dynamic_cast.
-	 **/
-	_surface->committed_private = this;
-	_surface->committed = &xdg_surface_v6_t::surface_commited_callback;
+	on_surface_commit.connect(&_surface->commit_signal, this,
+			&xdg_surface_v6_t::surface_commited);
 
 	_surface_destroy.notify = [] (wl_listener *l, void *data) {
 		auto surface = reinterpret_cast<weston_surface*>(data);
@@ -54,19 +49,30 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 
 }
 
-void xdg_surface_v6_t::surface_commited_callback(weston_surface * es, int32_t sx, int32_t sy) {
-	reinterpret_cast<xdg_surface_v6_t *>(es->committed_private)->surface_commited(es, sx, sy);
-}
-
-void xdg_surface_v6_t::surface_commited(weston_surface * es, int32_t sx, int32_t sy) {
+void xdg_surface_v6_t::surface_commited(weston_surface * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	for(auto & x: xdg_toplevel_v6_map) {
-		x.second->surface_commited(es, sx, sy);
+		x.second->surface_commited(s);
 	}
 }
 
 void xdg_surface_v6_t::surface_destroyed() {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	destroy_all_views();
+
+	if(_surface) {
+		wl_list_remove(&_surface_destroy.link);
+		_surface->committed_private = nullptr;
+		_surface->committed = nullptr;
+		_surface = nullptr;
+	}
+}
+
+
+void xdg_surface_v6_t::destroy_all_views() {
+	for(auto &x: xdg_toplevel_v6_map) {
+		x.second->destroy_all_views();
+	}
 }
 
 xdg_surface_v6_t::~xdg_surface_v6_t() {
@@ -113,7 +119,7 @@ void xdg_surface_v6_t::zxdg_surface_v6_set_window_geometry(struct wl_client * cl
 void xdg_surface_v6_t::zxdg_surface_v6_ack_configure(struct wl_client * client, struct wl_resource * resource, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_ack_config = serial;
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_delete_resource(struct wl_resource * resource)
