@@ -23,8 +23,7 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	_ctx{ctx}
 {
 
-	self_resource = wl_resource_create(client,
-			reinterpret_cast<wl_interface const *>(&zxdg_popup_v6_interface), 1, id);
+	self_resource = wl_resource_create(client, &zxdg_popup_v6_interface, 1, id);
 	zxdg_popup_v6_vtable::set_implementation(self_resource);
 
 }

@@ -32,8 +32,7 @@ xdg_toplevel_v6_t::xdg_toplevel_v6_t(
 			surface->_resource, XDG_SHELL_ERROR_ROLE) < 0)
 		throw "TODO";
 
-	self_resource = wl_resource_create(client,
-			reinterpret_cast<wl_interface const *>(&zxdg_toplevel_v6_interface), 1, id);
+	self_resource = wl_resource_create(client, &zxdg_toplevel_v6_interface, 1, id);
 	zxdg_toplevel_v6_vtable::set_implementation(self_resource);
 
 }

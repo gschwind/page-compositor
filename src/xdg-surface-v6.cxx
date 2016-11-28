@@ -27,8 +27,7 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 {
 	
 	/* allocate a wayland resource for the provided 'id' */
-	_resource = wl_resource_create(client,
-			reinterpret_cast<wl_interface const *>(&zxdg_surface_v6_interface), 1, id);
+	_resource = wl_resource_create(client, &zxdg_surface_v6_interface, 1, id);
 
 	/**
 	 * Define the implementation of the resource and the user_data,
