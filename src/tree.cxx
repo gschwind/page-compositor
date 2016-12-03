@@ -235,9 +235,21 @@ void tree_t::queue_redraw() {
  * Print the tree recursively using node names.
  **/
 void tree_t::print_tree(int level) const {
-	char space[] = "                               ";
-	space[level] = 0;
-	cout << space << get_node_name() << endl;
+	static char const * const space[10] = {
+			"",
+			" ",
+			"  ",
+			"   ",
+			"    ",
+			"     ",
+			"      ",
+			"       ",
+			"        ",
+			"         "
+	};
+	if(level >= 10)
+		return;
+	weston_log("%s%s\n", space[level], get_node_name().c_str());
 	for (auto i : children()) {
 		i->print_tree(level + 1);
 	}
