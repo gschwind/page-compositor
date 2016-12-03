@@ -3950,6 +3950,8 @@ void page_t::sync_tree_view() {
 			lv.push_back(v);
 	}
 
+	_root->print_tree(0);
+
 	weston_log("found %lu views\n", lv.size());
 
 	/* remove all existing views */
@@ -3963,13 +3965,13 @@ void page_t::sync_tree_view() {
 	for(auto v: lv) {
 		weston_layer_entry_insert(&default_layer.view_list, &v->layer_link);
 		weston_view_geometry_dirty(v);
-		//weston_view_update_transform(v);
+		weston_view_update_transform(v);
 	}
 
-//	wl_list_for_each_safe(cur, nxt, &default_layer.view_list.link, link) {
-//		weston_view * v = wl_container_of(cur, v, layer_link);
-//		weston_log("aaaa %p\n", v->output);
-//	}
+	wl_list_for_each_safe(cur, nxt, &default_layer.view_list.link, link) {
+		weston_view * v = wl_container_of(cur, v, layer_link);
+		weston_log("view=%p,output=%p,role='%s',surface=%p,x=%f,y=%f\n", v, v->output, weston_surface_get_role(v->surface), v->surface, v->geometry.x, v->geometry.y);
+	}
 
 	weston_compositor_damage_all(ec);
 
