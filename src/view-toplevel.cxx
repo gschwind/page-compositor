@@ -299,9 +299,9 @@ rect const & view_toplevel_t::get_floating_wished_position() {
 //}
 
 string view_toplevel_t::get_node_name() const {
-	string s = _get_node_name<'M'>();
+	string s = _get_node_name<'T'>();
 	ostringstream oss;
-	oss << s << " " << (void*)nullptr << " " << title();
+	oss << s << " " << (void*)_page_surface->surface() << " " << title();
 	return oss.str();
 }
 
