@@ -18,12 +18,18 @@ xdg_positioner_v6_t::xdg_positioner_v6_t(
 	self_resource{nullptr},
 	_id{id},
 	_client{client},
-	_ctx{ctx}
+	_ctx{ctx},
+	x_offset{0},
+	y_offset{0}
 {
 
 	self_resource = wl_resource_create(client, &zxdg_positioner_v6_interface, 1, id);
 	zxdg_positioner_v6_vtable::set_implementation(self_resource);
 
+}
+
+auto xdg_positioner_v6_t::get(struct wl_resource * r) -> xdg_positioner_v6_t * {
+	return dynamic_cast<xdg_positioner_v6_t *>(resource_get<zxdg_positioner_v6_vtable>(r));
 }
 
 void xdg_positioner_v6_t::zxdg_positioner_v6_destroy(struct wl_client * client, struct wl_resource * resource)
@@ -41,7 +47,8 @@ void xdg_positioner_v6_t::zxdg_positioner_v6_set_size(struct wl_client * client,
 void xdg_positioner_v6_t::zxdg_positioner_v6_set_anchor_rect(struct wl_client * client, struct wl_resource * resource, int32_t x, int32_t y, int32_t width, int32_t height)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	x_offset = x;
+	y_offset = y;
 }
 
 void xdg_positioner_v6_t::zxdg_positioner_v6_set_anchor(struct wl_client * client, struct wl_resource * resource, uint32_t anchor)
@@ -65,7 +72,8 @@ void xdg_positioner_v6_t::zxdg_positioner_v6_set_constraint_adjustment(struct wl
 void xdg_positioner_v6_t::zxdg_positioner_v6_set_offset(struct wl_client * client, struct wl_resource * resource, int32_t x, int32_t y)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	x_offset = x;
+	y_offset = y;
 }
 
 void xdg_positioner_v6_t::zxdg_positioner_v6_delete_resource(struct wl_resource * resource)

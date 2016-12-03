@@ -23,6 +23,9 @@ struct xdg_positioner_v6_t : public zxdg_positioner_v6_vtable {
 	uint32_t               _id;
 	struct wl_resource *   self_resource;
 
+	int32_t x_offset;
+	int32_t y_offset;
+
 	xdg_positioner_v6_t(xdg_positioner_v6_t const &) = delete;
 	xdg_positioner_v6_t & operator=(xdg_positioner_v6_t const &) = delete;
 
@@ -30,6 +33,8 @@ struct xdg_positioner_v6_t : public zxdg_positioner_v6_vtable {
 			page_context_t * ctx,
 			wl_client * client,
 			uint32_t id);
+
+	static auto get(struct wl_resource * r) -> xdg_positioner_v6_t *;
 
 	virtual ~xdg_positioner_v6_t() = default;
 
