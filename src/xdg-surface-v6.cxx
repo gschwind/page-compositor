@@ -47,6 +47,9 @@ void xdg_surface_v6_t::surface_commited(weston_surface * s) {
 	for(auto & x: xdg_toplevel_v6_map) {
 		x.second->surface_commited(s);
 	}
+	for(auto & x: xdg_popup_v6_map) {
+		x.second->surface_commited(s);
+	}
 }
 
 void xdg_surface_v6_t::surface_destroyed(weston_surface * s) {
@@ -58,9 +61,17 @@ void xdg_surface_v6_t::surface_destroyed(weston_surface * s) {
 	}
 }
 
+auto xdg_surface_v6_t::get(struct wl_resource * r) -> xdg_surface_v6_t * {
+	return dynamic_cast<xdg_surface_v6_t*>(resource_get<zxdg_surface_v6_vtable>(r));
+}
+
 
 void xdg_surface_v6_t::destroy_all_views() {
 	for(auto &x: xdg_toplevel_v6_map) {
+		x.second->destroy_all_views();
+	}
+
+	for(auto &x: xdg_popup_v6_map) {
 		x.second->destroy_all_views();
 	}
 }
@@ -91,7 +102,7 @@ void xdg_surface_v6_t::zxdg_surface_v6_get_popup(struct wl_client * client, stru
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	auto xdg_surface = new xdg_popup_v6_t(_ctx, client, this, id);
+	auto xdg_surface = new xdg_popup_v6_t(_ctx, client, this, id, parent, positioner);
 	xdg_popup_v6_map[id] = xdg_surface;
 
 }

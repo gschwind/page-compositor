@@ -96,6 +96,10 @@ auto xdg_toplevel_v6_t::create_view() -> view_toplevel_p {
 	return view;
 }
 
+auto xdg_toplevel_v6_t::base_master_view() -> view_toplevel_p {
+	return _master_view.lock();
+}
+
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);

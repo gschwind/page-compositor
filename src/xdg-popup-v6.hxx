@@ -23,7 +23,14 @@ struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interfa
 	wl_client *            _client;
 	xdg_surface_v6_t *     _surface;
 	uint32_t               _id;
+	struct wl_resource *   _parent;
+	struct wl_resource *   _positioner;
+
 	struct wl_resource *   self_resource;
+
+	view_popup_w _master_view;
+
+	signal_t<xdg_popup_v6_t *> destroy;
 
 	xdg_popup_v6_t(xdg_popup_v6_t const &) = delete;
 	xdg_popup_v6_t & operator=(xdg_popup_v6_t const &) = delete;
@@ -32,7 +39,13 @@ struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interfa
 			page_context_t * ctx,
 			wl_client * client,
 			xdg_surface_v6_t * surface,
-			uint32_t id);
+			uint32_t id,
+			struct wl_resource * parent,
+			struct wl_resource * positioner);
+
+	void surface_commited(weston_surface * s);
+	auto create_view() -> view_popup_p;
+	void destroy_all_views();
 
 	virtual ~xdg_popup_v6_t() = default;
 

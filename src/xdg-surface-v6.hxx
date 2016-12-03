@@ -63,6 +63,8 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 	void surface_destroyed(weston_surface * s);
 	void destroy_all_views();
 
+	static auto get(struct wl_resource * r) -> xdg_surface_v6_t *;
+
 	xdg_surface_v6_t(xdg_surface_v6_t const &) = delete;
 	xdg_surface_v6_t & operator=(xdg_surface_v6_t const &) = delete;
 
