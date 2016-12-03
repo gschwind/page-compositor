@@ -46,6 +46,8 @@ public:
 
 	void signal_destroy();
 
+	virtual auto get_node_name() const -> string override;
+
 };
 
 }

@@ -14,7 +14,8 @@ namespace page {
 view_popup_t::view_popup_t(page_context_t * ctx, page_surface_interface * p) :
 		_page_surface{p}
 {
-	_default_view = weston_view_create(_page_surface->surface());
+	_is_visible = true;
+	_default_view = _page_surface->create_weston_view();
 }
 
 view_popup_t::~view_popup_t()
@@ -47,6 +48,13 @@ auto view_popup_t::get_default_view() const -> weston_view * {
 
 void view_popup_t::signal_destroy() {
 	destroy.signal(this);
+}
+
+auto view_popup_t::get_node_name() const -> string {
+	string s = _get_node_name<'X'>();
+	ostringstream oss;
+	oss << s << " " << (void*)_page_surface->surface();
+	return oss.str();
 }
 
 
