@@ -28,7 +28,7 @@ struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interfa
 
 	struct wl_resource *   self_resource;
 
-	view_toplevel_w _master_view;
+	view_w _master_view;
 
 	signal_t<xdg_popup_v6_t *> destroy;
 
@@ -44,7 +44,7 @@ struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interfa
 			struct wl_resource * positioner);
 
 	void surface_commited(weston_surface * s);
-	auto create_view() -> view_toplevel_p;
+	auto create_view() -> view_p;
 	void destroy_all_views();
 
 	virtual ~xdg_popup_v6_t() = default;

@@ -68,8 +68,8 @@ class notebook_t : public page_component_t {
 	struct {
 		int event_x;
 		int event_y;
-		tuple<rect, view_toplevel_w, theme_tab_t *> * tab;
-		tuple<rect, view_toplevel_w, int> * exposay;
+		tuple<rect, view_w, theme_tab_t *> * tab;
+		tuple<rect, view_w, int> * exposay;
 	} _mouse_over;
 
 	enum select_e {
@@ -82,11 +82,11 @@ class notebook_t : public page_component_t {
 	};
 
 	struct _client_context_t {
-		view_toplevel_p client;
+		view_p client;
 
 		_client_context_t() = delete;
 		_client_context_t(_client_context_t const & x) = default;
-		_client_context_t(notebook_t * nbk, view_toplevel_p client);
+		_client_context_t(notebook_t * nbk, view_p client);
 		~_client_context_t();
 
 	};
@@ -97,7 +97,7 @@ class notebook_t : public page_component_t {
 	// list to maintain the client order
 	list<_client_context_t> _clients_tab_order;
 
-	view_toplevel_p _selected;
+	view_p _selected;
 
 	rect _client_area;
 	rect _client_position;
@@ -130,11 +130,11 @@ class notebook_t : public page_component_t {
 	} _area;
 
 	/* list of tabs and exposay buttons */
-	vector<tuple<rect, view_toplevel_w, theme_tab_t *>> _client_buttons;
-	vector<tuple<rect, view_toplevel_w, int>> _exposay_buttons;
+	vector<tuple<rect, view_w, theme_tab_t *>> _client_buttons;
+	vector<tuple<rect, view_w, int>> _exposay_buttons;
 	shared_ptr<renderable_unmanaged_gaussian_shadow_t<16>> _exposay_mouse_over;
 
-	void _set_selected(view_toplevel_p c);
+	void _set_selected(view_p c);
 
 
 	void _start_fading();
@@ -157,29 +157,29 @@ class notebook_t : public page_component_t {
 	rect _compute_notebook_close_position() const;
 	rect _compute_notebook_menu_position() const;
 
-	void _client_title_change(view_toplevel_t * c);
-	void _client_destroy(view_toplevel_t * c);
-	void _client_focus_change(view_toplevel_t * c);
+	void _client_title_change(view_t * c);
+	void _client_destroy(view_t * c);
+	void _client_focus_change(view_t * c);
 
 	void _update_allocation(rect & allocation);
 
-	void _remove_client(view_toplevel_p c);
+	void _remove_client(view_p c);
 
-	void _activate_client(view_toplevel_p x);
+	void _activate_client(view_p x);
 
 
 	rect _get_new_client_size();
 
 	void _select_next();
 
-	rect _compute_client_size(view_toplevel_p c);
+	rect _compute_client_size(view_p c);
 
-	auto clients() const -> list<view_toplevel_p>;
-	auto selected() const -> view_toplevel_p;
+	auto clients() const -> list<view_p>;
+	auto selected() const -> view_p;
 	bool is_default() const;
 
-	bool _has_client(view_toplevel_p c);
-	list<_client_context_t>::iterator _find_client_context(view_toplevel_p client);
+	bool _has_client(view_p c);
+	list<_client_context_t>::iterator _find_client_context(view_p client);
 
 	void _update_exposay();
 	void _stop_exposay();
@@ -239,9 +239,9 @@ public:
 	void set_default(bool x);
 	void render_legacy(cairo_t * cr);
 	void start_exposay();
-	void update_client_position(view_toplevel_p c);
-	void iconify_client(view_toplevel_p x);
-	bool add_client(view_toplevel_p c, bool prefer_activate);
+	void update_client_position(view_p c);
+	void iconify_client(view_p x);
+	bool add_client(view_p c, bool prefer_activate);
 
 	/* TODO : remove it */
 	friend grab_bind_client_t;

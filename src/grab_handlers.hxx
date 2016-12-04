@@ -56,7 +56,7 @@ public:
 
 class grab_bind_client_t : public pointer_grab_handler_t {
 	page_context_t * ctx;
-	view_toplevel_w c;
+	view_w c;
 
 	rect start_position;
 	uint32_t _button;
@@ -70,7 +70,7 @@ class grab_bind_client_t : public pointer_grab_handler_t {
 public:
 
 	grab_bind_client_t(page_context_t * ctx,
-			view_toplevel_p c, uint32_t button,
+			view_p c, uint32_t button,
 			rect const & pos);
 
 	virtual ~grab_bind_client_t();
@@ -88,7 +88,7 @@ public:
 
 struct mode_data_notebook_client_menu_t  : public pointer_grab_handler_t {
 	notebook_w from;
-	view_toplevel_w client;
+	view_w client;
 	bool active_grab;
 	rect b;
 
@@ -123,13 +123,13 @@ struct grab_floating_move_t : public pointer_grab_handler_t {
 	int y_root;
 	rect original_position;
 	rect popup_original_position;
-	view_toplevel_w f;
+	view_w f;
 	rect final_position;
 	uint32_t _button;
 
 	//shared_ptr<popup_notebook0_t> pfm;
 
-	grab_floating_move_t(page_context_t * ctx, view_toplevel_p f,
+	grab_floating_move_t(page_context_t * ctx, view_p f,
 			unsigned int button, int x, int y);
 
 	virtual ~grab_floating_move_t();
@@ -146,7 +146,7 @@ struct grab_floating_move_t : public pointer_grab_handler_t {
 
 struct grab_floating_resize_t : public pointer_grab_handler_t {
 	page_context_t * _ctx;
-	view_toplevel_w f;
+	view_w f;
 
 	xdg_surface_resize_edge mode;
 	int x_root;
@@ -160,7 +160,7 @@ struct grab_floating_resize_t : public pointer_grab_handler_t {
 public:
 
 	grab_floating_resize_t(page_context_t * _ctx,
-			view_toplevel_p f, uint32_t button, int x,
+			view_p f, uint32_t button, int x,
 			int y, xdg_surface_resize_edge mode);
 
 	virtual ~grab_floating_resize_t();
@@ -176,7 +176,7 @@ public:
 
 struct grab_fullscreen_client_t : public pointer_grab_handler_t {
 	page_context_t * _ctx;
-	view_toplevel_w mw;
+	view_w mw;
 	viewport_w v;
 	//shared_ptr<popup_notebook0_t> pn0;
 	uint32_t _button;
@@ -184,7 +184,7 @@ struct grab_fullscreen_client_t : public pointer_grab_handler_t {
 public:
 
 	grab_fullscreen_client_t(page_context_t * ctx,
-			view_toplevel_p mw, uint32_t button, int x, int y);
+			view_p mw, uint32_t button, int x, int y);
 
 	virtual ~grab_fullscreen_client_t();
 	virtual void focus() { }

@@ -94,13 +94,13 @@ auto wl_shell_surface_t::resource() const -> wl_resource * {
 	return _resource;
 }
 
-auto wl_shell_surface_t::create_view() -> view_toplevel_p {
-	auto view = make_shared<view_toplevel_t>(_ctx, this);
+auto wl_shell_surface_t::create_view() -> view_p {
+	auto view = make_shared<view_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }
 
-auto wl_shell_surface_t::master_view() -> view_toplevel_w {
+auto wl_shell_surface_t::master_view() -> view_w {
 	return _master_view;
 }
 
@@ -129,8 +129,8 @@ void wl_shell_surface_t::surface_destroyed(struct weston_surface * s) {
 	wl_resource_destroy(_resource);
 }
 
-view_toplevel_p wl_shell_surface_t::base_master_view() {
-	return dynamic_pointer_cast<view_toplevel_t>(_master_view.lock());
+view_p wl_shell_surface_t::base_master_view() {
+	return dynamic_pointer_cast<view_t>(_master_view.lock());
 }
 
 void wl_shell_surface_t::wl_shell_surface_pong(wl_client *client,
@@ -243,7 +243,7 @@ void wl_shell_surface_t::wl_shell_surface_set_popup(wl_client *client,
 		auto parent_view = _parent->master_view().lock();
 
 		if(parent_view != nullptr) {
-			auto xview = make_shared<view_toplevel_t>(_ctx, this);
+			auto xview = make_shared<view_t>(_ctx, this);
 			_master_view = xview;
 			weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, x, y);
 			parent_view->add_popup_child(xview, x, y);

@@ -38,12 +38,12 @@ struct xdg_surface_popup_t : public xdg_surface_base_t, public page_surface_inte
 	int32_t x;
 	int32_t y;
 
-	view_toplevel_w _master_view;
+	view_w _master_view;
 
 	signal_t<xdg_surface_popup_t *> destroy;
 
-	auto create_view() -> view_toplevel_p;
-	auto master_view() -> view_toplevel_w;
+	auto create_view() -> view_p;
+	auto master_view() -> view_w;
 
 	/* avoid copy */
 	xdg_surface_popup_t(xdg_surface_popup_t const &) = delete;
@@ -71,7 +71,7 @@ struct xdg_surface_popup_t : public xdg_surface_base_t, public page_surface_inte
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
 
 	virtual void weston_destroy() override;
-	virtual view_toplevel_p base_master_view();
+	virtual view_p base_master_view();
 
 	void destroy_all_views();
 

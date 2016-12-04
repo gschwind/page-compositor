@@ -60,7 +60,7 @@ struct xdg_surface_base_t {
 
 	virtual void weston_destroy() = 0;
 
-	virtual view_toplevel_p base_master_view() = 0;
+	virtual view_p base_master_view() = 0;
 	/** called on surface commit */
 	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy) = 0;
 

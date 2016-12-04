@@ -70,8 +70,8 @@ void xdg_popup_v6_t::surface_commited(weston_surface * s) {
 
 }
 
-auto xdg_popup_v6_t::create_view() -> view_toplevel_p {
-	auto view = make_shared<view_toplevel_t>(_ctx, this);
+auto xdg_popup_v6_t::create_view() -> view_p {
+	auto view = make_shared<view_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }

@@ -320,13 +320,13 @@ void xdg_surface_toplevel_t::xdg_surface_set_minimized(struct wl_client *client,
 	_pending.minimized = true;
 }
 
-auto xdg_surface_toplevel_t::create_view() -> view_toplevel_p {
-	auto view = make_shared<view_toplevel_t>(_ctx, this);
+auto xdg_surface_toplevel_t::create_view() -> view_p {
+	auto view = make_shared<view_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }
 
-auto xdg_surface_toplevel_t::master_view() -> view_toplevel_w {
+auto xdg_surface_toplevel_t::master_view() -> view_w {
 	return _master_view;
 }
 
@@ -346,8 +346,8 @@ xdg_surface_toplevel_t * xdg_surface_toplevel_t::get(weston_surface * surface) {
 			xdg_surface_base_t::get(surface));
 }
 
-view_toplevel_p xdg_surface_toplevel_t::base_master_view() {
-	return dynamic_pointer_cast<view_toplevel_t>(_master_view.lock());
+view_p xdg_surface_toplevel_t::base_master_view() {
+	return dynamic_pointer_cast<view_t>(_master_view.lock());
 }
 
 weston_surface * xdg_surface_toplevel_t::surface() const {

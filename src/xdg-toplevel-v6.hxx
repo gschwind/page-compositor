@@ -44,7 +44,7 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_i
 
 	} _pending, _current;
 
-	view_toplevel_w _master_view;
+	view_w _master_view;
 
 	signal_t<xdg_toplevel_v6_t *> destroy;
 
@@ -58,8 +58,8 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_i
 			uint32_t id);
 
 	void surface_commited(weston_surface * s);
-	auto create_view() -> view_toplevel_p;
-	auto base_master_view() -> view_toplevel_p;
+	auto create_view() -> view_p;
+	auto base_master_view() -> view_p;
 
 	void destroy_all_views();
 

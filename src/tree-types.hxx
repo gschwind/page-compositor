@@ -38,9 +38,9 @@ class notebook_t;
 using notebook_p = shared_ptr<notebook_t>;
 using notebook_w = weak_ptr<notebook_t>;
 
-class view_toplevel_t;
-using view_toplevel_p = shared_ptr<view_toplevel_t>;
-using view_toplevel_w = weak_ptr<view_toplevel_t>;
+class view_t;
+using view_p = shared_ptr<view_t>;
+using view_w = weak_ptr<view_t>;
 
 class xdg_shell_client_t;
 using xdg_shell_client_p = shared_ptr<xdg_shell_client_t>;

@@ -27,7 +27,7 @@ enum managed_window_type_e {
 	MANAGED_POPUP
 };
 
-class view_toplevel_t : public tree_t {
+class view_t : public tree_t {
 
 	friend class page_t;
 	page_context_t * _ctx;
@@ -53,8 +53,8 @@ class view_toplevel_t : public tree_t {
 	managed_window_type_e _managed_type;
 
 	/* private to avoid copy */
-	view_toplevel_t(view_toplevel_t const &) = delete;
-	view_toplevel_t & operator=(view_toplevel_t const &) = delete;
+	view_t(view_t const &) = delete;
+	view_t & operator=(view_t const &) = delete;
 
 	void set_wished_position(rect const & position);
 	rect const & get_wished_position() const;
@@ -68,26 +68,26 @@ class view_toplevel_t : public tree_t {
 
 public:
 
-	signal_t<view_toplevel_t*> destroy;
-	signal_t<view_toplevel_t*> focus_change;
-	signal_t<view_toplevel_t*> title_change;
+	signal_t<view_t*> destroy;
+	signal_t<view_t*> focus_change;
+	signal_t<view_t*> title_change;
 
-	void add_transient_child(view_toplevel_p c);
-	virtual void add_popup_child(view_toplevel_p child, int x, int y);
+	void add_transient_child(view_p c);
+	virtual void add_popup_child(view_p child, int x, int y);
 
 	void signal_title_change();
 
 	weston_surface * surface() const;
 
-	void destroy_popup_child(view_toplevel_t * c);
+	void destroy_popup_child(view_t * c);
 
-	auto shared_from_this() -> shared_ptr<view_toplevel_t>;
+	auto shared_from_this() -> shared_ptr<view_t>;
 
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
-	view_toplevel_t(page_context_t * ctx, page_surface_interface * s);
-	virtual ~view_toplevel_t();
+	view_t(page_context_t * ctx, page_surface_interface * s);
+	virtual ~view_t();
 
 	/* read only attributes */
 	auto resource() const -> wl_resource * __attribute__((deprecated));
@@ -193,6 +193,6 @@ public:
 
 #else
 
-class view_toplevel_t;
+class view_t;
 
 #endif /* SRC_XDG_SURFACE_TOPLEVEL_VIEW_HXX_ */

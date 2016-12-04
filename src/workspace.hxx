@@ -60,7 +60,7 @@ private:
 
 	workspace_switch_direction_e _switch_direction;
 
-	list<view_toplevel_w> _client_focus_history;
+	list<view_w> _client_focus_history;
 
 public:
 
@@ -81,11 +81,11 @@ public:
 	auto get_viewport_map() const -> vector<shared_ptr<viewport_t>>;
 	void set_primary_viewport(shared_ptr<viewport_t> v);
 	auto set_layout(vector<shared_ptr<viewport_t>> const & new_layout) -> void;
-	void attach(view_toplevel_p c);
+	void attach(view_p c);
 
-	bool client_focus_history_front(view_toplevel_p & out);
-	void client_focus_history_remove(view_toplevel_p in);
-	void client_focus_history_move_front(view_toplevel_p in);
+	bool client_focus_history_front(view_p & out);
+	void client_focus_history_remove(view_p in);
+	void client_focus_history_move_front(view_p in);
 	bool client_focus_history_is_empty();
 
 	/**

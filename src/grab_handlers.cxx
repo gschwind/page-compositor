@@ -98,7 +98,7 @@ void grab_split_t::button(uint32_t time, uint32_t button, uint32_t state) {
 }
 
 grab_bind_client_t::grab_bind_client_t(page_context_t * ctx,
-		view_toplevel_p c, uint32_t button,
+		view_p c, uint32_t button,
 		rect const & pos) :
 		ctx{ctx},
 		c{c},
@@ -308,7 +308,7 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 
 
 grab_floating_move_t::grab_floating_move_t(page_context_t * ctx,
-		view_toplevel_p f, uint32_t button, int x, int y) :
+		view_p f, uint32_t button, int x, int y) :
 		_ctx{ctx},
 		f{f},
 		original_position{f->get_wished_position()},
@@ -406,7 +406,7 @@ void grab_floating_move_t::button(uint32_t time, uint32_t button,
 
 
 grab_floating_resize_t::grab_floating_resize_t(page_context_t * ctx,
-		view_toplevel_p f, uint32_t button,
+		view_p f, uint32_t button,
 		int x, int y, xdg_surface_resize_edge mode) :
 		_ctx{ctx},
 		f{f},
@@ -583,7 +583,7 @@ void grab_floating_resize_t::button(uint32_t time, uint32_t _button,
 }
 
 grab_fullscreen_client_t::grab_fullscreen_client_t(page_context_t * ctx,
-		view_toplevel_p mw, uint32_t button, int x, int y) :
+		view_p mw, uint32_t button, int x, int y) :
  _ctx{ctx},
  mw{mw},
  //pn0{nullptr},

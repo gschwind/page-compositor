@@ -1420,7 +1420,7 @@ void page_t::run() {
 ////	_root->broadcast_render_finished();
 //}
 
-void page_t::fullscreen(view_toplevel_p mw) {
+void page_t::fullscreen(view_p mw) {
 
 	if(mw->is(MANAGED_FULLSCREEN))
 		return;
@@ -1438,7 +1438,7 @@ void page_t::fullscreen(view_toplevel_p mw) {
 	fullscreen(mw, v);
 }
 
-void page_t::fullscreen(view_toplevel_p mw, shared_ptr<viewport_t> v) {
+void page_t::fullscreen(view_p mw, shared_ptr<viewport_t> v) {
 	assert(v != nullptr);
 
 	if(mw->is(MANAGED_FULLSCREEN))
@@ -1495,7 +1495,7 @@ void page_t::fullscreen(view_toplevel_p mw, shared_ptr<viewport_t> v) {
 
 }
 
-void page_t::unfullscreen(view_toplevel_p mw) {
+void page_t::unfullscreen(view_p mw) {
 	/* WARNING: Call order is important, change it with caution */
 
 	/** just in case **/
@@ -1549,7 +1549,7 @@ void page_t::unfullscreen(view_toplevel_p mw) {
 
 }
 
-void page_t::toggle_fullscreen(view_toplevel_p c) {
+void page_t::toggle_fullscreen(view_p c) {
 	if(c->is(MANAGED_FULLSCREEN))
 		unfullscreen(c);
 	else
@@ -1569,7 +1569,7 @@ void page_t::toggle_fullscreen(view_toplevel_p c) {
 //}
 
 void page_t::insert_window_in_notebook(
-		view_toplevel_p x,
+		view_p x,
 		notebook_p n,
 		bool prefer_activate) {
 	assert(x != nullptr);
@@ -1602,7 +1602,7 @@ void page_t::insert_window_in_notebook(
 //}
 
 void page_t::set_keyboard_focus(weston_pointer * pointer,
-		shared_ptr<view_toplevel_t> new_focus) {
+		shared_ptr<view_t> new_focus) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	assert(new_focus != nullptr);
 	assert(new_focus->get_default_view() != nullptr);
@@ -1650,7 +1650,7 @@ void page_t::set_keyboard_focus(weston_pointer * pointer,
 //
 //}
 
-void page_t::split_left(notebook_p nbk, view_toplevel_p c) {
+void page_t::split_left(notebook_p nbk, view_p c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, VERTICAL_SPLIT);
@@ -1664,7 +1664,7 @@ void page_t::split_left(notebook_p nbk, view_toplevel_p c) {
 	split->show();
 }
 
-void page_t::split_right(notebook_p nbk, view_toplevel_p c) {
+void page_t::split_right(notebook_p nbk, view_p c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, VERTICAL_SPLIT);
@@ -1678,7 +1678,7 @@ void page_t::split_right(notebook_p nbk, view_toplevel_p c) {
 	split->show();
 }
 
-void page_t::split_top(notebook_p nbk, view_toplevel_p c) {
+void page_t::split_top(notebook_p nbk, view_p c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, HORIZONTAL_SPLIT);
@@ -1692,7 +1692,7 @@ void page_t::split_top(notebook_p nbk, view_toplevel_p c) {
 	split->show();
 }
 
-void page_t::split_bottom(notebook_p nbk, view_toplevel_p c) {
+void page_t::split_bottom(notebook_p nbk, view_p c) {
 	auto parent = dynamic_pointer_cast<page_component_t>(nbk->parent()->shared_from_this());
 	auto n = make_shared<notebook_t>(this);
 	auto split = make_shared<split_t>(this, HORIZONTAL_SPLIT);
@@ -1744,7 +1744,7 @@ void page_t::notebook_close(notebook_p nbk) {
 	}
 
 	/* move all client from destroyed notebook to new default pop */
-	auto clients = filter_class<view_toplevel_t>(nbk->children());
+	auto clients = filter_class<view_t>(nbk->children());
 //	bool notebook_has_focus = false;
 	for(auto i : clients) {
 //		if(i->has_focus())
@@ -2240,7 +2240,7 @@ void page_t::notebook_close(notebook_p nbk) {
 //	}
 //}
 //
-void page_t::insert_in_tree_using_transient_for(view_toplevel_p c) {
+void page_t::insert_in_tree_using_transient_for(view_p c) {
 
 //	auto transient_for = c->transient_for();
 //	if(transient_for != nullptr and not transient_for->master_view().expired()) {
@@ -2295,8 +2295,8 @@ void page_t::detach(shared_ptr<tree_t> t) {
 		 * proper client to re-focus and may re-focus that is not belong the
 		 * new workspace.
 		 **/
-		if(typeid(*t.get()) == typeid(view_toplevel_t)) {
-			auto x = dynamic_pointer_cast<view_toplevel_t>(t);
+		if(typeid(*t.get()) == typeid(view_t)) {
+			auto x = dynamic_pointer_cast<view_t>(t);
 			for(auto w: _root->_desktop_list)
 				w->client_focus_history_remove(x);
 		}
@@ -2309,7 +2309,7 @@ void page_t::detach(shared_ptr<tree_t> t) {
 	}
 }
 
-void page_t::fullscreen_client_to_viewport(view_toplevel_p c, viewport_p v) {
+void page_t::fullscreen_client_to_viewport(view_p c, viewport_p v) {
 	detach(c);
 	if (has_key(_fullscreen_client_to_viewport, c.get())) {
 		fullscreen_data_t & data = _fullscreen_client_to_viewport[c.get()];
@@ -2330,12 +2330,12 @@ void page_t::fullscreen_client_to_viewport(view_toplevel_p c, viewport_p v) {
 	}
 }
 
-void page_t::bind_window(view_toplevel_p mw, bool activate) {
+void page_t::bind_window(view_p mw, bool activate) {
 	detach(mw);
 	insert_window_in_notebook(mw, nullptr, activate);
 }
 
-void page_t::unbind_window(view_toplevel_p mw) {
+void page_t::unbind_window(view_p mw) {
 	detach(mw);
 	mw->set_managed_type(MANAGED_FLOATING);
 	insert_in_tree_using_transient_for(mw);
@@ -2366,7 +2366,7 @@ shared_ptr<notebook_t> page_t::get_another_notebook(shared_ptr<tree_t> base, sha
 
 }
 
-shared_ptr<notebook_t> page_t::find_parent_notebook_for(shared_ptr<view_toplevel_t> mw) {
+shared_ptr<notebook_t> page_t::find_parent_notebook_for(shared_ptr<view_t> mw) {
 	return dynamic_pointer_cast<notebook_t>(mw->parent()->shared_from_this());
 }
 
@@ -2538,7 +2538,7 @@ void page_t::remove_viewport(workspace_p d, viewport_p v) {
 
 	/* Transfer clients to a valid notebook */
 	for (auto nbk : filter_class<notebook_t>(v->get_all_children())) {
-		for (auto c : filter_class<view_toplevel_t>(nbk->children())) {
+		for (auto c : filter_class<view_t>(nbk->children())) {
 			d->default_pop()->add_client(c, false);
 		}
 	}
@@ -2558,7 +2558,7 @@ void page_t::remove_viewport(workspace_p d, viewport_p v) {
 ////	}
 //}
 
-void page_t::manage_client(view_toplevel_p mw) {
+void page_t::manage_client(view_p mw) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 //	if (mw->_pending.fullscreen) {
@@ -2742,11 +2742,11 @@ shared_ptr<viewport_t> page_t::find_mouse_viewport(int x, int y) const {
 //	return nullptr;
 //}
 
-void page_t::remove_client(view_toplevel_p c) {
+void page_t::remove_client(view_p c) {
 	auto parent = c->parent()->shared_from_this();
 	detach(c);
 	for(auto i: c->children()) {
-		auto c = dynamic_pointer_cast<view_toplevel_t>(i);
+		auto c = dynamic_pointer_cast<view_t>(i);
 		if(c != nullptr) {
 			insert_in_tree_using_transient_for(c);
 		}
@@ -3352,11 +3352,11 @@ int page_t::create_workspace() {
 //	return _keymap;
 //}
 
-list<view_toplevel_w> page_t::global_client_focus_history() {
+list<view_w> page_t::global_client_focus_history() {
 	return _global_focus_history;
 }
 
-bool page_t::global_focus_history_front(shared_ptr<view_toplevel_t> & out) {
+bool page_t::global_focus_history_front(shared_ptr<view_t> & out) {
 	if(not global_focus_history_is_empty()) {
 		out = _global_focus_history.front().lock();
 		return true;
@@ -3364,11 +3364,11 @@ bool page_t::global_focus_history_front(shared_ptr<view_toplevel_t> & out) {
 	return false;
 }
 
-void page_t::global_focus_history_remove(shared_ptr<view_toplevel_t> in) {
+void page_t::global_focus_history_remove(shared_ptr<view_t> in) {
 	_global_focus_history.remove_if([in](weak_ptr<tree_t> const & w) { return w.expired() or w.lock() == in; });
 }
 
-void page_t::global_focus_history_move_front(shared_ptr<view_toplevel_t> in) {
+void page_t::global_focus_history_move_front(shared_ptr<view_t> in) {
 	move_front(_global_focus_history, in);
 }
 
@@ -3766,7 +3766,7 @@ void page_t::on_output_pending(weston_output * output) {
 //}
 
 
-void page_t::configure_surface(view_toplevel_p xdg_surface,
+void page_t::configure_surface(view_p xdg_surface,
 			int32_t sx, int32_t sy) {
 
 	weston_log("ccc %p\n", xdg_surface.get());
