@@ -23,7 +23,6 @@
 #include "xdg-shell-client.hxx"
 #include "wl-shell-client.hxx"
 
-#include "view-base.hxx"
 #include "view-toplevel.hxx"
 
 namespace page {
@@ -347,8 +346,8 @@ xdg_surface_toplevel_t * xdg_surface_toplevel_t::get(weston_surface * surface) {
 			xdg_surface_base_t::get(surface));
 }
 
-view_base_p xdg_surface_toplevel_t::base_master_view() {
-	return dynamic_pointer_cast<view_base_t>(_master_view.lock());
+view_toplevel_p xdg_surface_toplevel_t::base_master_view() {
+	return dynamic_pointer_cast<view_toplevel_t>(_master_view.lock());
 }
 
 weston_surface * xdg_surface_toplevel_t::surface() const {

@@ -31,7 +31,6 @@
 #include "grab_handlers.hxx"
 #include "wl-shell-client.hxx"
 
-#include "view-base.hxx"
 #include "view-toplevel.hxx"
 
 namespace page {
@@ -215,8 +214,8 @@ wl_shell_surface_t * wl_shell_surface_t::get(weston_surface * surface) {
 			xdg_surface_base_t::get(surface));
 }
 
-view_base_p wl_shell_surface_t::base_master_view() {
-	return dynamic_pointer_cast<view_base_t>(_master_view.lock());
+view_toplevel_p wl_shell_surface_t::base_master_view() {
+	return dynamic_pointer_cast<view_toplevel_t>(_master_view.lock());
 }
 
 void wl_shell_surface_t::wl_shell_surface_pong(wl_client *client,

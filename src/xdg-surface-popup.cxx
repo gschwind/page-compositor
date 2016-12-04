@@ -12,7 +12,7 @@
 #include "xdg-shell-client.hxx"
 #include "xdg-surface-popup.hxx"
 #include "xdg-surface-toplevel.hxx"
-#include "view-popup.hxx"
+
 #include "view-toplevel.hxx"
 
 #include "xdg-shell-unstable-v5-server-protocol.h"
@@ -118,13 +118,13 @@ void xdg_surface_popup_t::xdg_popup_destroy(wl_client * client, wl_resource * re
 	wl_resource_destroy(resource);
 }
 
-auto xdg_surface_popup_t::create_view() -> view_popup_p {
-	auto view = make_shared<view_popup_t>(_ctx, this);
+auto xdg_surface_popup_t::create_view() -> view_toplevel_p {
+	auto view = make_shared<view_toplevel_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }
 
-auto xdg_surface_popup_t::master_view() -> view_popup_w {
+auto xdg_surface_popup_t::master_view() -> view_toplevel_w {
 	return _master_view;
 }
 
@@ -151,8 +151,8 @@ xdg_surface_popup_t * xdg_surface_popup_t::get(weston_surface * surface) {
 			xdg_surface_base_t::get(surface));
 }
 
-view_base_p xdg_surface_popup_t::base_master_view() {
-	return dynamic_pointer_cast<view_base_t>(_master_view.lock());
+view_toplevel_p xdg_surface_popup_t::base_master_view() {
+	return dynamic_pointer_cast<view_toplevel_t>(_master_view.lock());
 }
 
 

@@ -9,6 +9,9 @@
 #define SRC_PAGE_SURFACE_INTERFACE_HXX_
 
 #include <set>
+#include <string>
+
+#include <compositor.h>
 
 namespace page {
 
@@ -21,8 +24,8 @@ struct page_surface_interface {
 
 	virtual ~page_surface_interface() = default;
 
-	virtual weston_surface * surface() const = 0;
-	virtual weston_view * create_weston_view() = 0;
+	virtual struct weston_surface * surface() const = 0;
+	virtual struct weston_view * create_weston_view() = 0;
 	virtual int32_t width() const = 0;
 	virtual int32_t height() const = 0;
 	virtual string const & title() const = 0;

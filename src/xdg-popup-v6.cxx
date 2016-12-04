@@ -11,7 +11,7 @@
 #include "xdg-shell-unstable-v6-server-protocol.h"
 #include "xdg-shell-unstable-v5-server-protocol.h"
 
-#include "view-popup.hxx"
+#include "view-toplevel.hxx"
 
 namespace page {
 
@@ -70,8 +70,8 @@ void xdg_popup_v6_t::surface_commited(weston_surface * s) {
 
 }
 
-auto xdg_popup_v6_t::create_view() -> view_popup_p {
-	auto view = make_shared<view_popup_t>(_ctx, this);
+auto xdg_popup_v6_t::create_view() -> view_toplevel_p {
+	auto view = make_shared<view_toplevel_t>(_ctx, this);
 	_master_view = view;
 	return view;
 }

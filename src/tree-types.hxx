@@ -38,14 +38,6 @@ class notebook_t;
 using notebook_p = shared_ptr<notebook_t>;
 using notebook_w = weak_ptr<notebook_t>;
 
-class view_base_t;
-using view_base_p = shared_ptr<view_base_t>;
-using view_base_w = weak_ptr<view_base_t>;
-
-class view_popup_t;
-using view_popup_p = shared_ptr<view_popup_t>;
-using view_popup_w = weak_ptr<view_popup_t>;
-
 class view_toplevel_t;
 using view_toplevel_p = shared_ptr<view_toplevel_t>;
 using view_toplevel_w = weak_ptr<view_toplevel_t>;
