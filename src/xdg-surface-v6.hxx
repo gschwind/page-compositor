@@ -46,8 +46,9 @@ using namespace wcxx;
 struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 
 	page_context_t *       _ctx;
-	wl_client *            _client;
-	weston_surface *       _surface;
+
+	struct wl_client *            _client;
+	struct weston_surface *       _surface;
 	uint32_t               _id;
 	struct wl_resource *   _resource;
 

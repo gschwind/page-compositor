@@ -30,8 +30,7 @@ wl_shell_client_t::wl_shell_client_t(page_context_t * ctx, wl_client * client, u
 {
 
 	/* allocate a wayland resource for the provided 'id' */
-	_wl_shell_resource = wl_resource_create(client,
-			reinterpret_cast<wl_interface const *>(&wl_shell_interface), 1, id);
+	_wl_shell_resource = wl_resource_create(client, &wl_shell_interface, 1, id);
 
 	/**
 	 * Define the implementation of the resource and the user_data,

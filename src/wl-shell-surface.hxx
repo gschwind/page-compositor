@@ -27,6 +27,7 @@
 #include <compositor.h>
 
 #include "tree-types.hxx"
+#include "listener.hxx"
 
 #include "wayland-interface.hxx"
 #include "icon_handler.hxx"
@@ -48,11 +49,20 @@ using namespace wcxx;
 using namespace std;
 
 struct wl_shell_surface_t :
-	public xdg_surface_base_t,
 	public wl_shell_surface_vtable,
 	public page_surface_interface {
 
 	friend class page::page_t;
+
+	page_context_t *        _ctx;
+	struct wl_client *      _client;
+	struct weston_surface * _surface;
+	uint32_t                _id;
+	struct wl_resource *    _resource;
+	struct wl_listener      _surface_destroy;
+
+	listener_t<struct weston_surface> on_surface_destroy;
+	listener_t<struct weston_surface> on_surface_commit;
 
 	struct _state {
 		std::string title;
@@ -71,34 +81,25 @@ struct wl_shell_surface_t :
 			geometry = rect{0,0,0,0};
 		}
 
-	} _pending, _current;
+	} _current;
+
+	wl_shell_surface_t * _parent;
+	std::string str_class;
 
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
 
 	view_toplevel_w _master_view;
 
-
 	signal_t<wl_shell_surface_t *> destroy;
 
-	void xdg_surface_send_configure(int32_t width,
-			int32_t height, set<uint32_t> const & states);
-	void wl_surface_send_configure(int32_t width,
-			int32_t height, set<uint32_t> const & states);
+	static auto get(struct wl_resource * r) -> wl_shell_surface_t *;
 
 	/* private to avoid copy */
 	wl_shell_surface_t(wl_shell_surface_t const &) = delete;
 	wl_shell_surface_t & operator=(wl_shell_surface_t const &) = delete;
 
 	static void delete_resource(wl_resource *resource);
-
-	void set_xdg_surface_implementation();
-	void set_wl_shell_surface_implementation();
-
-	/** called on surface commit */
-	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
-
-	static auto get(wl_resource * r) -> wl_shell_surface_t *;
 
 	wl_shell_surface_t(
 			page_context_t * ctx,
@@ -117,14 +118,14 @@ struct wl_shell_surface_t :
 	auto create_view() -> view_toplevel_p;
 	auto master_view() -> view_toplevel_w;
 
-	virtual void weston_destroy() override;
 	void destroy_all_views();
 
 	virtual view_toplevel_p base_master_view();
 
 	void minimize();
 
-	static wl_shell_surface_t * get(weston_surface * surface);
+	void surface_commited(struct weston_surface * s);
+	void surface_destroyed(struct weston_surface * s);
 
 	/* wl_shell_surface */
 	virtual void wl_shell_surface_pong(struct wl_client * client, struct wl_resource * resource, uint32_t serial) override;

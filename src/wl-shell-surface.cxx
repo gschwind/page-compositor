@@ -58,70 +58,25 @@ wl_shell_surface_t::wl_shell_surface_t(
 		wl_client * client,
 		weston_surface * surface,
 		uint32_t id) :
-	xdg_surface_base_t{ctx, client, surface, id},
-	_pending{},
-	_ack_serial{0}
+	_ctx{ctx},
+	_id{id},
+	_client{client},
+	_surface{surface},
+	_current{},
+	_ack_serial{0},
+	_parent{nullptr}
 {
-	weston_log("ALLOC wl_shell_surface_t %p\n", this);
-
-	rect pos{0,0,surface->width, surface->height};
-
-	weston_log("window default position = %s\n", pos.to_string().c_str());
-
-	/* tell weston how to use this data */
-	if (weston_surface_set_role(surface, "xdg_toplevel",
-			_resource, XDG_SHELL_ERROR_ROLE) < 0)
-		throw "TODO";
-
-	_resource = wl_resource_create(_client,
-			reinterpret_cast<wl_interface const *>(&wl_shell_surface_interface), 1, _id);
+	weston_log("NEW wl_shell_surface_t %p\n", this);
+	_resource = wl_resource_create(_client, &wl_shell_surface_interface, 1, _id);
 	wl_shell_surface_vtable::set_implementation(_resource);
 
-}
+	on_surface_destroy.connect(&_surface->destroy_signal, this, &wl_shell_surface_t::surface_destroyed);
+	on_surface_commit.connect(&_surface->commit_signal, this, &wl_shell_surface_t::surface_commited);
 
-//void wl_shell_surface_t::set_xdg_surface_implementation() {
-//	_resource = wl_resource_create(_client,
-//			reinterpret_cast<wl_interface const *>(&xdg_surface_interface), 1,
-//			_id);
-//
-//	xdg_surface_vtable::set_implementation(_resource);
-//
-//	_surface_send_configure = &wl_shell_surface_t::xdg_surface_send_configure;
-//
-//}
-//
-//void wl_shell_surface_t::set_wl_shell_surface_implementation() {
-//	_resource = wl_resource_create(_client,
-//			reinterpret_cast<wl_interface const *>(&wl_shell_surface_interface), 1,
-//			_id);
-//
-//	wl_resource_set_implementation(_resource,
-//			&_wl_shell_surface_implementation,
-//			this, &wl_shell_surface_t::delete_resource);
-//
-//	_surface_send_configure = &wl_shell_surface_t::wl_surface_send_configure;
-//
-//}
+}
 
 wl_shell_surface_t::~wl_shell_surface_t() {
-	weston_log("DELETE wl_shell_surface_t %p\n", this);
-	/* should not be usefull, delete must be call on resource destroy */
-//	if(_resource) {
-//		wl_resource_set_user_data(_resource, nullptr);
-//	}
-
-}
-
-void wl_shell_surface_t::weston_destroy() {
-	destroy_all_views();
-
-	if(_surface) {
-		wl_list_remove(&_surface_destroy.link);
-		_surface->committed_private = nullptr;
-		_surface->committed = nullptr;
-		_surface = nullptr;
-	}
-
+	weston_log("DEL wl_shell_surface_t %p\n", this);
 }
 
 void wl_shell_surface_t::destroy_all_views() {
@@ -131,57 +86,8 @@ void wl_shell_surface_t::destroy_all_views() {
 	}
 }
 
-void wl_shell_surface_t::weston_configure(struct weston_surface * es,
-		int32_t sx, int32_t sy)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-	if(_master_view.expired()) {
-		_ctx->manage_client(create_view());
-	}
-
-	/* configuration is invalid */
-	if(_ack_serial != 0)
-		return;
-
-	if(_pending.maximized != _current.maximized) {
-		if(_pending.maximized) {
-			/* on maximize */
-		} else {
-			/* on unmaximize */
-		}
-	}
-
-	if(_pending.minimized != _current.minimized) {
-		if(_pending.minimized) {
-			minimize();
-			_pending.minimized = false;
-		} else {
-			/* on unminimize */
-		}
-	}
-
-	if(_pending.transient_for != _current.transient_for) {
-
-	}
-
-	if(_pending.title != _current.title) {
-		_current.title = _pending.title;
-		if(not _master_view.expired()) {
-			_master_view.lock()->signal_title_change();
-		}
-	}
-
-	if(not _master_view.expired()) {
-		_master_view.lock()->update_view();
-	}
-
-	_current = _pending;
-
-}
-
-auto wl_shell_surface_t::get(wl_resource * r) -> wl_shell_surface_t * {
-	return reinterpret_cast<wl_shell_surface_t*>(wl_resource_get_user_data(r));
+auto wl_shell_surface_t::get(struct wl_resource * r) -> wl_shell_surface_t * {
+	return dynamic_cast<wl_shell_surface_t*>(resource_get<wl_shell_surface_vtable>(r));
 }
 
 auto wl_shell_surface_t::resource() const -> wl_resource * {
@@ -209,9 +115,13 @@ void wl_shell_surface_t::minimize() {
 
 }
 
-wl_shell_surface_t * wl_shell_surface_t::get(weston_surface * surface) {
-	return dynamic_cast<wl_shell_surface_t*>(
-			xdg_surface_base_t::get(surface));
+void wl_shell_surface_t::surface_commited(struct weston_surface * s) {
+
+}
+
+void wl_shell_surface_t::surface_destroyed(struct weston_surface * s) {
+	destroy_all_views();
+	wl_resource_destroy(_resource);
 }
 
 view_toplevel_p wl_shell_surface_t::base_master_view() {
@@ -276,6 +186,14 @@ void wl_shell_surface_t::wl_shell_surface_resize(wl_client *client,
 
 void wl_shell_surface_t::wl_shell_surface_set_toplevel(wl_client *client,
 		     wl_resource *resource) {
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(_surface, "wl_shell_surface_toplevel",
+			_resource, WL_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
+
+	if(_master_view.expired()) {
+		_ctx->manage_client(create_view());
+	}
 
 }
 
@@ -285,6 +203,7 @@ void wl_shell_surface_t::wl_shell_surface_set_transient(wl_client *client,
 		      int32_t x,
 		      int32_t y,
 		      uint32_t flags) {
+	_current.transient_for = parent;
 
 }
 
@@ -293,9 +212,10 @@ void wl_shell_surface_t::wl_shell_surface_set_fullscreen(wl_client *client,
 		       uint32_t method,
 		       uint32_t framerate,
 		       wl_resource *output) {
-	_pending.minimized = false;
-	_pending.fullscreen = true;
-	_pending.maximized = false;
+	_current.minimized = false;
+	_current.fullscreen = true;
+	_current.maximized = false;
+	/* TODO: switch to fullscreen */
 }
 
 void wl_shell_surface_t::wl_shell_surface_set_popup(wl_client *client,
@@ -307,27 +227,50 @@ void wl_shell_surface_t::wl_shell_surface_set_popup(wl_client *client,
 		  int32_t y,
 		  uint32_t flags) {
 
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(_surface, "wl_shell_surface_popup",
+			_resource, WL_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
+
+	if(_master_view.expired()) {
+		auto xview = create_view();
+		_parent = wl_shell_surface_t::get(parent);
+		auto parent_view = _parent->master_view().lock();
+
+		if(parent_view != nullptr) {
+			auto xview = make_shared<view_toplevel_t>(_ctx, this);
+			_master_view = xview;
+			weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, x, y);
+			parent_view->add_popup_child(xview, x, y);
+			wl_client_flush(_client);
+		}
+	}
+
 }
 
 void wl_shell_surface_t::wl_shell_surface_set_maximized(wl_client *client,
 		      wl_resource *resource,
 		      wl_resource *output) {
-	_pending.minimized = false;
-	_pending.fullscreen = false;
-	_pending.maximized = true;
+	_current.minimized = false;
+	_current.fullscreen = false;
+	_current.maximized = true;
 }
 
 void wl_shell_surface_t::wl_shell_surface_set_title(wl_client *client,
 		  wl_resource *resource,
 		  const char *title) {
-	_pending.title = title;
+	_current.title = title;
+
+	if(not _master_view.expired()) {
+		_master_view.lock()->signal_title_change();
+	}
 
 }
 
 void wl_shell_surface_t::wl_shell_surface_set_class(wl_client *client,
 		  wl_resource *resource,
 		  const char *class_) {
-	/* TODO */
+	str_class = class_;
 }
 
 weston_surface * wl_shell_surface_t::surface() const {
@@ -352,13 +295,13 @@ string const & wl_shell_surface_t::title() const {
 
 void wl_shell_surface_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
 	_ack_serial = 0;
-	::wl_shell_surface_send_configure(_resource,
+	wl_shell_surface_send_configure(_resource,
 			WL_SHELL_SURFACE_RESIZE_TOP_LEFT, width, height);
 	wl_client_flush(_client);
 }
 
 void wl_shell_surface_t::send_close() {
-	xdg_surface_send_close(_resource);
+	/* cannot send close */
 }
 
 
