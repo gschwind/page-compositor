@@ -223,7 +223,7 @@ void viewport_t::create_window() {
 }
 
 void viewport_t::_redraw_back_buffer() {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	if(_pix->get_cairo_surface() == nullptr)
 		return;

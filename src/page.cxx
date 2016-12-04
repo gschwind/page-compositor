@@ -113,7 +113,7 @@ static void _default_grab_cancel(weston_pointer_grab * grab) {
 void page_t::page_start_repaint_loop(weston_output *output_base) {
 	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
 
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 	ths->_root->broadcast_trigger_redraw();
 
 	auto func = ths->start_repaint_loop_functions[output_base];
@@ -127,7 +127,7 @@ int page_t::page_repaint(struct weston_output *output_base,
 		   pixman_region32_t *damage) {
 	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
 
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
 	ths->_root->broadcast_trigger_redraw();
 
 	auto func = ths->repaint_functions[output_base];
@@ -3666,11 +3666,11 @@ void page_t::on_output_created(weston_output * output) {
 //	background->timeline.force_refresh = 1;
 //	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
-//	repaint_functions[output] = output->repaint;
-//	output->repaint = &page_t::page_repaint;
-//
-//	start_repaint_loop_functions[output] = output->start_repaint_loop;
-//	output->start_repaint_loop = &page_t::page_start_repaint_loop;
+	repaint_functions[output] = output->repaint;
+	output->repaint = &page_t::page_repaint;
+
+	start_repaint_loop_functions[output] = output->start_repaint_loop;
+	output->start_repaint_loop = &page_t::page_start_repaint_loop;
 
 	_outputs.push_back(output);
 	update_viewport_layout();
