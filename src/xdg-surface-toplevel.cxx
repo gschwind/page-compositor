@@ -29,14 +29,6 @@ namespace page {
 
 using namespace std;
 
-void xdg_surface_toplevel_t::delete_resource(struct wl_resource *resource) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto xs = xdg_surface_toplevel_t::get(resource);
-	xs->destroy_all_views();
-	xs->destroy.signal(xs);
-	delete xs;
-}
-
 void xdg_surface_toplevel_t::xdg_surface_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto xs = xdg_surface_toplevel_t::get(resource);
@@ -73,30 +65,6 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 }
 
-//void xdg_surface_toplevel_t::set_xdg_surface_implementation() {
-//	_resource = wl_resource_create(_client,
-//			reinterpret_cast<wl_interface const *>(&xdg_surface_interface), 1,
-//			_id);
-//
-//	xdg_surface_vtable::set_implementation(_resource);
-//
-//	_surface_send_configure = &xdg_surface_toplevel_t::xdg_surface_send_configure;
-//
-//}
-
-//void xdg_surface_toplevel_t::set_wl_shell_surface_implementation() {
-//	_resource = wl_resource_create(_client,
-//			reinterpret_cast<wl_interface const *>(&wl_shell_surface_interface), 1,
-//			_id);
-//
-//	wl_resource_set_implementation(_resource,
-//			&_wl_shell_surface_implementation,
-//			this, &xdg_surface_toplevel_t::delete_resource);
-//
-//	_surface_send_configure = &xdg_surface_toplevel_t::wl_surface_send_configure;
-//
-//}
-
 xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 	weston_log("DELETE xdg_surface_toplevel_t %p\n", this);
 	/* should not be usefull, delete must be call on resource destroy */
@@ -106,15 +74,8 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 
 }
 
-void xdg_surface_toplevel_t::weston_destroy() {
+void xdg_surface_toplevel_t::surface_destroyed(struct weston_surface * s) {
 	destroy_all_views();
-
-	if(_surface) {
-		wl_list_remove(&_surface_destroy.link);
-		_surface->committed_private = nullptr;
-		_surface->committed = nullptr;
-		_surface = nullptr;
-	}
 }
 
 void xdg_surface_toplevel_t::destroy_all_views() {
@@ -124,8 +85,7 @@ void xdg_surface_toplevel_t::destroy_all_views() {
 	}
 }
 
-void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
-		int32_t sx, int32_t sy)
+void xdg_surface_toplevel_t::surface_commited(struct weston_surface * es)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
@@ -174,7 +134,7 @@ void xdg_surface_toplevel_t::weston_configure(struct weston_surface * es,
 }
 
 auto xdg_surface_toplevel_t::get(wl_resource * r) -> xdg_surface_toplevel_t * {
-	return reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(r));
+	return dynamic_cast<xdg_surface_toplevel_t*>(resource_get<xdg_surface_vtable>(r));
 }
 
 auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
@@ -339,11 +299,6 @@ void xdg_surface_toplevel_t::minimize() {
 		_ctx->bind_window(master_view, true);
 	}
 
-}
-
-xdg_surface_toplevel_t * xdg_surface_toplevel_t::get(weston_surface * surface) {
-	return dynamic_cast<xdg_surface_toplevel_t*>(
-			xdg_surface_base_t::get(surface));
 }
 
 view_p xdg_surface_toplevel_t::base_master_view() {

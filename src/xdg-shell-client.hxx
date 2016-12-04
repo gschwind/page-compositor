@@ -34,6 +34,8 @@ struct xdg_shell_client_t : protected connectable_t, public xdg_shell_vtable {
 	map<uint32_t, xdg_surface_toplevel_t *> xdg_surface_toplevel_map;
 	map<uint32_t, xdg_surface_popup_t *> xdg_surface_popup_map;
 
+	map<struct weston_surface *, xdg_surface_base_t *> surfaces_map;
+
 	xdg_shell_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
 	virtual ~xdg_shell_client_t() { }
 
@@ -43,8 +45,9 @@ struct xdg_shell_client_t : protected connectable_t, public xdg_shell_vtable {
 	void destroy_toplevel(xdg_surface_toplevel_t * s);
 	void destroy_popup(xdg_surface_popup_t * s);
 
+	xdg_surface_base_t * find_xdg_surface_from_weston_surface(struct weston_surface * s);
 
-	static xdg_shell_client_t * get(wl_resource * resource);
+	static auto get(wl_resource * resource) -> xdg_shell_client_t *;
 
 	virtual void xdg_shell_destroy(wl_client * client, wl_resource * resource)
 			override;

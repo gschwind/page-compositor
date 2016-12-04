@@ -14,6 +14,8 @@
 #include <memory>
 #include <compositor.h>
 
+#include "xdg-shell-unstable-v5-interface.hxx"
+
 #include "renderable.hxx"
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_unmanaged_gaussian_shadow.hxx"
@@ -24,15 +26,19 @@
 
 namespace page {
 
+using namespace wcxx;
 using namespace std;
 
-struct xdg_surface_popup_t : public xdg_surface_base_t, public page_surface_interface {
+struct xdg_surface_popup_t :
+		public xdg_surface_base_t,
+		public xdg_popup_vtable,
+		public page_surface_interface {
 
 	wl_client * client;
 	wl_resource * resource;
 	uint32_t id;
 	weston_surface * _surface;
-	weston_surface * parent;
+	xdg_surface_base_t * parent;
 	weston_seat * seat;
 	uint32_t serial;
 	int32_t x;
@@ -49,33 +55,30 @@ struct xdg_surface_popup_t : public xdg_surface_base_t, public page_surface_inte
 	xdg_surface_popup_t(xdg_surface_popup_t const &) = delete;
 	xdg_surface_popup_t & operator=(xdg_surface_popup_t const &) = delete;
 
-	static void _weston_configure(weston_surface * es, int32_t sx, int32_t sy);
-
-	void xdg_popup_destroy(wl_client * client, wl_resource * resource);
-
 	/** called on surface commit */
-	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
+	virtual void surface_commited(weston_surface * es) override;
+	virtual void surface_destroyed(weston_surface * es) override;
 
 	xdg_surface_popup_t(page_context_t * ctx,
 			  wl_client * client,
 			  wl_resource * resource,
 			  uint32_t id,
 			  weston_surface * surface,
-			  weston_surface * parent,
+			  xdg_surface_base_t * parent,
 			  weston_seat * seat,
 			  uint32_t serial,
 			  int32_t x, int32_t y);
 	~xdg_surface_popup_t();
 
-	static void xdg_popup_delete(struct wl_resource *resource);
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
 
-	virtual void weston_destroy() override;
 	virtual view_p base_master_view();
 
 	void destroy_all_views();
 
-	static xdg_surface_popup_t * get(weston_surface * surface);
+	/* xdg_popup_vtable */
+	virtual void xdg_popup_destroy(struct wl_client * client, struct wl_resource * resource) override;
+	virtual void xdg_popup_delete_resource(struct wl_resource * resource) override;
 
 	/* page_surface_interface */
 	virtual weston_surface * surface() const override;

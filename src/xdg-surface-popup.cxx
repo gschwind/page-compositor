@@ -22,18 +22,21 @@ namespace page {
 using namespace std;
 
 auto xdg_surface_popup_t::get(wl_resource * r) -> xdg_surface_popup_t * {
-	return reinterpret_cast<xdg_surface_popup_t *>(
-			wl_resource_get_user_data(r));
+	return dynamic_cast<xdg_surface_popup_t*>(resource_get<xdg_popup_vtable>(r));
 }
 
-void xdg_surface_popup_t::weston_configure(weston_surface * es, int32_t sx,
-		int32_t sy)
+void xdg_surface_popup_t::surface_commited(weston_surface * es)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	if(_master_view.expired()) {
+		/* tell weston how to use this data */
+		if (weston_surface_set_role(_surface, "xdg_popup",
+				_resource, XDG_SHELL_ERROR_ROLE) < 0)
+			throw "TODO";
+
 		auto xview = create_view();
-		auto base = xdg_surface_base_t::get(parent);
+		auto base = parent;
 		weston_log("%p\n", base);
 		auto parent_view = base->base_master_view();
 		weston_log("%p\n", parent_view.get());
@@ -48,17 +51,7 @@ void xdg_surface_popup_t::weston_configure(weston_surface * es, int32_t sx,
 
 }
 
-static void xdg_popup_destroy(wl_client * client, wl_resource * resource) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto p = xdg_surface_popup_t::get(resource);
-	p->xdg_popup_destroy(client, resource);
-}
-
-static struct xdg_popup_interface const _xdg_popup_implementation = {
-		xdg_popup_destroy
-};
-
-void xdg_surface_popup_t::xdg_popup_delete(struct wl_resource *resource) {
+void xdg_surface_popup_t::xdg_popup_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	auto xs = xdg_surface_popup_t::get(resource);
 	xs->destroy_all_views();
@@ -72,7 +65,7 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 		  wl_resource * resource,
 		  uint32_t id,
 		  weston_surface * surface,
-		  weston_surface * parent,
+		  xdg_surface_base_t * parent,
 		  weston_seat * seat,
 		  uint32_t serial,
 		  int32_t x, int32_t y) :
@@ -90,16 +83,7 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 	_resource = wl_resource_create(client,
 			reinterpret_cast<wl_interface const *>(&xdg_popup_interface), 1, id);
 
-	wl_resource_set_implementation(_resource,
-			&_xdg_popup_implementation,
-			this,
-			&xdg_surface_popup_t::xdg_popup_delete);
-
-	/* tell weston how to use this data */
-	if (weston_surface_set_role(surface, "xdg_popup",
-			_resource, XDG_SHELL_ERROR_ROLE) < 0)
-		throw "TODO";
-
+	xdg_popup_vtable::set_implementation(_resource);
 
 }
 
@@ -128,16 +112,12 @@ auto xdg_surface_popup_t::master_view() -> view_w {
 	return _master_view;
 }
 
-void xdg_surface_popup_t::weston_destroy() {
-	destroy_all_views();
-
-	if(_surface) {
-		wl_list_remove(&_surface_destroy.link);
-		_surface->committed_private = nullptr;
-		_surface->committed = nullptr;
-		_surface = nullptr;
-	}
-
+void xdg_surface_popup_t::surface_destroyed(struct weston_surface * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	auto xs = xdg_surface_popup_t::get(resource);
+	xs->destroy_all_views();
+	xs->destroy.signal(xs);
+	delete xs;
 }
 
 void xdg_surface_popup_t::destroy_all_views() {
@@ -146,13 +126,8 @@ void xdg_surface_popup_t::destroy_all_views() {
 	}
 }
 
-xdg_surface_popup_t * xdg_surface_popup_t::get(weston_surface * surface) {
-	return dynamic_cast<xdg_surface_popup_t*>(
-			xdg_surface_base_t::get(surface));
-}
-
 view_p xdg_surface_popup_t::base_master_view() {
-	return dynamic_pointer_cast<view_t>(_master_view.lock());
+	return _master_view.lock();
 }
 
 

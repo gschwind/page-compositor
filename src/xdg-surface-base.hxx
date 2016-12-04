@@ -20,6 +20,7 @@
 #include "tree-types.hxx"
 
 #include "utils.hxx"
+#include "listener.hxx"
 #include "region.hxx"
 
 #include "exception.hxx"
@@ -44,6 +45,9 @@ struct xdg_surface_base_t {
 	struct wl_resource *   _resource;
 	wl_listener            _surface_destroy;
 
+	listener_t<struct weston_surface> on_surface_destroy;
+	listener_t<struct weston_surface> on_surface_commit;
+
 	xdg_surface_base_t(xdg_surface_base_t const &) = delete;
 	xdg_surface_base_t & operator=(xdg_surface_base_t const &) = delete;
 
@@ -56,15 +60,11 @@ struct xdg_surface_base_t {
 	virtual ~xdg_surface_base_t();
 
 	auto surface() const -> weston_surface * { return _surface; }
-	static void _weston_configure(weston_surface * es, int32_t sx, int32_t sy);
-
-	virtual void weston_destroy() = 0;
 
 	virtual view_p base_master_view() = 0;
 	/** called on surface commit */
-	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy) = 0;
-
-	static xdg_surface_base_t * get(weston_surface * surface);
+	virtual void surface_commited(weston_surface * es) = 0;
+	virtual void surface_destroyed(weston_surface * es) = 0;
 
 };
 

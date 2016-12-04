@@ -67,14 +67,7 @@ struct xdg_surface_toplevel_t :
 
 	view_w _master_view;
 
-
 	signal_t<xdg_surface_toplevel_t *> destroy;
-
-
-	void xdg_surface_send_configure(int32_t width,
-			int32_t height, set<uint32_t> const & states);
-	void wl_surface_send_configure(int32_t width,
-			int32_t height, set<uint32_t> const & states);
 
 	/* private to avoid copy */
 	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
@@ -82,11 +75,9 @@ struct xdg_surface_toplevel_t :
 
 	static void delete_resource(wl_resource *resource);
 
-	void set_xdg_surface_implementation();
-	void set_wl_shell_surface_implementation();
-
 	/** called on surface commit */
-	virtual void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
+	virtual void surface_commited(weston_surface * es) override;
+	virtual void surface_destroyed(weston_surface * es) override;
 
 	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
 
@@ -107,7 +98,6 @@ struct xdg_surface_toplevel_t :
 	auto create_view() -> view_p;
 	auto master_view() -> view_w;
 
-	virtual void weston_destroy() override;
 	void destroy_all_views();
 
 	virtual view_p base_master_view();
