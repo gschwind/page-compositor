@@ -116,7 +116,12 @@ void wl_shell_surface_t::minimize() {
 }
 
 void wl_shell_surface_t::surface_commited(struct weston_surface * s) {
-
+	if(_width != s->width or _heigth != s->height) {
+		_width = s->width;
+		_heigth = s->height;
+		if(not _master_view.expired())
+			_master_view.lock()->update_view();
+	}
 }
 
 void wl_shell_surface_t::surface_destroyed(struct weston_surface * s) {
@@ -296,7 +301,7 @@ string const & wl_shell_surface_t::title() const {
 void wl_shell_surface_t::send_configure(int32_t width, int32_t height, set<uint32_t> const & states) {
 	_ack_serial = 0;
 	wl_shell_surface_send_configure(_resource,
-			WL_SHELL_SURFACE_RESIZE_TOP_LEFT, width, height);
+			WL_SHELL_SURFACE_RESIZE_NONE, width, height);
 	wl_client_flush(_client);
 }
 

@@ -61,6 +61,9 @@ struct wl_shell_surface_t :
 	struct wl_resource *    _resource;
 	struct wl_listener      _surface_destroy;
 
+	int32_t _width;
+	int32_t _heigth;
+
 	listener_t<struct weston_surface> on_surface_destroy;
 	listener_t<struct weston_surface> on_surface_commit;
 
