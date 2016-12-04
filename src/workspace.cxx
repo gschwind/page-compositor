@@ -12,7 +12,7 @@
 #include "viewport.hxx"
 #include "workspace.hxx"
 
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 namespace page {
 

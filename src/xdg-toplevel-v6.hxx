@@ -10,7 +10,7 @@
 
 #include "xdg-shell-unstable-v6-interface.hxx"
 #include "xdg-surface-v6.hxx"
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 namespace page {
 

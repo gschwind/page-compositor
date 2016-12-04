@@ -9,7 +9,7 @@
 
 #include "grab_handlers.hxx"
 #include "page_context.hxx"
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 namespace page {
 

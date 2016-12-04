@@ -31,7 +31,7 @@
 #include "grab_handlers.hxx"
 #include "wl-shell-client.hxx"
 
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 namespace page {
 

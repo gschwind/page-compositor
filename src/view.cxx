@@ -5,14 +5,13 @@
  *
  */
 
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 #include <typeinfo>
 
 #include <cairo.h>
 #include <linux/input.h>
 
-#include "view-toplevel.hxx"
 #include "renderable_floating_outer_gradien.hxx"
 #include "notebook.hxx"
 #include "utils.hxx"

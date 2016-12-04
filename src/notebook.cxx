@@ -14,7 +14,7 @@
 #include "dropdown_menu.hxx"
 #include "grab_handlers.hxx"
 #include "renderable_unmanaged_gaussian_shadow.hxx"
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 namespace page {
 

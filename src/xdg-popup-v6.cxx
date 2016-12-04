@@ -11,7 +11,7 @@
 #include "xdg-shell-unstable-v6-server-protocol.h"
 #include "xdg-shell-unstable-v5-server-protocol.h"
 
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 namespace page {
 

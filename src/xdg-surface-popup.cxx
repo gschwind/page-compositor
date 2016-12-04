@@ -13,7 +13,7 @@
 #include "xdg-surface-popup.hxx"
 #include "xdg-surface-toplevel.hxx"
 
-#include "view-toplevel.hxx"
+#include "view.hxx"
 
 #include "xdg-shell-unstable-v5-server-protocol.h"
 
