@@ -540,8 +540,10 @@ void page_t::run() {
 
 	char * display = getenv("DISPLAY");
 	if(display) {
+		use_x11_backend = true;
 		load_x11_backend(ec);
 	} else {
+		use_x11_backend = false;
 		load_drm_backend(ec);
 	}
 
@@ -3547,7 +3549,7 @@ void page_t::load_drm_backend(weston_compositor* ec) {
 	config.tty = 0;
 	config.use_pixman = 0;
 	config.seat_id = 0;
-	config.gbm_format =0;
+	config.gbm_format = 0;
 //	config.configure_output = &drm_configure_output;
 	config.configure_device = 0;
 	config.use_current_mode = 1;
@@ -3558,6 +3560,11 @@ void page_t::load_drm_backend(weston_compositor* ec) {
 		return;
 
 	backend_init(ec, &config.base);
+
+    output_created.connect(&ec->output_created_signal, this, &page_t::on_output_created);
+    output_pending.connect(&ec->output_pending_signal, this, &page_t::on_output_pending);
+
+    weston_pending_output_coldplug(ec);
 
 }
 
@@ -3599,6 +3606,7 @@ void page_t::connect_all() {
 
     output_destroyed.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_destroyed\n"); };
     output_moved.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_moved\n"); };
+	output_resized.notify =  [](wl_listener *l, void *data) { weston_log("compositor::output_resized\n"); };
 
     session.notify = [](wl_listener *l, void *data) { weston_log("compositor::session\n"); };
 
@@ -3616,12 +3624,13 @@ void page_t::connect_all() {
 
     wl_signal_add(&ec->output_destroyed_signal, &output_destroyed);
     wl_signal_add(&ec->output_moved_signal, &output_moved);
+    wl_signal_add(&ec->output_resized_signal, &output_resized);
 
     wl_signal_add(&ec->session_signal, &session);
 }
 
 void page_t::on_output_created(weston_output * output) {
-	weston_log("compositor::output_created\n");
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 //	auto stest = weston_surface_create(ec);
 //	weston_surface_set_size(stest, output->width, output->height);
@@ -3666,11 +3675,13 @@ void page_t::on_output_created(weston_output * output) {
 //	background->timeline.force_refresh = 1;
 //	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
-	repaint_functions[output] = output->repaint;
-	output->repaint = &page_t::page_repaint;
+	if(use_x11_backend) {
+		repaint_functions[output] = output->repaint;
+		output->repaint = &page_t::page_repaint;
 
-	start_repaint_loop_functions[output] = output->start_repaint_loop;
-	output->start_repaint_loop = &page_t::page_start_repaint_loop;
+		start_repaint_loop_functions[output] = output->start_repaint_loop;
+		output->start_repaint_loop = &page_t::page_start_repaint_loop;
+	}
 
 	_outputs.push_back(output);
 	update_viewport_layout();
@@ -3678,16 +3689,40 @@ void page_t::on_output_created(weston_output * output) {
 }
 
 void page_t::on_output_pending(weston_output * output) {
-	weston_log("%s\n", __PRETTY_FUNCTION__);
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	const struct weston_windowed_output_api *api =
-		weston_windowed_output_get_api(ec);
+	if (use_x11_backend) {
+		weston_output_set_scale(output, 1);
+		weston_output_set_transform(output, WL_OUTPUT_TRANSFORM_NORMAL);
 
-	weston_output_set_scale(output, 1);
-	weston_output_set_transform(output, WL_OUTPUT_TRANSFORM_NORMAL);
-	api->output_set_size(output, 1600, 1600);
+		const struct weston_windowed_output_api *api =
+				weston_windowed_output_get_api(ec);
+		api->output_set_size(output, 1600, 1600);
 
-	weston_output_enable(output);
+		weston_output_enable(output);
+	} else {
+
+		struct weston_config_section *section;
+		const struct weston_drm_output_api *api = weston_drm_output_get_api(output->compositor);
+
+		if (!api) {
+			weston_log("Cannot use weston_drm_output_api.\n");
+			return;
+		}
+
+		if (api->set_mode(output, WESTON_DRM_BACKEND_OUTPUT_CURRENT, NULL) < 0) {
+			weston_log("Cannot configure an output using weston_drm_output_api.\n");
+			return;
+		}
+
+		weston_output_set_scale(output, 1);
+		weston_output_set_transform(output, WL_OUTPUT_TRANSFORM_NORMAL);
+
+		api->set_gbm_format(output, NULL);
+		api->set_seat(output, NULL);
+
+		weston_output_enable(output);
+	}
 
 }
 

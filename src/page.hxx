@@ -120,6 +120,8 @@ struct page_t : public page_context_t, public connectable_t {
 	string page_base_dir;
 	string _theme_engine;
 
+	bool use_x11_backend;
+
 	wl_listener destroy;
 
 	/* surface signals */
@@ -140,6 +142,7 @@ struct page_t : public page_context_t, public connectable_t {
 	listener_t<weston_output> output_pending;
 	wl_listener output_destroyed;
 	wl_listener output_moved;
+	wl_listener output_resized;
 
 	wl_listener session;
 
