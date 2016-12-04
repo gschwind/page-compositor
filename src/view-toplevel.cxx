@@ -381,6 +381,42 @@ void view_toplevel_t::activate() {
 	queue_redraw();
 }
 
+bool view_toplevel_t::button(weston_pointer_grab * grab, uint32_t time, uint32_t button, uint32_t state) {
+	auto pointer = grab->pointer;
+	wl_fixed_t view_x;
+	wl_fixed_t view_y;
+	int view_ix;
+	int view_iy;
+	int ix = wl_fixed_to_int(pointer->x);
+	int iy = wl_fixed_to_int(pointer->y);
+
+	if (!pixman_region32_contains_point(
+			&_default_view->transform.boundingbox, ix, iy, NULL))
+		return false;
+
+	weston_view_from_global_fixed(_default_view, pointer->x, pointer->y, &view_x, &view_y);
+	view_ix = wl_fixed_to_int(view_x);
+	view_iy = wl_fixed_to_int(view_y);
+
+	if (!pixman_region32_contains_point(&_default_view->surface->input,
+					    view_ix, view_iy, NULL))
+		return false;
+
+	if (_default_view->geometry.scissor_enabled &&
+	    !pixman_region32_contains_point(&_default_view->geometry.scissor,
+					    view_ix, view_iy, NULL))
+		return false;
+
+	if (pointer->button_count == 0 &&
+			 state == WL_POINTER_BUTTON_STATE_RELEASED) {
+		_ctx->set_keyboard_focus(pointer, shared_from_this());
+		weston_pointer_set_focus(pointer, _default_view, view_ix, view_iy);
+	}
+
+	return true;
+
+}
+
 void view_toplevel_t::queue_redraw() {
 
 	if(_default_view) {

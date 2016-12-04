@@ -4113,26 +4113,7 @@ void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 					       state);
 	}
 
-	view = weston_compositor_pick_view(compositor,
-					   pointer->x, pointer->y,
-					   &sx, &sy);
-	if(view) {
-		if(strcmp("page_viewport", view->surface->role_name) == 0) {
-			_root->broadcast_button(grab, time, button, state);
-		}
-		if (pointer->button_count == 0 &&
-				 state == WL_POINTER_BUTTON_STATE_RELEASED) {
-			auto xdg_window = xdg_surface_toplevel_t::get(view->surface);
-			if(xdg_window) {
-				if(not xdg_window->master_view().expired()) {
-					set_keyboard_focus(pointer, xdg_window->master_view().lock());
-				}
-			}
-
-			weston_pointer_set_focus(pointer, view, sx, sy);
-
-		}
-	}
+	_root->broadcast_button(grab, time, button, state);
 
 }
 
