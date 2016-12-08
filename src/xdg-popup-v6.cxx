@@ -28,7 +28,6 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	_id{id},
 	_client{client},
 	_ctx{ctx},
-	_positioner{positioner},
 	_parent{parent}
 {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
@@ -36,13 +35,27 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	self_resource = wl_resource_create(client, &zxdg_popup_v6_interface, 1, id);
 	zxdg_popup_v6_vtable::set_implementation(self_resource);
 
+	connect(_base->destroy, this, &xdg_popup_v6_t::surface_destroyed);
+	connect(_base->commited, this, &xdg_popup_v6_t::surface_commited);
+
+	auto pos = xdg_positioner_v6_t::get(positioner);
+	x_offset = pos->x_offset;
+	y_offset = pos->y_offset;
+
 }
 
 xdg_popup_v6_t::~xdg_popup_v6_t() {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 }
 
-void xdg_popup_v6_t::surface_commited(weston_surface * s) {
+void xdg_popup_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	_base->destroy_all_views();
+	destroy.signal(this);
+	wl_resource_destroy(self_resource);
+}
+
+void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	if(_base->_master_view.expired()) {
@@ -53,18 +66,17 @@ void xdg_popup_v6_t::surface_commited(weston_surface * s) {
 
 		auto xview = _base->create_view();
 		auto base = xdg_surface_v6_t::get(_parent);
-		auto positioner = xdg_positioner_v6_t::get(_positioner);
 		weston_log("%p\n", base);
 		auto parent_view = base->_master_view.lock();
 		weston_log("%p\n", parent_view.get());
 
-		weston_log("x=%d, y=%d\n", positioner->x_offset, positioner->y_offset);
+		weston_log("x=%d, y=%d\n", x_offset, y_offset);
 		if(parent_view != nullptr) {
-			weston_log("x=%d, y=%d\n", positioner->x_offset, positioner->y_offset);
-			parent_view->add_popup_child(xview, positioner->x_offset, positioner->y_offset);
+			weston_log("x=%d, y=%d\n", x_offset, y_offset);
+			parent_view->add_popup_child(xview, x_offset, y_offset);
 
 			/* the popup does not get shown if it is not configured */
-			zxdg_popup_v6_send_configure(self_resource, positioner->x_offset, positioner->y_offset, surface()->width, surface()->height);
+			zxdg_popup_v6_send_configure(self_resource, x_offset, y_offset, surface()->width, surface()->height);
 			_base->_ack_config = wl_display_next_serial(_ctx->_dpy);
 			zxdg_surface_v6_send_configure(_base->_resource, _base->_ack_config);
 			wl_client_flush(_client);

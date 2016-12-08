@@ -17,18 +17,20 @@ namespace page {
 using namespace std;
 using namespace wcxx;
 
-struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interface {
+struct xdg_popup_v6_t : public connectable_t, public zxdg_popup_v6_vtable, public page_surface_interface {
 	xdg_surface_v6_t *     _base;
 
 	page_context_t *       _ctx;
 	wl_client *            _client;
 	uint32_t               _id;
 	struct wl_resource *   _parent;
-	struct wl_resource *   _positioner;
 
 	struct wl_resource *   self_resource;
 
 	signal_t<xdg_popup_v6_t *> destroy;
+
+	int32_t x_offset;
+	int32_t y_offset;
 
 	xdg_popup_v6_t(xdg_popup_v6_t const &) = delete;
 	xdg_popup_v6_t & operator=(xdg_popup_v6_t const &) = delete;
@@ -41,7 +43,8 @@ struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interfa
 			struct wl_resource * parent,
 			struct wl_resource * positioner);
 
-	void surface_commited(weston_surface * s);
+	void surface_destroyed(xdg_surface_v6_t * s);
+	void surface_commited(xdg_surface_v6_t * s);
 
 	virtual ~xdg_popup_v6_t();
 
