@@ -39,15 +39,12 @@ struct listener_t {
 		_func = f;
 		_pod._func = &_func;
 		_pod._listener.notify = &listener_t::_call;
-		if(not wl_list_empty(&_pod._listener.link)) {
-			wl_list_remove(&_pod._listener.link);
-			wl_list_init(&_pod._listener.link);
-		}
+		disconnect();
 		wl_signal_add(signal, &_pod._listener);
 	}
 
 	template<typename Z>
-	void connect(wl_signal* signal, Z * ths, void(Z::*f)(T*)) {
+	void connect(struct wl_signal * signal, Z * ths, void(Z::*f)(T*)) {
 		connect(signal, [ths,f](T * o) -> void { (ths->*f)(o); });
 	}
 
@@ -56,6 +53,20 @@ struct listener_t {
 			wl_list_remove(&_pod._listener.link);
 			wl_list_init(&_pod._listener.link);
 		}
+	}
+
+	template<typename F>
+	void resource_add_destroy_listener(struct wl_resource * resource, F f) {
+		_func = f;
+		_pod._func = &_func;
+		_pod._listener.notify = &listener_t::_call;
+		disconnect();
+		wl_resource_add_destroy_listener(resource, &_pod._listener);
+	}
+
+	template<typename Z>
+	void resource_add_destroy_listener(struct wl_resource * resource, Z * ths, void(Z::*f)(T*)) {
+		resource_add_destroy_listener(resource, [ths,f](T * o) -> void { (ths->*f)(o); });
 	}
 
 };

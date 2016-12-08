@@ -16,7 +16,13 @@ using namespace std;
 void xdg_shell_client_t::xdg_shell_destroy(wl_client * client,
 		wl_resource * resource)
 {
-	/* TODO */
+	if(not xdg_surface_toplevel_map.empty() or not xdg_surface_popup_map.empty()) {
+		wl_resource_post_error(xdg_shell_resource, XDG_SHELL_ERROR_DEFUNCT_SURFACES, "TODO");
+		return;
+	}
+
+	destroy.signal(this);
+	wl_resource_destroy(xdg_shell_resource);
 }
 
 void xdg_shell_client_t::xdg_shell_use_unstable_version(wl_client * client,
@@ -80,9 +86,7 @@ auto xdg_shell_client_t::get(wl_resource * resource) -> xdg_shell_client_t * {
 
 void xdg_shell_client_t::xdg_shell_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto c = xdg_shell_client_t::get(resource);
-	c->destroy.signal(c);
-	delete c;
+	delete this;
 }
 
 xdg_shell_client_t::xdg_shell_client_t(
@@ -102,15 +106,6 @@ xdg_shell_client_t::xdg_shell_client_t(
 	 * i.e. callbacks that must be used for this resource.
 	 **/
 	xdg_shell_vtable::set_implementation(xdg_shell_resource);
-
-}
-
-
-void xdg_shell_client_t::remove_all_transient(xdg_surface_toplevel_t * s) {
-
-}
-
-void xdg_shell_client_t::remove_all_popup(xdg_surface_popup_t * s) {
 
 }
 

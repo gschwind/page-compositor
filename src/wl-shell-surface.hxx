@@ -102,8 +102,6 @@ struct wl_shell_surface_t :
 	wl_shell_surface_t(wl_shell_surface_t const &) = delete;
 	wl_shell_surface_t & operator=(wl_shell_surface_t const &) = delete;
 
-	static void delete_resource(wl_resource *resource);
-
 	wl_shell_surface_t(
 			page_context_t * ctx,
 			wl_client * client,

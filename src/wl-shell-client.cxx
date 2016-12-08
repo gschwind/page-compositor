@@ -41,7 +41,8 @@ wl_shell_client_t::wl_shell_client_t(page_context_t * ctx, wl_client * client, u
 }
 
 void wl_shell_client_t::wl_shell_delete_resource(struct wl_resource *resource) {
-	/* TODO */
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	delete this;
 }
 
 void wl_shell_client_t::wl_shell_get_shell_surface(struct wl_client *client,
@@ -55,9 +56,6 @@ void wl_shell_client_t::wl_shell_get_shell_surface(struct wl_client *client,
 
 	/* disable shared_ptr, they are managed by wl_resource */
 	auto xdg_surface = new wl_shell_surface_t(_ctx, client, surface, id);
-
-	/* TODO */
-	//connect(xdg_surface->destroy, this, &xdg_shell_client_t::destroy_toplevel);
 
 }
 

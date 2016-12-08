@@ -21,7 +21,8 @@ namespace page {
 
 using namespace std;
 
-struct xdg_shell_client_t : protected connectable_t, public xdg_shell_vtable {
+struct xdg_shell_client_t : protected connectable_t,
+public xdg_shell_vtable {
 	page_context_t * _ctx;
 
 	wl_client * client;
@@ -37,7 +38,7 @@ struct xdg_shell_client_t : protected connectable_t, public xdg_shell_vtable {
 	map<struct weston_surface *, xdg_surface_base_t *> surfaces_map;
 
 	xdg_shell_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
-	virtual ~xdg_shell_client_t() { }
+	virtual ~xdg_shell_client_t() = default;
 
 	void remove_all_transient(xdg_surface_toplevel_t * s);
 	void remove_all_popup(xdg_surface_popup_t * s);

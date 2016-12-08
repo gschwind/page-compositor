@@ -17,11 +17,11 @@ namespace page {
 using namespace std;
 using namespace wcxx;
 
-struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_interface {
+struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable, public page_surface_interface {
+	xdg_surface_v6_t *     _base;
 
 	page_context_t *       _ctx;
 	wl_client *            _client;
-	xdg_surface_v6_t *     _surface;
 	uint32_t               _id;
 	struct wl_resource *   self_resource;
 
@@ -44,7 +44,7 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_i
 
 	} _pending, _current;
 
-	view_w _master_view;
+	listener_t<struct wl_resource> on_resource_destroyed;
 
 	signal_t<xdg_toplevel_v6_t *> destroy;
 
@@ -57,13 +57,10 @@ struct xdg_toplevel_v6_t : public zxdg_toplevel_v6_vtable, public page_surface_i
 			xdg_surface_v6_t * surface,
 			uint32_t id);
 
-	void surface_commited(weston_surface * s);
-	auto create_view() -> view_p;
-	auto base_master_view() -> view_p;
+	void surface_destroyed(xdg_surface_v6_t * s);
+	void surface_commited(xdg_surface_v6_t * s);
 
-	void destroy_all_views();
-
-	virtual ~xdg_toplevel_v6_t() = default;
+	virtual ~xdg_toplevel_v6_t();
 
 	/* zxdg_toplevel_v6_vtable */
 	virtual void zxdg_toplevel_v6_destroy(struct wl_client * client, struct wl_resource * resource) override;

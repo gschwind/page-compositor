@@ -36,6 +36,9 @@ struct xdg_shell_v6_client_t : protected connectable_t, public zxdg_shell_v6_vta
 	map<uint32_t, xdg_surface_v6_t *> xdg_surface_map;
 	map<uint32_t, xdg_positioner_v6_t *> xdg_positioner_v6_map;
 
+	void destroy_surface(xdg_surface_v6_t * s);
+	void destroy_positionner(xdg_positioner_v6_t * p);
+
 	xdg_shell_v6_client_t(page_context_t * ctx, wl_client * client, uint32_t id);
 
 	virtual ~xdg_shell_v6_client_t() = default;

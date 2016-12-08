@@ -23,6 +23,8 @@ struct xdg_positioner_v6_t : public zxdg_positioner_v6_vtable {
 	uint32_t               _id;
 	struct wl_resource *   self_resource;
 
+	signal_t<xdg_positioner_v6_t*> destroy;
+
 	int32_t x_offset;
 	int32_t y_offset;
 

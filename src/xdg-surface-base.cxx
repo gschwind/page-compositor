@@ -27,7 +27,8 @@ xdg_surface_base_t::xdg_surface_base_t(
 }
 
 xdg_surface_base_t::~xdg_surface_base_t() {
-
+	on_surface_commit.disconnect();
+	on_surface_destroy.disconnect();
 }
 
 }

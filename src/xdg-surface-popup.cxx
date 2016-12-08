@@ -53,10 +53,7 @@ void xdg_surface_popup_t::surface_commited(weston_surface * es)
 
 void xdg_surface_popup_t::xdg_popup_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto xs = xdg_surface_popup_t::get(resource);
-	xs->destroy_all_views();
-	xs->destroy.signal(xs);
-	delete xs;
+	delete this;
 }
 
 xdg_surface_popup_t::xdg_surface_popup_t(
@@ -78,27 +75,21 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 		x{x},
 		y{y}
 {
-	weston_log("ALLOC xdg_surface_popup_t %p\n", this);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
-	_resource = wl_resource_create(client,
-			reinterpret_cast<wl_interface const *>(&xdg_popup_interface), 1, id);
-
+	_resource = wl_resource_create(client, &xdg_popup_interface, 1, _id);
 	xdg_popup_vtable::set_implementation(_resource);
 
 }
 
 xdg_surface_popup_t::~xdg_surface_popup_t() {
-	weston_log("DELETE xdg_surface_popup_t %p\n", this);
-	/* should not be usefull, delete must be call on resource destroy */
-//	if(_resource) {
-//		wl_resource_set_user_data(_resource, nullptr);
-//	}
-
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 }
 
 void xdg_surface_popup_t::xdg_popup_destroy(wl_client * client, wl_resource * resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	assert(resource == _resource);
+	destroy_all_views();
+	destroy.signal(this);
 	wl_resource_destroy(resource);
 }
 
@@ -114,15 +105,15 @@ auto xdg_surface_popup_t::master_view() -> view_w {
 
 void xdg_surface_popup_t::surface_destroyed(struct weston_surface * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto xs = xdg_surface_popup_t::get(resource);
-	xs->destroy_all_views();
-	xs->destroy.signal(xs);
-	delete xs;
+	destroy_all_views();
+	destroy.signal(this);
+	wl_resource_destroy(_resource);
 }
 
 void xdg_surface_popup_t::destroy_all_views() {
 	if(not _master_view.expired()) {
 		_master_view.lock()->signal_destroy();
+		_master_view.reset();
 	}
 }
 

@@ -31,10 +31,7 @@ using namespace std;
 
 void xdg_surface_toplevel_t::xdg_surface_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto xs = xdg_surface_toplevel_t::get(resource);
-	xs->destroy_all_views();
-	xs->destroy.signal(xs);
-	delete xs;
+	delete this;
 }
 
 xdg_surface_toplevel_t::xdg_surface_toplevel_t(
@@ -46,27 +43,21 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_pending{},
 	_ack_serial{0}
 {
-	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
 	rect pos{0,0,surface->width, surface->height};
 
 	weston_log("window default position = %s\n", pos.to_string().c_str());
 
-	/* tell weston how to use this data */
-	if (weston_surface_set_role(surface, "xdg_toplevel",
-			_resource, XDG_SHELL_ERROR_ROLE) < 0)
-		throw "TODO";
-
-	_resource = wl_resource_create(_client,
-			reinterpret_cast<wl_interface const *>(&xdg_surface_interface), 1,
-			_id);
-
+	_resource = wl_resource_create(_client, &xdg_surface_interface, 1, _id);
 	xdg_surface_vtable::set_implementation(_resource);
 
 }
 
 xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
-	weston_log("DELETE xdg_surface_toplevel_t %p\n", this);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+	wl_resource_set_implementation(_resource, nullptr, nullptr, nullptr);
+
 	/* should not be usefull, delete must be call on resource destroy */
 //	if(_resource) {
 //		wl_resource_set_user_data(_resource, nullptr);
@@ -76,12 +67,14 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 
 void xdg_surface_toplevel_t::surface_destroyed(struct weston_surface * s) {
 	destroy_all_views();
+	destroy.signal(this);
+	wl_resource_destroy(_resource);
 }
 
 void xdg_surface_toplevel_t::destroy_all_views() {
 	if(not _master_view.expired()) {
-		auto master_view = _master_view.lock();
-		master_view->signal_destroy();
+		_master_view.lock()->signal_destroy();
+		_master_view.reset();
 	}
 }
 
@@ -90,6 +83,11 @@ void xdg_surface_toplevel_t::surface_commited(struct weston_surface * es)
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	if(_master_view.expired()) {
+		/* tell weston how to use this data */
+		if (weston_surface_set_role(_surface, "xdg_toplevel",
+				_resource, XDG_SHELL_ERROR_ROLE) < 0)
+			throw "TODO";
+
 		_ctx->manage_client(create_view());
 	}
 
@@ -144,8 +142,9 @@ auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
 void xdg_surface_toplevel_t::xdg_surface_destroy(struct wl_client *client,
 		struct wl_resource *resource)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	wl_resource_destroy(resource);
+	destroy_all_views();
+	destroy.signal(this);
+	wl_resource_destroy(_resource);
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_parent(wl_client * client,
@@ -347,6 +346,7 @@ void xdg_surface_toplevel_t::send_configure(int32_t width, int32_t height, set<u
 
 void xdg_surface_toplevel_t::send_close() {
 	xdg_surface_send_close(_resource);
+	wl_client_flush(_client);
 }
 
 

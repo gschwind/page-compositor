@@ -43,7 +43,7 @@ using namespace wcxx;
  * client_base_t handle all foreign windows, it's the base of
  * client_managed_t and client_not_managed_t.
  **/
-struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
+struct xdg_surface_v6_t : public connectable_t, public zxdg_surface_v6_vtable {
 
 	page_context_t *       _ctx;
 
@@ -57,12 +57,21 @@ struct xdg_surface_v6_t : public zxdg_surface_v6_vtable {
 
 	uint32_t _ack_config;
 
-	map<uint32_t, xdg_toplevel_v6_t *> xdg_toplevel_v6_map;
-	map<uint32_t, xdg_popup_v6_t *> xdg_popup_v6_map;
+	signal_t<xdg_surface_v6_t *> destroy;
+	signal_t<xdg_surface_v6_t *> commited;
+
+	page_surface_interface * _role;
+
+	view_w _master_view;
 
 	void surface_commited(weston_surface * s);
 	void surface_destroyed(weston_surface * s);
+
+	auto create_view() -> view_p;
 	void destroy_all_views();
+
+	void toplevel_destroyed(xdg_toplevel_v6_t * s);
+	void popup_destroyed(xdg_popup_v6_t * s);
 
 	static auto get(struct wl_resource * r) -> xdg_surface_v6_t *;
 

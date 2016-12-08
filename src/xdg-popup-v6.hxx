@@ -18,17 +18,15 @@ using namespace std;
 using namespace wcxx;
 
 struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interface {
+	xdg_surface_v6_t *     _base;
 
 	page_context_t *       _ctx;
 	wl_client *            _client;
-	xdg_surface_v6_t *     _surface;
 	uint32_t               _id;
 	struct wl_resource *   _parent;
 	struct wl_resource *   _positioner;
 
 	struct wl_resource *   self_resource;
-
-	view_w _master_view;
 
 	signal_t<xdg_popup_v6_t *> destroy;
 
@@ -44,10 +42,8 @@ struct xdg_popup_v6_t : public zxdg_popup_v6_vtable, public page_surface_interfa
 			struct wl_resource * positioner);
 
 	void surface_commited(weston_surface * s);
-	auto create_view() -> view_p;
-	void destroy_all_views();
 
-	virtual ~xdg_popup_v6_t() = default;
+	virtual ~xdg_popup_v6_t();
 
 	/* zxdg_popup_v6_vtable */
 	virtual void zxdg_popup_v6_destroy(struct wl_client * client, struct wl_resource * resource) override;

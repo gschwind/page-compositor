@@ -35,7 +35,8 @@ auto xdg_positioner_v6_t::get(struct wl_resource * r) -> xdg_positioner_v6_t * {
 void xdg_positioner_v6_t::zxdg_positioner_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	destroy.signal(this);
+	wl_resource_destroy(self_resource);
 }
 
 void xdg_positioner_v6_t::zxdg_positioner_v6_set_size(struct wl_client * client, struct wl_resource * resource, int32_t width, int32_t height)
@@ -79,7 +80,7 @@ void xdg_positioner_v6_t::zxdg_positioner_v6_set_offset(struct wl_client * clien
 void xdg_positioner_v6_t::zxdg_positioner_v6_delete_resource(struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	delete this;
 }
 
 }

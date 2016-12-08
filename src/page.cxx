@@ -236,7 +236,10 @@ page_t::page_t(int argc, char ** argv)
 
 	char const * conf_file_name = 0;
 
+	use_x11_backend = false;
+	_global_wl_shell = nullptr;
 	_global_xdg_shell_v5 = nullptr;
+	_global_xdg_shell_v6 = nullptr;
 	_global_buffer_manager = nullptr;
 	configuration._replace_wm = false;
 	configuration._menu_drop_down_shadow = false;
@@ -3507,7 +3510,7 @@ void page_t::load_x11_backend(weston_compositor* ec) {
 	config.no_input = 0;
 //	config.num_outputs = 1;
 //	config.outputs = &default_output;
-	config.use_pixman = 0;
+	config.use_pixman = 1;
 
 	auto backend_init = reinterpret_cast<backend_init_func>(
 			weston_load_module("x11-backend.so", "backend_init"));

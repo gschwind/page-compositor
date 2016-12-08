@@ -9,6 +9,8 @@
 
 #include "xdg-shell-unstable-v6-server-protocol.h"
 
+#include "view.hxx"
+
 namespace page {
 
 using namespace std;
@@ -23,7 +25,8 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 	_client{client},
 	_surface{surface},
 	_id{id},
-	_ack_config{0xffffffff}
+	_ack_config{0xffffffff},
+	_role{nullptr}
 {
 	
 	/* allocate a wayland resource for the provided 'id' */
@@ -34,7 +37,7 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 	 * i.e. callbacks that must be used for this resource.
 	 **/
 	zxdg_surface_v6_vtable::set_implementation(_resource);
-	
+
 	on_surface_destroy.connect(&_surface->destroy_signal, this,
 			&xdg_surface_v6_t::surface_destroyed);
 	on_surface_commit.connect(&_surface->commit_signal, this,
@@ -44,35 +47,38 @@ xdg_surface_v6_t::xdg_surface_v6_t(
 
 void xdg_surface_v6_t::surface_commited(weston_surface * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	for(auto & x: xdg_toplevel_v6_map) {
-		x.second->surface_commited(s);
-	}
-	for(auto & x: xdg_popup_v6_map) {
-		x.second->surface_commited(s);
-	}
+	commited.signal(this);
 }
 
 void xdg_surface_v6_t::surface_destroyed(weston_surface * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	destroy_all_views();
-	if(_surface) {
-		on_surface_destroy.disconnect();
-		on_surface_commit.disconnect();
-	}
+	destroy.signal(this);
+	wl_resource_destroy(_resource);
+}
+
+void xdg_surface_v6_t::toplevel_destroyed(xdg_toplevel_v6_t * s) {
+	_role = nullptr;
+}
+
+void xdg_surface_v6_t::popup_destroyed(xdg_popup_v6_t * s) {
+	_role = nullptr;
 }
 
 auto xdg_surface_v6_t::get(struct wl_resource * r) -> xdg_surface_v6_t * {
 	return dynamic_cast<xdg_surface_v6_t*>(resource_get<zxdg_surface_v6_vtable>(r));
 }
 
+auto xdg_surface_v6_t::create_view() -> view_p {
+	auto view = make_shared<view_t>(_ctx, _role);
+	_master_view = view;
+	return view;
+}
 
 void xdg_surface_v6_t::destroy_all_views() {
-	for(auto &x: xdg_toplevel_v6_map) {
-		x.second->destroy_all_views();
-	}
-
-	for(auto &x: xdg_popup_v6_map) {
-		x.second->destroy_all_views();
+	if(not _master_view.expired()) {
+		_master_view.lock()->signal_destroy();
+		_master_view.reset();
 	}
 }
 
@@ -86,25 +92,38 @@ xdg_surface_v6_t::~xdg_surface_v6_t() {
 void xdg_surface_v6_t::zxdg_surface_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	if(_role) {
+		wl_resource_post_error(_resource, ZXDG_SURFACE_V6_ERROR_ALREADY_CONSTRUCTED, "already specialized");
+		return;
+	}
+
+	destroy.signal(this);
+	wl_resource_destroy(_resource);
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_get_toplevel(struct wl_client * client, struct wl_resource * resource, uint32_t id)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-
+	if(_role) {
+		wl_resource_post_error(_resource, ZXDG_SURFACE_V6_ERROR_ALREADY_CONSTRUCTED, "already specialized");
+		return;
+	}
 	auto xdg_surface = new xdg_toplevel_v6_t(_ctx, client, this, id);
-	xdg_toplevel_v6_map[id] = xdg_surface;
+	connect(xdg_surface->destroy, this, &xdg_surface_v6_t::toplevel_destroyed);
+	_role = xdg_surface;
 
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_get_popup(struct wl_client * client, struct wl_resource * resource, uint32_t id, struct wl_resource * parent, struct wl_resource * positioner)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-
+	if(_role) {
+		wl_resource_post_error(_resource, ZXDG_SURFACE_V6_ERROR_ALREADY_CONSTRUCTED, "already specialized");
+		return;
+	}
 	auto xdg_surface = new xdg_popup_v6_t(_ctx, client, this, id, parent, positioner);
-	xdg_popup_v6_map[id] = xdg_surface;
-
+	connect(xdg_surface->destroy, this, &xdg_surface_v6_t::popup_destroyed);
+	_role = xdg_surface;
 }
 
 void xdg_surface_v6_t::zxdg_surface_v6_set_window_geometry(struct wl_client * client, struct wl_resource * resource, int32_t x, int32_t y, int32_t width, int32_t height)
@@ -123,7 +142,7 @@ void xdg_surface_v6_t::zxdg_surface_v6_ack_configure(struct wl_client * client, 
 void xdg_surface_v6_t::zxdg_surface_v6_delete_resource(struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	delete this;
 }
 
 }

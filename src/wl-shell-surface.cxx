@@ -37,20 +37,9 @@ namespace page {
 
 using namespace std;
 
-void wl_shell_surface_t::delete_resource(struct wl_resource *resource) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto xs = wl_shell_surface_t::get(resource);
-	xs->destroy_all_views();
-	xs->destroy.signal(xs);
-	delete xs;
-}
-
 void wl_shell_surface_t::wl_shell_surface_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	auto xs = wl_shell_surface_t::get(resource);
-	xs->destroy_all_views();
-	xs->destroy.signal(xs);
-	delete xs;
+	delete this;
 }
 
 wl_shell_surface_t::wl_shell_surface_t(
@@ -77,6 +66,10 @@ wl_shell_surface_t::wl_shell_surface_t(
 
 wl_shell_surface_t::~wl_shell_surface_t() {
 	weston_log("DEL wl_shell_surface_t %p\n", this);
+	if(_surface) {
+		on_surface_destroy.disconnect();
+		on_surface_commit.disconnect();
+	}
 }
 
 void wl_shell_surface_t::destroy_all_views() {
@@ -125,7 +118,9 @@ void wl_shell_surface_t::surface_commited(struct weston_surface * s) {
 }
 
 void wl_shell_surface_t::surface_destroyed(struct weston_surface * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	destroy_all_views();
+	destroy.signal(this);
 	wl_resource_destroy(_resource);
 }
 

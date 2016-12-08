@@ -54,7 +54,7 @@ view_t::view_t(
 	_has_keyboard_focus{false},
 	_has_change{true}
 {
-	weston_log("ALLOC xdg_surface_toplevel_t %p\n", this);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
 	rect pos{0, 0, std::max(_page_surface->width(), 1), std::max(_page_surface->height(), 1)};
 
@@ -120,7 +120,7 @@ view_t::view_t(
 }
 
 view_t::~view_t() {
-	weston_log("DELETE xdg_surface_toplevel_t %p\n", this);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 	if(_default_view) {
 		weston_view_destroy(_default_view);
 		_default_view = nullptr;
