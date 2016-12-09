@@ -52,7 +52,6 @@ void xdg_surface_v6_t::surface_commited(weston_surface * s) {
 
 void xdg_surface_v6_t::surface_destroyed(weston_surface * s) {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
-	destroy_all_views();
 	destroy.signal(this);
 	wl_resource_destroy(_resource);
 }
@@ -75,13 +74,6 @@ auto xdg_surface_v6_t::create_view() -> view_p {
 	auto view = make_shared<view_t>(_ctx, _role);
 	_role->_master_view = view;
 	return view;
-}
-
-void xdg_surface_v6_t::destroy_all_views() {
-	if(not _role->_master_view.expired()) {
-		_role->_master_view.lock()->signal_destroy();
-		assert(_role->_master_view.expired());
-	}
 }
 
 xdg_surface_v6_t::~xdg_surface_v6_t() {

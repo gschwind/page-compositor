@@ -71,8 +71,6 @@ struct xdg_surface_popup_t :
 
 	virtual page_surface_interface * base_master_view();
 
-	void destroy_all_views();
-
 	/* xdg_popup_vtable */
 	virtual void xdg_popup_destroy(struct wl_client * client, struct wl_resource * resource) override;
 	virtual void xdg_popup_delete_resource(struct wl_resource * resource) override;

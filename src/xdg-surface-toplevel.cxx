@@ -66,16 +66,10 @@ xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 }
 
 void xdg_surface_toplevel_t::surface_destroyed(struct weston_surface * s) {
-	destroy_all_views();
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+	_ctx->destroy_surface(this);
 	destroy.signal(this);
 	wl_resource_destroy(_resource);
-}
-
-void xdg_surface_toplevel_t::destroy_all_views() {
-	if(not _master_view.expired()) {
-		_master_view.lock()->signal_destroy();
-		_master_view.reset();
-	}
 }
 
 void xdg_surface_toplevel_t::surface_commited(struct weston_surface * es)
@@ -142,7 +136,7 @@ auto xdg_surface_toplevel_t::resource() const -> wl_resource * {
 void xdg_surface_toplevel_t::xdg_surface_destroy(struct wl_client *client,
 		struct wl_resource *resource)
 {
-	destroy_all_views();
+	_ctx->destroy_surface(this);
 	destroy.signal(this);
 	wl_resource_destroy(_resource);
 }

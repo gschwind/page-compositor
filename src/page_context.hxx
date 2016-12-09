@@ -92,6 +92,7 @@ public:
 	virtual void manage_popup(page_surface_interface * s) = 0;
 	virtual void configure_popup(page_surface_interface * s) = 0;
 	virtual void schedule_repaint() = 0;
+	virtual void destroy_surface(page_surface_interface * s) = 0;
 
 //	virtual void manage(page_surface_interface * s) = 0;
 //	virtual void unmanage(page_surface_interface * s) = 0;

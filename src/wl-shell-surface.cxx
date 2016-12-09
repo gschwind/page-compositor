@@ -73,14 +73,6 @@ wl_shell_surface_t::~wl_shell_surface_t() {
 	}
 }
 
-void wl_shell_surface_t::destroy_all_views() {
-	if(not _master_view.expired()) {
-		_master_view.lock()->signal_destroy();
-		assert(_master_view.expired());
-		_master_view.reset();
-	}
-}
-
 auto wl_shell_surface_t::get(struct wl_resource * r) -> wl_shell_surface_t * {
 	return dynamic_cast<wl_shell_surface_t*>(resource_get<wl_shell_surface_vtable>(r));
 }
@@ -96,7 +88,7 @@ void wl_shell_surface_t::surface_commited(struct weston_surface * s) {
 
 void wl_shell_surface_t::surface_destroyed(struct weston_surface * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	destroy_all_views();
+	_ctx->destroy_surface(this);
 	destroy.signal(this);
 	wl_resource_destroy(_resource);
 }

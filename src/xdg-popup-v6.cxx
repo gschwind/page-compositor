@@ -53,7 +53,7 @@ xdg_popup_v6_t::~xdg_popup_v6_t() {
 
 void xdg_popup_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	_base->destroy_all_views();
+	_ctx->destroy_surface(this);
 	destroy.signal(this);
 	wl_resource_destroy(self_resource);
 }
@@ -85,7 +85,7 @@ void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
 void xdg_popup_v6_t::zxdg_popup_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	_base->destroy_all_views();
+	_ctx->destroy_surface(this);
 	destroy.signal(this);
 	wl_resource_destroy(self_resource);
 }

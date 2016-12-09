@@ -282,8 +282,6 @@ void viewport_t::trigger_redraw() {
 /* mark renderable_page for redraw */
 void viewport_t::queue_redraw() {
 	_is_durty = true;
-	if(_default_view)
-		weston_view_schedule_repaint(_default_view);
 	_ctx->schedule_repaint();
 }
 

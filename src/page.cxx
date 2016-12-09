@@ -128,6 +128,13 @@ void page_t::schedule_repaint() {
 
 }
 
+void page_t::destroy_surface(page_surface_interface * s) {
+	if(s->_master_view.expired())
+		return;
+	s->_master_view.lock()->signal_destroy();
+	assert(s->_master_view.expired());
+}
+
 static void ack_buffer(struct wl_client *client,
 		   wl_resource * resource,
 		   uint32_t serial,

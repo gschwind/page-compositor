@@ -472,7 +472,7 @@ struct page_t : public page_context_t, public connectable_t {
 	virtual void manage_popup(page_surface_interface * s);
 	virtual void configure_popup(page_surface_interface * s);
 	virtual void schedule_repaint();
-
+	virtual void destroy_surface(page_surface_interface * s);
 
 };
 

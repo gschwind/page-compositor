@@ -66,7 +66,6 @@ struct xdg_surface_v6_t : public connectable_t, public zxdg_surface_v6_vtable {
 	void surface_destroyed(weston_surface * s);
 
 	auto create_view() -> view_p;
-	void destroy_all_views();
 
 	void toplevel_destroyed(xdg_toplevel_v6_t * s);
 	void popup_destroyed(xdg_popup_v6_t * s);

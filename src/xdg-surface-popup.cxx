@@ -80,7 +80,7 @@ xdg_surface_popup_t::~xdg_surface_popup_t() {
 
 void xdg_surface_popup_t::xdg_popup_destroy(wl_client * client, wl_resource * resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	destroy_all_views();
+	_ctx->destroy_surface(this);
 	destroy.signal(this);
 	wl_resource_destroy(resource);
 }
@@ -97,16 +97,9 @@ auto xdg_surface_popup_t::master_view() -> view_w {
 
 void xdg_surface_popup_t::surface_destroyed(struct weston_surface * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	destroy_all_views();
+	_ctx->destroy_surface(this);
 	destroy.signal(this);
 	wl_resource_destroy(_resource);
-}
-
-void xdg_surface_popup_t::destroy_all_views() {
-	if(not _master_view.expired()) {
-		_master_view.lock()->signal_destroy();
-		_master_view.reset();
-	}
 }
 
 page_surface_interface * xdg_surface_popup_t::base_master_view() {

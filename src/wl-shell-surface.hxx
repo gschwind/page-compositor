@@ -106,8 +106,6 @@ struct wl_shell_surface_t :
 			uint32_t id);
 	virtual ~wl_shell_surface_t();
 
-	void destroy_all_views();
-
 	void surface_commited(struct weston_surface * s);
 	void surface_destroyed(struct weston_surface * s);
 
