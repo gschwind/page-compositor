@@ -47,7 +47,7 @@ struct xdg_surface_toplevel_t :
 		bool fullscreen;
 		bool maximized;
 		bool minimized;
-		wl_resource * transient_for;
+		surface_t * transient_for;
 		rect geometry;
 
 		_state() {
@@ -75,8 +75,9 @@ struct xdg_surface_toplevel_t :
 	static void delete_resource(wl_resource *resource);
 
 	/** called on surface commit */
-	virtual void surface_commited(weston_surface * es) override;
-	virtual void surface_destroyed(weston_surface * es) override;
+	void surface_first_commited(weston_surface * es);
+	void surface_commited(weston_surface * es);
+	void surface_destroyed(weston_surface * es);
 
 	edge_e edge_map(uint32_t edge);
 

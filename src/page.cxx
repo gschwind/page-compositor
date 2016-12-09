@@ -2306,7 +2306,13 @@ void page_t::insert_in_tree_using_transient_for(view_p c) {
 //	}
 
 	c->set_managed_type(MANAGED_FLOATING);
-	get_current_workspace()->attach(c);
+	if(c->_page_surface->_transient_for
+			and not c->_page_surface->_transient_for->_master_view.expired()) {
+		auto parent = c->_page_surface->_transient_for->_master_view.lock();
+		parent->add_transient_child(c);
+	} else {
+		get_current_workspace()->attach(c);
+	}
 	c->update_view();
 	sync_tree_view();
 
@@ -2661,7 +2667,12 @@ void page_t::manage_client(surface_t * s) {
 //	weston_view_geometry_dirty(view);
 
 	/** case is notebook window **/
-	bind_window(view, true);
+
+	if(s->_transient_for == nullptr) {
+		bind_window(view, true);
+	} else {
+		insert_in_tree_using_transient_for(view);
+	}
 
 	/** case is floating window **/
 	//insert_in_tree_using_transient_for(mw);

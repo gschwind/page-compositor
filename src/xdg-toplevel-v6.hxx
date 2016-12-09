@@ -30,7 +30,7 @@ struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable,
 		bool fullscreen;
 		bool maximized;
 		bool minimized;
-		wl_resource * transient_for;
+		surface_t * transient_for;
 		rect geometry;
 
 		_state() {
@@ -60,9 +60,12 @@ struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable,
 			uint32_t id);
 
 	void surface_destroyed(xdg_surface_v6_t * s);
+	void surface_first_commited(xdg_surface_v6_t * s);
 	void surface_commited(xdg_surface_v6_t * s);
 
 	edge_e edge_map(uint32_t edge);
+
+	static auto get(struct wl_resource * r) -> xdg_toplevel_v6_t *;
 
 	virtual ~xdg_toplevel_v6_t();
 

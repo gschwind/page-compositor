@@ -25,18 +25,24 @@ auto xdg_surface_popup_t::get(wl_resource * r) -> xdg_surface_popup_t * {
 	return dynamic_cast<xdg_surface_popup_t*>(resource_get<xdg_popup_vtable>(r));
 }
 
-void xdg_surface_popup_t::surface_commited(weston_surface * es)
+void xdg_surface_popup_t::surface_first_commited(weston_surface * es)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-	if(not _master_view.expired())
-		return;
 
 	if (weston_surface_set_role(_surface, "xdg_popup",
 			_resource, XDG_SHELL_ERROR_ROLE) < 0)
 		return;
 
 	_ctx->manage_popup(this);
+
+	on_surface_commit.disconnect();
+	on_surface_commit.connect(&_surface->commit_signal, this, &xdg_surface_popup_t::surface_commited);
+
+}
+
+void xdg_surface_popup_t::surface_commited(weston_surface * es)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 }
 
@@ -66,6 +72,9 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 	_resource = wl_resource_create(client, &xdg_popup_interface, 1, _id);
 	xdg_popup_vtable::set_implementation(_resource);
 
+	on_surface_commit.connect(&_surface->commit_signal, this, &xdg_surface_popup_t::surface_first_commited);
+	on_surface_destroy.connect(&_surface->destroy_signal, this, &xdg_surface_popup_t::surface_destroyed);
+
 	_parent = parent->page_surface();
 	x_offset = x;
 	y_offset = y;
@@ -76,6 +85,8 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 
 xdg_surface_popup_t::~xdg_surface_popup_t() {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+	on_surface_commit.disconnect();
+	on_surface_destroy.disconnect();
 }
 
 void xdg_surface_popup_t::xdg_popup_destroy(wl_client * client, wl_resource * resource) {

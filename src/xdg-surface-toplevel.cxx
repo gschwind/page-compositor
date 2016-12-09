@@ -64,10 +64,16 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 	_resource = wl_resource_create(_client, &xdg_surface_interface, 1, _id);
 	xdg_surface_vtable::set_implementation(_resource);
 
+	on_surface_commit.connect(&_surface->commit_signal, this, &xdg_surface_toplevel_t::surface_first_commited);
+	on_surface_destroy.connect(&_surface->destroy_signal, this, &xdg_surface_toplevel_t::surface_destroyed);
+
+
 }
 
 xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+	on_surface_commit.disconnect();
+	on_surface_destroy.disconnect();
 }
 
 void xdg_surface_toplevel_t::surface_destroyed(struct weston_surface * s) {
@@ -77,18 +83,28 @@ void xdg_surface_toplevel_t::surface_destroyed(struct weston_surface * s) {
 	wl_resource_destroy(_resource);
 }
 
-void xdg_surface_toplevel_t::surface_commited(struct weston_surface * es)
+void xdg_surface_toplevel_t::surface_first_commited(struct weston_surface * es)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(_master_view.expired()) {
-		/* tell weston how to use this data */
-		if (weston_surface_set_role(_surface, "xdg_toplevel",
-				_resource, XDG_SHELL_ERROR_ROLE) < 0)
-			throw "TODO";
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(_surface, "xdg_toplevel",
+			_resource, XDG_SHELL_ERROR_ROLE) < 0)
+		throw "TODO";
 
-		_ctx->manage_client(this);
-	}
+	_transient_for = _pending.transient_for;
+
+	_ctx->manage_client(this);
+
+	on_surface_commit.disconnect();
+	on_surface_commit.connect(&_surface->commit_signal, this, &xdg_surface_toplevel_t::surface_commited);
+
+}
+
+
+void xdg_surface_toplevel_t::surface_commited(struct weston_surface * es)
+{
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	/* configuration is invalid */
 	if(_ack_serial != 0)
@@ -158,8 +174,12 @@ void xdg_surface_toplevel_t::xdg_surface_destroy(struct wl_client *client,
 void xdg_surface_toplevel_t::xdg_surface_set_parent(wl_client * client,
 		wl_resource * resource, wl_resource * parent_resource)
 {
-	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-	xdg_surface->_pending.transient_for = parent_resource;
+	if (parent_resource) {
+		auto parent = xdg_surface_toplevel_t::get(parent_resource);
+		_pending.transient_for = parent->page_surface();
+	} else {
+		_pending.transient_for = nullptr;
+	}
 }
 
 void xdg_surface_toplevel_t::xdg_surface_set_app_id(struct wl_client *client,

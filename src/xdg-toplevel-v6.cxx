@@ -42,7 +42,7 @@ xdg_toplevel_v6_t::xdg_toplevel_v6_t(
 	self_resource = wl_resource_create(client, &zxdg_toplevel_v6_interface, 1, id);
 	zxdg_toplevel_v6_vtable::set_implementation(self_resource);
 	connect(_base->destroy, this, &xdg_toplevel_v6_t::surface_destroyed);
-	connect(_base->commited, this, &xdg_toplevel_v6_t::surface_commited);
+	connect(_base->commited, this, &xdg_toplevel_v6_t::surface_first_commited);
 }
 
 xdg_toplevel_v6_t::~xdg_toplevel_v6_t() {
@@ -56,16 +56,24 @@ void xdg_toplevel_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
 	wl_resource_destroy(self_resource);
 }
 
-void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
+void xdg_toplevel_v6_t::surface_first_commited(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(_master_view.expired()) {
-		/* tell weston how to use this data */
-		if (weston_surface_set_role(_base->_surface, "xdg_toplevel_v6",
-				self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
-			return;
-		_ctx->manage_client(this);
-	}
+	_transient_for = _pending.transient_for;
+
+	/* tell weston how to use this data */
+	if (weston_surface_set_role(_base->_surface, "xdg_toplevel_v6",
+			self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
+		return;
+	_ctx->manage_client(this);
+
+	disconnect(_base->commited);
+	connect(_base->commited, this, &xdg_toplevel_v6_t::surface_commited);
+
+}
+
+void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	/* configuration is invalid */
 	if(_base->_ack_config != 0)
@@ -88,8 +96,9 @@ void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
 		}
 	}
 
-	if(_pending.transient_for != _current.transient_for) {
-
+	if(_pending.transient_for != _transient_for) {
+		_transient_for = _pending.transient_for;
+		/* TODO */
 	}
 
 	if(_pending.title != _current.title) {
@@ -115,6 +124,10 @@ edge_e xdg_toplevel_v6_t::edge_map(uint32_t edge) {
 	return x->second;
 }
 
+auto xdg_toplevel_v6_t::get(struct wl_resource * r) -> xdg_toplevel_v6_t * {
+	return dynamic_cast<xdg_toplevel_v6_t*>(resource_get<zxdg_toplevel_v6_vtable>(r));
+}
+
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
@@ -126,7 +139,11 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_destroy(struct wl_client * client, stru
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_parent(struct wl_client * client, struct wl_resource * resource, struct wl_resource * parent)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	_pending.transient_for = parent;
+	if(parent) {
+		_pending.transient_for = xdg_toplevel_v6_t::get(parent);
+	} else {
+		_pending.transient_for = nullptr;
+	}
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_title(struct wl_client * client, struct wl_resource * resource, const char * title)

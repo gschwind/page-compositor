@@ -22,8 +22,6 @@ xdg_surface_base_t::xdg_surface_base_t(
 	_surface{surface},
 	_id{id}
 {
-	on_surface_commit.connect(&_surface->commit_signal, this, &xdg_surface_base_t::surface_commited);
-	on_surface_destroy.connect(&_surface->destroy_signal, this, &xdg_surface_base_t::surface_destroyed);
 }
 
 xdg_surface_base_t::~xdg_surface_base_t() {

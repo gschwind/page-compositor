@@ -36,7 +36,7 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	zxdg_popup_v6_vtable::set_implementation(self_resource);
 
 	connect(_base->destroy, this, &xdg_popup_v6_t::surface_destroyed);
-	connect(_base->commited, this, &xdg_popup_v6_t::surface_commited);
+	connect(_base->commited, this, &xdg_popup_v6_t::surface_first_commited);
 
 	_parent = xdg_surface_v6_t::get(parent)->_role;
 	assert(_parent != nullptr);
@@ -58,7 +58,7 @@ void xdg_popup_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
 	wl_resource_destroy(self_resource);
 }
 
-void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
+void xdg_popup_v6_t::surface_first_commited(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
 	if (not _is_configured) {
@@ -79,6 +79,15 @@ void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
 		return;
 
 	_ctx->manage_popup(this);
+
+	disconnect(_base->commited);
+	connect(_base->commited, this, &xdg_popup_v6_t::surface_commited);
+
+}
+
+void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
 
 }
 

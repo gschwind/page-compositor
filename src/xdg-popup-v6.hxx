@@ -42,6 +42,7 @@ struct xdg_popup_v6_t : public connectable_t, public zxdg_popup_v6_vtable, publi
 			struct wl_resource * positioner);
 
 	void surface_destroyed(xdg_surface_v6_t * s);
+	void surface_first_commited(xdg_surface_v6_t * s);
 	void surface_commited(xdg_surface_v6_t * s);
 
 	virtual ~xdg_popup_v6_t();

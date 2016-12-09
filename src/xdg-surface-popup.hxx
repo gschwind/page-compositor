@@ -52,8 +52,9 @@ struct xdg_surface_popup_t :
 	xdg_surface_popup_t & operator=(xdg_surface_popup_t const &) = delete;
 
 	/** called on surface commit */
-	virtual void surface_commited(weston_surface * es) override;
-	virtual void surface_destroyed(weston_surface * es) override;
+	void surface_first_commited(weston_surface * es);
+	void surface_commited(weston_surface * es);
+	void surface_destroyed(weston_surface * es);
 
 	xdg_surface_popup_t(page_context_t * ctx,
 			  wl_client * client,
