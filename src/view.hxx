@@ -11,6 +11,7 @@
 #include "tree.hxx"
 #include "page_context.hxx"
 #include "page-surface-interface.hxx"
+#include "listener.hxx"
 
 namespace page {
 
@@ -65,6 +66,9 @@ class view_t : public tree_t {
 
 	bool _has_change;
 	bool _has_keyboard_focus;
+
+	listener_t<struct weston_view> weston_view_destroy_listener;
+	void weston_view_destroyed(struct weston_view * v);
 
 public:
 

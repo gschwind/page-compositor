@@ -28,7 +28,8 @@ workspace_t::workspace_t(page_context_t * ctx, unsigned id) :
 	_primary_viewport{},
 	_id{id},
 	_switch_renderable{nullptr},
-	_switch_direction{WORKSPACE_SWITCH_LEFT}
+	_switch_direction{WORKSPACE_SWITCH_LEFT},
+	_switch_screenshot{nullptr}
 {
 	_viewport_layer = make_shared<tree_t>();
 	_floating_layer = make_shared<tree_t>();

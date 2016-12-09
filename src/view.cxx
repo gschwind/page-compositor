@@ -42,6 +42,10 @@ void view_t::destroy_popup_child(view_t * c) {
 	_popups_childdren->remove(c->shared_from_this());
 }
 
+void view_t::weston_view_destroyed(struct weston_view * v) {
+	destroy.signal(this);
+}
+
 view_t::view_t(
 		page_context_t * ctx,
 		page_surface_interface * xdg_surface) :

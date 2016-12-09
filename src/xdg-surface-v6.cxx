@@ -51,17 +51,19 @@ void xdg_surface_v6_t::surface_commited(weston_surface * s) {
 }
 
 void xdg_surface_v6_t::surface_destroyed(weston_surface * s) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 	destroy_all_views();
 	destroy.signal(this);
 	wl_resource_destroy(_resource);
 }
 
 void xdg_surface_v6_t::toplevel_destroyed(xdg_toplevel_v6_t * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	_role = nullptr;
 }
 
 void xdg_surface_v6_t::popup_destroyed(xdg_popup_v6_t * s) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	_role = nullptr;
 }
 
@@ -78,7 +80,7 @@ auto xdg_surface_v6_t::create_view() -> view_p {
 void xdg_surface_v6_t::destroy_all_views() {
 	if(not _master_view.expired()) {
 		_master_view.lock()->signal_destroy();
-		_master_view.reset();
+		assert(_master_view.expired());
 	}
 }
 
@@ -93,7 +95,7 @@ void xdg_surface_v6_t::zxdg_surface_v6_destroy(struct wl_client * client, struct
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	if(_role) {
-		wl_resource_post_error(_resource, ZXDG_SURFACE_V6_ERROR_ALREADY_CONSTRUCTED, "already specialized");
+		wl_resource_post_error(_resource, ZXDG_SURFACE_V6_ERROR_ALREADY_CONSTRUCTED, "you must destroy toplevel or popup first");
 		return;
 	}
 

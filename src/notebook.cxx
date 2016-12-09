@@ -1079,6 +1079,9 @@ void notebook_t::_update_mouse_over() {
 bool notebook_t::motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event * event) {
 	auto pointer = grab->pointer;
 
+	if(pointer == nullptr)
+		return false;
+
 	if (pointer->focus != get_parent_default_view()) {
 		_has_mouse_change = true;
 		_mouse_over.event_x = -1;

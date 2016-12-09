@@ -49,8 +49,8 @@ private:
 	weak_ptr<viewport_t> _primary_viewport;
 	weak_ptr<notebook_t> _default_pop;
 
-	workspace_t(workspace_t const & v);
-	workspace_t & operator= (workspace_t const &);
+	workspace_t(workspace_t const & v) = delete;
+	workspace_t & operator= (workspace_t const &) = delete;
 
 	static time64_t const _switch_duration;
 

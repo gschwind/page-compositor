@@ -35,7 +35,6 @@ xdg_toplevel_v6_t::xdg_toplevel_v6_t(
 
 xdg_toplevel_v6_t::~xdg_toplevel_v6_t() {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
-	wl_resource_set_implementation(self_resource, nullptr, nullptr, nullptr);
 }
 
 void xdg_toplevel_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
@@ -99,7 +98,8 @@ void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_base->destroy_all_views();
+	destroy.signal(this);
 	wl_resource_destroy(self_resource);
 }
 
