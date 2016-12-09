@@ -17,7 +17,7 @@ namespace page {
 using namespace std;
 using namespace wcxx;
 
-struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable, public page_surface_interface {
+struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable, public surface_t {
 	xdg_surface_v6_t *     _base;
 
 	page_context_t *       _ctx;

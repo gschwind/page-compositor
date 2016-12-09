@@ -17,7 +17,7 @@
 #include "keyboard-grab-handler.hxx"
 #include "pixmap.hxx"
 
-#include "page-surface-interface.hxx"
+#include "surface.hxx"
 
 namespace page {
 
@@ -86,13 +86,13 @@ public:
 //	virtual void make_surface_stats(int & size, int & count) = 0;
 //	virtual auto mainloop() -> mainloop_t * = 0;
 	virtual void sync_tree_view() = 0;
-	virtual void manage_client(page_surface_interface * s) = 0;
+	virtual void manage_client(surface_t * s) = 0;
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p = 0;
 	virtual void bind_window(view_p mw, bool activate) = 0;
-	virtual void manage_popup(page_surface_interface * s) = 0;
-	virtual void configure_popup(page_surface_interface * s) = 0;
+	virtual void manage_popup(surface_t * s) = 0;
+	virtual void configure_popup(surface_t * s) = 0;
 	virtual void schedule_repaint() = 0;
-	virtual void destroy_surface(page_surface_interface * s) = 0;
+	virtual void destroy_surface(surface_t * s) = 0;
 
 //	virtual void manage(page_surface_interface * s) = 0;
 //	virtual void unmanage(page_surface_interface * s) = 0;

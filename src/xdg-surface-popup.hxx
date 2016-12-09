@@ -20,9 +20,8 @@
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_unmanaged_gaussian_shadow.hxx"
 #include "renderable_pixmap.hxx"
-
+#include "surface.hxx"
 #include "xdg-surface-base.hxx"
-#include "page-surface-interface.hxx"
 
 namespace page {
 
@@ -32,7 +31,7 @@ using namespace std;
 struct xdg_surface_popup_t :
 		public xdg_surface_base_t,
 		public xdg_popup_vtable,
-		public page_surface_interface {
+		public surface_t {
 
 	wl_client * client;
 	wl_resource * resource;
@@ -69,7 +68,7 @@ struct xdg_surface_popup_t :
 
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
 
-	virtual page_surface_interface * page_surface();
+	virtual surface_t * page_surface();
 
 	/* xdg_popup_vtable */
 	virtual void xdg_popup_destroy(struct wl_client * client, struct wl_resource * resource) override;

@@ -102,7 +102,7 @@ void xdg_surface_popup_t::surface_destroyed(struct weston_surface * s) {
 	wl_resource_destroy(_resource);
 }
 
-page_surface_interface * xdg_surface_popup_t::page_surface() {
+surface_t * xdg_surface_popup_t::page_surface() {
 	return this;
 }
 

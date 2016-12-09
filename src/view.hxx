@@ -10,8 +10,8 @@
 
 #include "tree.hxx"
 #include "page_context.hxx"
-#include "page-surface-interface.hxx"
 #include "listener.hxx"
+#include "surface.hxx"
 
 namespace page {
 
@@ -32,7 +32,7 @@ class view_t : public tree_t {
 
 	friend class page_t;
 	page_context_t * _ctx;
-	page_surface_interface * _page_surface;
+	surface_t * _page_surface;
 
 	/** hold floating position **/
 	rect _floating_wished_position;
@@ -90,7 +90,7 @@ public:
 	/** called on surface commit */
 	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
-	view_t(page_context_t * ctx, page_surface_interface * s);
+	view_t(page_context_t * ctx, surface_t * s);
 	virtual ~view_t();
 
 	/* read only attributes */

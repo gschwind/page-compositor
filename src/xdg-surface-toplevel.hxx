@@ -24,10 +24,9 @@
 #include "floating_event.hxx"
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_pixmap.hxx"
-
+#include "surface.hxx"
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
-#include "page-surface-interface.hxx"
 
 namespace page {
 
@@ -39,7 +38,7 @@ using namespace std;
 struct xdg_surface_toplevel_t :
 	public xdg_surface_base_t,
 	public xdg_surface_vtable,
-	public page_surface_interface {
+	public surface_t {
 
 	friend class page::page_t;
 
@@ -96,7 +95,7 @@ struct xdg_surface_toplevel_t :
 	auto create_view() -> view_p;
 	auto master_view() -> view_w;
 
-	virtual page_surface_interface * page_surface();
+	virtual surface_t * page_surface();
 
 	void minimize();
 

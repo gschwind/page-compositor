@@ -24,7 +24,7 @@
 
 #include <linux/input.h>
 #include <compositor.h>
-
+#include <surface.hxx>
 #include "renderable_floating_outer_gradien.hxx"
 #include "notebook.hxx"
 #include "utils.hxx"
@@ -32,7 +32,6 @@
 #include "wl-shell-client.hxx"
 
 #include "view.hxx"
-#include "page-surface-interface.hxx"
 
 namespace page {
 

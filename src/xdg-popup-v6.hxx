@@ -8,16 +8,16 @@
 #ifndef SRC_XDG_POPUP_V6_HXX_
 #define SRC_XDG_POPUP_V6_HXX_
 
+#include "surface.hxx"
 #include "xdg-shell-unstable-v6-interface.hxx"
 #include "xdg-surface-v6.hxx"
-#include "page-surface-interface.hxx"
 
 namespace page {
 
 using namespace std;
 using namespace wcxx;
 
-struct xdg_popup_v6_t : public connectable_t, public zxdg_popup_v6_vtable, public page_surface_interface {
+struct xdg_popup_v6_t : public connectable_t, public zxdg_popup_v6_vtable, public surface_t {
 	xdg_surface_v6_t *     _base;
 
 	page_context_t *       _ctx;

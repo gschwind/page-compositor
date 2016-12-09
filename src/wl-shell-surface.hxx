@@ -36,10 +36,9 @@
 #include "floating_event.hxx"
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_pixmap.hxx"
-
+#include "surface.hxx"
 #include "xdg-surface-base.hxx"
 #include "xdg-surface-popup.hxx"
-#include "page-surface-interface.hxx"
 
 namespace page {
 
@@ -50,7 +49,7 @@ using namespace std;
 
 struct wl_shell_surface_t :
 	public wl_shell_surface_vtable,
-	public page_surface_interface {
+	public surface_t {
 
 	friend class page::page_t;
 

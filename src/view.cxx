@@ -48,7 +48,7 @@ void view_t::weston_view_destroyed(struct weston_view * v) {
 
 view_t::view_t(
 		page_context_t * ctx,
-		page_surface_interface * xdg_surface) :
+		surface_t * xdg_surface) :
 	_ctx{ctx},
 	_floating_wished_position{},
 	_notebook_wished_position{},

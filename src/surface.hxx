@@ -5,8 +5,8 @@
  *      Author: gschwind
  */
 
-#ifndef SRC_PAGE_SURFACE_INTERFACE_HXX_
-#define SRC_PAGE_SURFACE_INTERFACE_HXX_
+#ifndef SRC_SURFACE_HXX_
+#define SRC_SURFACE_HXX_
 
 #include <set>
 #include <string>
@@ -22,18 +22,18 @@ using namespace std;
 /**
  * This interface allow allow views to communicate to backend
  **/
-struct page_surface_interface {
+struct surface_t {
 
 	view_w _master_view;
 
 	/* parent for popup */
-	page_surface_interface * _parent;
+	surface_t * _parent;
 
 	/* positionner */
 	int32_t x_offset;
 	int32_t y_offset;
 
-	virtual ~page_surface_interface() = default;
+	virtual ~surface_t() = default;
 
 	virtual struct weston_surface * surface() const = 0;
 	virtual struct weston_view * create_weston_view() = 0;
@@ -50,6 +50,6 @@ struct page_surface_interface {
 
 #else
 
-struct page_surface_interface;
+struct surface_t;
 
-#endif /* SRC_PAGE_SURFACE_INTERFACE_HXX_ */
+#endif /* SRC_SURFACE_HXX_ */

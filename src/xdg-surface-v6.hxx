@@ -60,7 +60,7 @@ struct xdg_surface_v6_t : public connectable_t, public zxdg_surface_v6_vtable {
 	signal_t<xdg_surface_v6_t *> destroy;
 	signal_t<xdg_surface_v6_t *> commited;
 
-	page_surface_interface * _role;
+	surface_t * _role;
 
 	void surface_commited(weston_surface * s);
 	void surface_destroyed(weston_surface * s);

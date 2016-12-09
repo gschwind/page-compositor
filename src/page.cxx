@@ -128,7 +128,7 @@ void page_t::schedule_repaint() {
 
 }
 
-void page_t::destroy_surface(page_surface_interface * s) {
+void page_t::destroy_surface(surface_t * s) {
 	if(s->_master_view.expired())
 		return;
 	s->_master_view.lock()->signal_destroy();
@@ -2567,7 +2567,7 @@ void page_t::remove_viewport(workspace_p d, viewport_p v) {
 ////	}
 //}
 
-void page_t::manage_client(page_surface_interface * s) {
+void page_t::manage_client(surface_t * s) {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
 	auto view = make_shared<view_t>(this, s);
@@ -2634,7 +2634,7 @@ void page_t::manage_client(page_surface_interface * s) {
 
 }
 
-void page_t::manage_popup(page_surface_interface * s) {
+void page_t::manage_popup(surface_t * s) {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 	assert(s->_parent != nullptr);
 
@@ -2649,7 +2649,7 @@ void page_t::manage_popup(page_surface_interface * s) {
 	}
 }
 
-void page_t::configure_popup(page_surface_interface * s) {
+void page_t::configure_popup(surface_t * s) {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 	s->send_configure_popup(s->x_offset, s->y_offset, s->width(), s->height());
 }
