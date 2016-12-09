@@ -29,6 +29,18 @@ namespace page {
 
 using namespace std;
 
+map<uint32_t, edge_e> const xdg_surface_toplevel_t::_edge_map{
+	{XDG_SURFACE_RESIZE_EDGE_NONE, EDGE_NONE},
+	{XDG_SURFACE_RESIZE_EDGE_TOP, EDGE_TOP},
+	{XDG_SURFACE_RESIZE_EDGE_BOTTOM, EDGE_BOTTOM},
+	{XDG_SURFACE_RESIZE_EDGE_LEFT, EDGE_LEFT},
+	{XDG_SURFACE_RESIZE_EDGE_TOP_LEFT, EDGE_TOP_LEFT},
+	{XDG_SURFACE_RESIZE_EDGE_BOTTOM_LEFT, EDGE_BOTTOM_LEFT},
+	{XDG_SURFACE_RESIZE_EDGE_RIGHT, EDGE_RIGHT},
+	{XDG_SURFACE_RESIZE_EDGE_TOP_RIGHT, EDGE_TOP_RIGHT},
+	{XDG_SURFACE_RESIZE_EDGE_BOTTOM_RIGHT, EDGE_BOTTOM_RIGHT}
+};
+
 void xdg_surface_toplevel_t::xdg_surface_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	delete this;
@@ -125,6 +137,15 @@ void xdg_surface_toplevel_t::surface_commited(struct weston_surface * es)
 
 }
 
+edge_e xdg_surface_toplevel_t::edge_map(uint32_t edge) {
+	auto x = _edge_map.find(edge);
+	if(x == _edge_map.end()) {
+		weston_log("warning unexpected edge found");
+		return EDGE_NONE;
+	}
+	return x->second;
+}
+
 auto xdg_surface_toplevel_t::get(wl_resource * r) -> xdg_surface_toplevel_t * {
 	return dynamic_cast<xdg_surface_toplevel_t*>(resource_get<xdg_surface_vtable>(r));
 }
@@ -185,22 +206,8 @@ void xdg_surface_toplevel_t::xdg_surface_resize(struct wl_client *client, struct
 		   struct wl_resource *seat_resource, uint32_t serial,
 		   uint32_t edges)
 {
-	if(master_view().expired())
-		return;
-
-	auto seat = reinterpret_cast<weston_seat*>(
-			wl_resource_get_user_data(seat_resource));
-
-	auto pointer = weston_seat_get_pointer(seat);
-	double x = wl_fixed_to_double(pointer->x);
-	double y = wl_fixed_to_double(pointer->y);
-
-	auto master_view = _master_view.lock();
-	if(master_view->is(MANAGED_FLOATING)) {
-		_ctx->grab_start(pointer, new grab_floating_resize_t(_ctx, master_view,
-			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges)));
-	}
-
+	auto seat = resource_get<struct weston_seat>(seat_resource);
+	_ctx->start_resize(this, seat, serial, edge_map(edges));
 }
 
 void xdg_surface_toplevel_t::xdg_surface_ack_configure(wl_client *client,

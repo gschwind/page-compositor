@@ -15,6 +15,18 @@
 
 namespace page {
 
+map<uint32_t, edge_e> const xdg_toplevel_v6_t::_edge_map{
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_NONE, EDGE_NONE},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP, EDGE_TOP},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM, EDGE_BOTTOM},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT, EDGE_LEFT},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT, EDGE_TOP_LEFT},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT, EDGE_BOTTOM_LEFT},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT, EDGE_RIGHT},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT, EDGE_TOP_RIGHT},
+	{ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT, EDGE_BOTTOM_RIGHT}
+};
+
 xdg_toplevel_v6_t::xdg_toplevel_v6_t(
 		page_context_t * ctx,
 		wl_client * client,
@@ -94,6 +106,15 @@ void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
 	_current = _pending;
 }
 
+edge_e xdg_toplevel_v6_t::edge_map(uint32_t edge) {
+	auto x = _edge_map.find(edge);
+	if(x == _edge_map.end()) {
+		weston_log("warning unexpected edge found");
+		return EDGE_NONE;
+	}
+	return x->second;
+}
+
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_destroy(struct wl_client * client, struct wl_resource * resource)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
@@ -136,21 +157,9 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_move(struct wl_client * client, struct 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_resize(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat_resource, uint32_t serial, uint32_t edges)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	if(_master_view.expired())
-		return;
+	auto seat = resource_get<struct weston_seat>(seat_resource);
+	_ctx->start_resize(this, seat, serial, edge_map(edges));
 
-	auto seat = reinterpret_cast<weston_seat*>(
-			wl_resource_get_user_data(seat_resource));
-
-	auto pointer = weston_seat_get_pointer(seat);
-	double x = wl_fixed_to_double(pointer->x);
-	double y = wl_fixed_to_double(pointer->y);
-
-	auto master_view = _master_view.lock();
-	if(master_view->is(MANAGED_FLOATING)) {
-		_ctx->grab_start(pointer, new grab_floating_resize_t(_ctx, master_view,
-			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges)));
-	}
 }
 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_set_max_size(struct wl_client * client, struct wl_resource * resource, int32_t width, int32_t height)

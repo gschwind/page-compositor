@@ -148,7 +148,7 @@ struct grab_floating_resize_t : public pointer_grab_handler_t {
 	page_context_t * _ctx;
 	view_w f;
 
-	xdg_surface_resize_edge mode;
+	edge_e mode;
 	int x_root;
 	int y_root;
 	rect original_position;
@@ -161,7 +161,7 @@ public:
 
 	grab_floating_resize_t(page_context_t * _ctx,
 			view_p f, uint32_t button, int x,
-			int y, xdg_surface_resize_edge mode);
+			int y, edge_e mode);
 
 	virtual ~grab_floating_resize_t();
 	virtual void focus() { }

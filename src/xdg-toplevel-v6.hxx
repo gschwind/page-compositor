@@ -44,6 +44,8 @@ struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable,
 
 	} _pending, _current;
 
+	static map<uint32_t, edge_e> const _edge_map;
+
 	listener_t<struct wl_resource> on_resource_destroyed;
 
 	signal_t<xdg_toplevel_v6_t *> destroy;
@@ -59,6 +61,8 @@ struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable,
 
 	void surface_destroyed(xdg_surface_v6_t * s);
 	void surface_commited(xdg_surface_v6_t * s);
+
+	edge_e edge_map(uint32_t edge);
 
 	virtual ~xdg_toplevel_v6_t();
 

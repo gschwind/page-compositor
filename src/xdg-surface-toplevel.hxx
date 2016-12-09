@@ -66,6 +66,8 @@ struct xdg_surface_toplevel_t :
 
 	signal_t<xdg_surface_toplevel_t *> destroy;
 
+	static map<uint32_t, edge_e> const _edge_map;
+
 	/* private to avoid copy */
 	xdg_surface_toplevel_t(xdg_surface_toplevel_t const &) = delete;
 	xdg_surface_toplevel_t & operator=(xdg_surface_toplevel_t const &) = delete;
@@ -75,6 +77,8 @@ struct xdg_surface_toplevel_t :
 	/** called on surface commit */
 	virtual void surface_commited(weston_surface * es) override;
 	virtual void surface_destroyed(weston_surface * es) override;
+
+	edge_e edge_map(uint32_t edge);
 
 	static auto get(wl_resource * r) -> xdg_surface_toplevel_t *;
 

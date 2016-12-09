@@ -63,6 +63,8 @@ struct wl_shell_surface_t :
 	int32_t _width;
 	int32_t _heigth;
 
+	static map<uint32_t, edge_e> const _edge_map;
+
 	listener_t<struct weston_surface> on_surface_destroy;
 	listener_t<struct weston_surface> on_surface_commit;
 
@@ -107,6 +109,7 @@ struct wl_shell_surface_t :
 
 	void surface_commited(struct weston_surface * s);
 	void surface_destroyed(struct weston_surface * s);
+	edge_e edge_map(uint32_t edge);
 
 	/* wl_shell_surface */
 	virtual void wl_shell_surface_pong(struct wl_client * client, struct wl_resource * resource, uint32_t serial) override;

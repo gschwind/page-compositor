@@ -154,6 +154,21 @@ void page_t::start_move(surface_t * s, struct weston_seat * seat, uint32_t seria
 	}
 }
 
+void page_t::start_resize(surface_t * s, struct weston_seat * seat, uint32_t serial, edge_e edges) {
+	if(s->_master_view.expired())
+		return;
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	auto master_view = s->_master_view.lock();
+	if(master_view->is(MANAGED_FLOATING)) {
+		grab_start(pointer, new grab_floating_resize_t(this, master_view,
+			BTN_LEFT, x, y, edges));
+	}
+}
+
 static void ack_buffer(struct wl_client *client,
 		   wl_resource * resource,
 		   uint32_t serial,

@@ -26,7 +26,17 @@ using namespace std;
 class theme_t;
 class mainloop_t;
 
-
+enum edge_e {
+	EDGE_NONE = 0,
+	EDGE_TOP = 1,
+	EDGE_BOTTOM = 2,
+	EDGE_LEFT = 4,
+	EDGE_TOP_LEFT = 5,
+	EDGE_BOTTOM_LEFT = 6,
+	EDGE_RIGHT = 8,
+	EDGE_TOP_RIGHT = 9,
+	EDGE_BOTTOM_RIGHT = 10
+};
 
 struct page_configuration_t {
 	bool _replace_wm;
@@ -93,12 +103,12 @@ public:
 	virtual void configure_popup(surface_t * s) = 0;
 	virtual void schedule_repaint() = 0;
 	virtual void destroy_surface(surface_t * s) = 0;
-	virtual void start_move(surface_t * s, struct weston_seat *seat, uint32_t serial) = 0;
+	virtual void start_move(surface_t * s, struct weston_seat * seat, uint32_t serial) = 0;
+	virtual void start_resize(surface_t * s, struct weston_seat * seat, uint32_t serial, edge_e edges) = 0;
 
 //	virtual void manage(page_surface_interface * s) = 0;
 //	virtual void unmanage(page_surface_interface * s) = 0;
 //	virtual void show_window_menu(page_surface_interface * s, struct weston_seat *seat, int32_t x, int32_t y);
-//	virtual void start_resize(page_surface_interface * s, struct weston_seat *seat, uint32_t serial, int edges);
 
 };
 

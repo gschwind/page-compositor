@@ -37,6 +37,18 @@ namespace page {
 
 using namespace std;
 
+map<uint32_t, edge_e> const wl_shell_surface_t::_edge_map{
+	{WL_SHELL_SURFACE_RESIZE_NONE, EDGE_NONE},
+	{WL_SHELL_SURFACE_RESIZE_TOP, EDGE_TOP},
+	{WL_SHELL_SURFACE_RESIZE_BOTTOM, EDGE_BOTTOM},
+	{WL_SHELL_SURFACE_RESIZE_LEFT, EDGE_LEFT},
+	{WL_SHELL_SURFACE_RESIZE_TOP_LEFT, EDGE_TOP_LEFT},
+	{WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT, EDGE_BOTTOM_LEFT},
+	{WL_SHELL_SURFACE_RESIZE_RIGHT, EDGE_RIGHT},
+	{WL_SHELL_SURFACE_RESIZE_TOP_RIGHT, EDGE_TOP_RIGHT},
+	{WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT, EDGE_BOTTOM_RIGHT}
+};
+
 void wl_shell_surface_t::wl_shell_surface_delete_resource(struct wl_resource *resource) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	delete this;
@@ -92,6 +104,15 @@ void wl_shell_surface_t::surface_destroyed(struct weston_surface * s) {
 	wl_resource_destroy(_resource);
 }
 
+edge_e wl_shell_surface_t::edge_map(uint32_t edge) {
+	auto x = _edge_map.find(edge);
+	if(x == _edge_map.end()) {
+		weston_log("warning unexpected edge found");
+		return EDGE_NONE;
+	}
+	return x->second;
+}
+
 void wl_shell_surface_t::wl_shell_surface_pong(wl_client *client,
 	     wl_resource *resource,
 	     uint32_t serial) {
@@ -114,25 +135,8 @@ void wl_shell_surface_t::wl_shell_surface_resize(wl_client *client,
 	       wl_resource *seat_resource,
 	       uint32_t serial,
 	       uint32_t edges) {
-
-	if(_master_view.expired())
-		return;
-
-	auto seat = reinterpret_cast<weston_seat*>(
-			wl_resource_get_user_data(seat_resource));
-
-	auto pointer = weston_seat_get_pointer(seat);
-	double x = wl_fixed_to_double(pointer->x);
-	double y = wl_fixed_to_double(pointer->y);
-
-	auto master_view = _master_view.lock();
-	if(master_view->is(MANAGED_FLOATING)) {
-		_ctx->grab_start(pointer, new grab_floating_resize_t(_ctx, master_view,
-			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges))); // FIXME: map enum edges.
-	}
-
-	// start_resize(ps, seat, serial)
-
+	auto seat = resource_get<struct weston_seat>(seat_resource);
+	_ctx->start_resize(this, seat, serial, edge_map(edges));
 }
 
 void wl_shell_surface_t::wl_shell_surface_set_toplevel(wl_client *client,

@@ -474,6 +474,7 @@ struct page_t : public page_context_t, public connectable_t {
 	virtual void schedule_repaint();
 	virtual void destroy_surface(surface_t * s);
 	virtual void start_move(surface_t * s, struct weston_seat *seat, uint32_t serial);
+	virtual void start_resize(surface_t * s, struct weston_seat * seat, uint32_t serial, edge_e edges);
 
 };
 
