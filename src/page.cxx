@@ -237,6 +237,7 @@ page_t::page_t(int argc, char ** argv)
 	char const * conf_file_name = 0;
 
 	use_x11_backend = false;
+	use_pixman = false;
 	_global_wl_shell = nullptr;
 	_global_xdg_shell_v5 = nullptr;
 	_global_xdg_shell_v6 = nullptr;
@@ -254,6 +255,11 @@ page_t::page_t(int argc, char ** argv)
 		} else {
 			conf_file_name = argv[k];
 		}
+
+		if(strcmp("--use-pixman", argv[k]) == 0) {
+			use_pixman = true;
+		}
+
 		++k;
 	}
 
@@ -3510,7 +3516,7 @@ void page_t::load_x11_backend(weston_compositor* ec) {
 	config.no_input = 0;
 //	config.num_outputs = 1;
 //	config.outputs = &default_output;
-	config.use_pixman = 1;
+	config.use_pixman = use_pixman?1:0;
 
 	auto backend_init = reinterpret_cast<backend_init_func>(
 			weston_load_module("x11-backend.so", "backend_init"));
@@ -3550,7 +3556,7 @@ void page_t::load_drm_backend(weston_compositor* ec) {
 
 	config.connector = 0;
 	config.tty = 0;
-	config.use_pixman = 0;
+	config.use_pixman = use_pixman?1:0;
 	config.seat_id = 0;
 	config.gbm_format = 0;
 //	config.configure_output = &drm_configure_output;

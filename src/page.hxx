@@ -121,6 +121,7 @@ struct page_t : public page_context_t, public connectable_t {
 	string _theme_engine;
 
 	bool use_x11_backend;
+	bool use_pixman;
 
 	wl_listener destroy;
 
