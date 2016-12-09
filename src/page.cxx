@@ -135,6 +135,25 @@ void page_t::destroy_surface(surface_t * s) {
 	assert(s->_master_view.expired());
 }
 
+void page_t::start_move(surface_t * s, struct weston_seat * seat, uint32_t serial) {
+	//weston_log("call %s\n", __PRETTY_FUNCTION__);
+	if(s->_master_view.expired())
+		return;
+
+	auto pointer = weston_seat_get_pointer(seat);
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	auto master_view = s->_master_view.lock();
+	if(master_view->is(MANAGED_NOTEBOOK)) {
+		grab_start(pointer, new grab_bind_client_t{this, master_view,
+			BTN_LEFT, rect(x, y, 1, 1)});
+	} else if(master_view->is(MANAGED_FLOATING)) {
+		grab_start(pointer, new grab_floating_move_t(this, master_view,
+			BTN_LEFT, x, y));
+	}
+}
+
 static void ack_buffer(struct wl_client *client,
 		   wl_resource * resource,
 		   uint32_t serial,

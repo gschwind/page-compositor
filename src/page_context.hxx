@@ -93,11 +93,11 @@ public:
 	virtual void configure_popup(surface_t * s) = 0;
 	virtual void schedule_repaint() = 0;
 	virtual void destroy_surface(surface_t * s) = 0;
+	virtual void start_move(surface_t * s, struct weston_seat *seat, uint32_t serial) = 0;
 
 //	virtual void manage(page_surface_interface * s) = 0;
 //	virtual void unmanage(page_surface_interface * s) = 0;
 //	virtual void show_window_menu(page_surface_interface * s, struct weston_seat *seat, int32_t x, int32_t y);
-//	virtual void start_move(page_surface_interface * s, struct weston_seat *seat, uint32_t serial);
 //	virtual void start_resize(page_surface_interface * s, struct weston_seat *seat, uint32_t serial, int edges);
 
 };

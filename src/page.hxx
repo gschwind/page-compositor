@@ -473,6 +473,7 @@ struct page_t : public page_context_t, public connectable_t {
 	virtual void configure_popup(surface_t * s);
 	virtual void schedule_repaint();
 	virtual void destroy_surface(surface_t * s);
+	virtual void start_move(surface_t * s, struct weston_seat *seat, uint32_t serial);
 
 };
 

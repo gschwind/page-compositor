@@ -104,26 +104,8 @@ void wl_shell_surface_t::wl_shell_surface_move(wl_client *client,
 	     wl_resource *seat_resource,
 	     uint32_t serial) {
 
-	if(_master_view.expired())
-		return;
-
-	auto seat = reinterpret_cast<weston_seat*>(
-			wl_resource_get_user_data(seat_resource));
-
-	auto pointer = weston_seat_get_pointer(seat);
-	double x = wl_fixed_to_double(pointer->x);
-	double y = wl_fixed_to_double(pointer->y);
-
-	auto master_view = _master_view.lock();
-	if(master_view->is(MANAGED_NOTEBOOK)) {
-		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view,
-			BTN_LEFT, rect(x, y, 1, 1)});
-	} else if(master_view->is(MANAGED_FLOATING)) {
-		_ctx->grab_start(pointer, new grab_floating_move_t(_ctx, master_view,
-			BTN_LEFT, x, y));
-	}
-
-	// start_move(ps, seat, serial)
+	auto seat = resource_get<struct weston_seat>(seat_resource);
+	_ctx->start_move(this, seat, serial);
 
 }
 
