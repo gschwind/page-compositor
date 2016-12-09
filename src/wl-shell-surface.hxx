@@ -109,21 +109,7 @@ struct wl_shell_surface_t :
 			uint32_t id);
 	virtual ~wl_shell_surface_t();
 
-	/* read only attributes */
-	auto resource() const -> wl_resource *;
-
-	void set_title(char const *);
-	void set_transient_for(wl_shell_surface_t * s);
-	auto transient_for() const -> wl_shell_surface_t *;
-
-	auto create_view() -> view_p;
-	auto master_view() -> view_w;
-
 	void destroy_all_views();
-
-	virtual view_p base_master_view();
-
-	void minimize();
 
 	void surface_commited(struct weston_surface * s);
 	void surface_destroyed(struct weston_surface * s);

@@ -55,7 +55,8 @@ wl_shell_surface_t::wl_shell_surface_t(
 	_ack_serial{0},
 	_parent{nullptr}
 {
-	weston_log("NEW wl_shell_surface_t %p\n", this);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+
 	_resource = wl_resource_create(_client, &wl_shell_surface_interface, 1, _id);
 	wl_shell_surface_vtable::set_implementation(_resource);
 
@@ -65,7 +66,7 @@ wl_shell_surface_t::wl_shell_surface_t(
 }
 
 wl_shell_surface_t::~wl_shell_surface_t() {
-	weston_log("DEL wl_shell_surface_t %p\n", this);
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 	if(_surface) {
 		on_surface_destroy.disconnect();
 		on_surface_commit.disconnect();
@@ -74,38 +75,14 @@ wl_shell_surface_t::~wl_shell_surface_t() {
 
 void wl_shell_surface_t::destroy_all_views() {
 	if(not _master_view.expired()) {
-		auto master_view = _master_view.lock();
-		master_view->signal_destroy();
+		_master_view.lock()->signal_destroy();
+		assert(_master_view.expired());
+		_master_view.reset();
 	}
 }
 
 auto wl_shell_surface_t::get(struct wl_resource * r) -> wl_shell_surface_t * {
 	return dynamic_cast<wl_shell_surface_t*>(resource_get<wl_shell_surface_vtable>(r));
-}
-
-auto wl_shell_surface_t::resource() const -> wl_resource * {
-	return _resource;
-}
-
-auto wl_shell_surface_t::create_view() -> view_p {
-	auto view = make_shared<view_t>(_ctx, this);
-	_master_view = view;
-	return view;
-}
-
-auto wl_shell_surface_t::master_view() -> view_w {
-	return _master_view;
-}
-
-void wl_shell_surface_t::minimize() {
-	if(_master_view.expired())
-		return;
-	auto master_view = _master_view.lock();
-
-	if(not master_view->is(MANAGED_NOTEBOOK)) {
-		_ctx->bind_window(master_view, true);
-	}
-
 }
 
 void wl_shell_surface_t::surface_commited(struct weston_surface * s) {
@@ -124,10 +101,6 @@ void wl_shell_surface_t::surface_destroyed(struct weston_surface * s) {
 	wl_resource_destroy(_resource);
 }
 
-view_p wl_shell_surface_t::base_master_view() {
-	return dynamic_pointer_cast<view_t>(_master_view.lock());
-}
-
 void wl_shell_surface_t::wl_shell_surface_pong(wl_client *client,
 	     wl_resource *resource,
 	     uint32_t serial) {
@@ -140,7 +113,7 @@ void wl_shell_surface_t::wl_shell_surface_move(wl_client *client,
 	     wl_resource *seat_resource,
 	     uint32_t serial) {
 
-	if(master_view().expired())
+	if(_master_view.expired())
 		return;
 
 	auto seat = reinterpret_cast<weston_seat*>(
@@ -166,7 +139,7 @@ void wl_shell_surface_t::wl_shell_surface_resize(wl_client *client,
 	       uint32_t serial,
 	       uint32_t edges) {
 
-	if(master_view().expired())
+	if(_master_view.expired())
 		return;
 
 	auto seat = reinterpret_cast<weston_seat*>(
@@ -187,12 +160,15 @@ void wl_shell_surface_t::wl_shell_surface_resize(wl_client *client,
 void wl_shell_surface_t::wl_shell_surface_set_toplevel(wl_client *client,
 		     wl_resource *resource) {
 	/* tell weston how to use this data */
-	if (weston_surface_set_role(_surface, "wl_shell_surface_toplevel",
-			_resource, WL_SHELL_ERROR_ROLE) < 0)
-		throw "TODO";
 
 	if(_master_view.expired()) {
-		_ctx->manage_client(create_view());
+		if (weston_surface_set_role(_surface, "wl_shell_surface_toplevel",
+				_resource, WL_SHELL_ERROR_ROLE) < 0)
+			return;
+
+		auto xview = make_shared<view_t>(_ctx, this);
+		_master_view = xview;
+		_ctx->manage_client(xview);
 	}
 
 }
@@ -227,23 +203,24 @@ void wl_shell_surface_t::wl_shell_surface_set_popup(wl_client *client,
 		  int32_t y,
 		  uint32_t flags) {
 
+	if(not _master_view.expired())
+		return;
+
 	/* tell weston how to use this data */
 	if (weston_surface_set_role(_surface, "wl_shell_surface_popup",
 			_resource, WL_SHELL_ERROR_ROLE) < 0)
-		throw "TODO";
+		return;
 
-	if(_master_view.expired()) {
-		auto xview = create_view();
-		_parent = wl_shell_surface_t::get(parent);
-		auto parent_view = _parent->master_view().lock();
+	auto xview = create_weston_view();
+	_parent = wl_shell_surface_t::get(parent);
+	auto parent_view = _parent->_master_view.lock();
 
-		if(parent_view != nullptr) {
-			auto xview = make_shared<view_t>(_ctx, this);
-			_master_view = xview;
-			weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, x, y);
-			parent_view->add_popup_child(xview, x, y);
-			wl_client_flush(_client);
-		}
+	if(parent_view != nullptr) {
+		auto xview = make_shared<view_t>(_ctx, this);
+		_master_view = xview;
+		weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, x, y);
+		parent_view->add_popup_child(xview, x, y);
+		wl_client_flush(_client);
 	}
 
 }
