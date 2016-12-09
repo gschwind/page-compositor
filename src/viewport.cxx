@@ -261,8 +261,8 @@ void viewport_t::_redraw_back_buffer() {
 	_exposed = true;
 	_damaged += _effective_area;
 
-	weston_surface_damage(_pix->wsurface());
 	(*_ctx->ec->renderer->attach)(_backbround_surface, _pix->wbuffer());
+	weston_surface_damage(_pix->wsurface());
 	(*_ctx->ec->renderer->flush_damage)(_backbround_surface);
 
 }
@@ -282,15 +282,9 @@ void viewport_t::trigger_redraw() {
 /* mark renderable_page for redraw */
 void viewport_t::queue_redraw() {
 	_is_durty = true;
-	if(_pix->get_cairo_surface()) {
-		weston_surface_damage(_pix->wsurface());
-	}
-
 	if(_default_view)
 		weston_view_schedule_repaint(_default_view);
-
-	broadcast_trigger_redraw();
-
+	_ctx->schedule_repaint();
 }
 
 region viewport_t::get_damaged() {

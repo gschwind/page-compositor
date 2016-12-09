@@ -62,6 +62,7 @@ bool notebook_t::add_client(view_p x, bool prefer_activate) {
 		_set_selected(x);
 	}
 
+	_schedule_repaint();
 	_ctx->sync_tree_view();
 	return true;
 }
@@ -90,6 +91,7 @@ void notebook_t::remove(shared_ptr<tree_t> src) {
 void notebook_t::_activate_client(view_p x) {
 	if (_has_client(x)) {
 		_set_selected(x);
+		_ctx->sync_tree_view();
 	}
 }
 
@@ -129,7 +131,7 @@ void notebook_t::_remove_client(view_p x) {
 		}
 	}
 
-	_layout_is_durty = true;
+	_schedule_repaint();
 	_ctx->sync_tree_view();
 
 }
@@ -151,7 +153,7 @@ void notebook_t::_set_selected(view_p c) {
 	_selected->reconfigure();
 	_children.push_back(_selected);
 
-	_layout_is_durty = true;
+	_schedule_repaint();
 }
 
 void notebook_t::update_client_position(view_p c) {
@@ -165,7 +167,7 @@ void notebook_t::iconify_client(view_p x) {
 	if(_selected == x) {
 		_start_fading();
 		_children.remove(x);
-		_layout_is_durty = true;
+		_schedule_repaint();
 	}
 }
 
@@ -176,10 +178,11 @@ void notebook_t::set_allocation(rect const & area) {
 	assert(area.h >= height);
 
 	_allocation = area;
-	_layout_is_durty = true;
 	_has_mouse_change = true;
 	_mouse_over.event_x = -1;
 	_mouse_over.event_y = -1;
+
+	_schedule_repaint();
 }
 
 void notebook_t::_update_layout() {
@@ -388,7 +391,7 @@ void notebook_t::render_legacy(cairo_t * cr) {
 
 void notebook_t::update_layout() {
 	if(not _transition.empty()) {
-		_layout_is_durty = true;
+		_schedule_repaint();
 	}
 
 	if(_layout_is_durty) {
@@ -1190,7 +1193,8 @@ void notebook_t::_client_title_change(view_t * c) {
 	if(c == _selected.get()) {
 		_theme_notebook.selected_client.title = c->title();
 	}
-	_layout_is_durty = true;
+	_schedule_repaint();
+
 }
 
 void notebook_t::_client_destroy(view_t * c) {
@@ -1202,7 +1206,7 @@ void notebook_t::_client_focus_change(view_t * c) {
 	if(_selected.get() == c) {
 		_selected_has_focus = c->has_focus();
 	}
-	_layout_is_durty = true;
+	_schedule_repaint();
 }
 
 rect notebook_t::allocation() const {
@@ -1323,7 +1327,7 @@ void  notebook_t::_scroll_right(int x) {
 	add_transition(transition);
 
 	_update_notebook_areas();
-	_layout_is_durty = true;
+	_schedule_repaint();
 }
 
 void  notebook_t::_scroll_left(int x) {
@@ -1349,7 +1353,7 @@ void  notebook_t::_scroll_left(int x) {
 	add_transition(transition);
 
 	_update_notebook_areas();
-	_layout_is_durty = true;
+	_schedule_repaint();
 }
 
 void notebook_t::_set_theme_tab_offset(int x) {
@@ -1366,6 +1370,11 @@ void notebook_t::_set_theme_tab_offset(int x) {
 		return;
 	}
 	_theme_client_tabs_offset = x;
+}
+
+void notebook_t::_schedule_repaint() {
+	_layout_is_durty = true;
+	queue_redraw();
 }
 
 notebook_t::_client_context_t::_client_context_t(notebook_t * nbk,

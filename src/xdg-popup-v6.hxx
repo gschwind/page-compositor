@@ -28,6 +28,8 @@ struct xdg_popup_v6_t : public connectable_t, public zxdg_popup_v6_vtable, publi
 
 	signal_t<xdg_popup_v6_t *> destroy;
 
+	bool _is_configured;
+
 	xdg_popup_v6_t(xdg_popup_v6_t const &) = delete;
 	xdg_popup_v6_t & operator=(xdg_popup_v6_t const &) = delete;
 

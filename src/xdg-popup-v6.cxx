@@ -27,7 +27,8 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	_base{surface},
 	_id{id},
 	_client{client},
-	_ctx{ctx}
+	_ctx{ctx},
+	_is_configured{false}
 {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
@@ -44,9 +45,6 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	x_offset = pos->x_offset;
 	y_offset = pos->y_offset;
 
-	/* ask page to configure the popup */
-	_ctx->configure_popup(this);
-
 }
 
 xdg_popup_v6_t::~xdg_popup_v6_t() {
@@ -62,6 +60,13 @@ void xdg_popup_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
 
 void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
+
+	if (not _is_configured) {
+		/* ask page to configure the popup */
+		_ctx->configure_popup(this);
+		_is_configured = true;
+		return;
+	}
 
 	if(_base->_ack_config != 0)
 		return;

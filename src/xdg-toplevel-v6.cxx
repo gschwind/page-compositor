@@ -51,7 +51,7 @@ void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
 		/* tell weston how to use this data */
 		if (weston_surface_set_role(_base->_surface, "xdg_toplevel_v6",
 				self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
-			throw "TODO";
+			return;
 		_ctx->manage_client(this);
 	}
 

@@ -122,6 +122,7 @@ struct page_t : public page_context_t, public connectable_t {
 
 	bool use_x11_backend;
 	bool use_pixman;
+	bool repaint_scheduled;
 
 	wl_listener destroy;
 
@@ -427,6 +428,8 @@ struct page_t : public page_context_t, public connectable_t {
 	static int page_repaint(struct weston_output *output_base,
 			   pixman_region32_t *damage);
 
+	void page_repaint_idle();
+
 	void configure_surface(view_p,
 			int32_t sx, int32_t sy);
 
@@ -468,6 +471,8 @@ struct page_t : public page_context_t, public connectable_t {
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p;
 	virtual void manage_popup(page_surface_interface * s);
 	virtual void configure_popup(page_surface_interface * s);
+	virtual void schedule_repaint();
+
 
 };
 

@@ -111,31 +111,20 @@ static void _default_grab_cancel(weston_pointer_grab * grab) {
 	pod->ths->process_cancel(grab);
 }
 
-void page_t::page_start_repaint_loop(weston_output *output_base) {
-	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
-
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	ths->_root->broadcast_trigger_redraw();
-
-	auto func = ths->start_repaint_loop_functions[output_base];
-	output_base->start_repaint_loop = func;
-	(*output_base->start_repaint_loop)(output_base);
-	output_base->start_repaint_loop = &page_t::page_start_repaint_loop;
-
+void page_t::page_repaint_idle() {
+	_root->broadcast_trigger_redraw();
+	weston_compositor_schedule_repaint(ec);
+	repaint_scheduled = false;
 }
 
-int page_t::page_repaint(struct weston_output *output_base,
-		   pixman_region32_t *damage) {
-	auto ths = reinterpret_cast<page_t*>(weston_compositor_get_user_data(output_base->compositor));
-
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-	ths->_root->broadcast_trigger_redraw();
-
-	auto func = ths->repaint_functions[output_base];
-	output_base->repaint = func;
-	int ret = (*output_base->repaint)(output_base, damage);
-	output_base->repaint = &page_t::page_repaint;
-	return ret;
+void page_t::schedule_repaint() {
+	if(repaint_scheduled)
+		return;
+	repaint_scheduled = true;
+	auto loop = wl_display_get_event_loop(ec->wl_display);
+	wl_event_loop_add_idle(loop, [](void * data){
+		reinterpret_cast<page_t*>(data)->page_repaint_idle();
+	}, this);
 
 }
 
@@ -232,7 +221,8 @@ void page_t::print_tree_binding(struct weston_keyboard *keyboard, uint32_t time,
 	ths->_root->print_tree(0);
 }
 
-page_t::page_t(int argc, char ** argv)
+page_t::page_t(int argc, char ** argv) :
+		repaint_scheduled{false}
 {
 
 	char const * conf_file_name = 0;
@@ -2648,6 +2638,7 @@ void page_t::manage_popup(page_surface_interface * s) {
 		s->_master_view = view;
 		weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, s->x_offset, s->y_offset);
 		parent_view->add_popup_child(view, s->x_offset, s->y_offset);
+		sync_tree_view();
 	}
 }
 
@@ -3708,13 +3699,13 @@ void page_t::on_output_created(weston_output * output) {
 //	background->timeline.force_refresh = 1;
 //	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
 
-	if(use_x11_backend) {
-		repaint_functions[output] = output->repaint;
-		output->repaint = &page_t::page_repaint;
-
-		start_repaint_loop_functions[output] = output->start_repaint_loop;
-		output->start_repaint_loop = &page_t::page_start_repaint_loop;
-	}
+//	if(use_x11_backend) {
+//		repaint_functions[output] = output->repaint;
+//		output->repaint = &page_t::page_repaint;
+//
+//		start_repaint_loop_functions[output] = output->start_repaint_loop;
+//		output->start_repaint_loop = &page_t::page_start_repaint_loop;
+//	}
 
 	_outputs.push_back(output);
 	update_viewport_layout();
@@ -4018,7 +4009,7 @@ void page_t::sync_tree_view() {
 			lv.push_back(v);
 	}
 
-	_root->print_tree(0);
+	//_root->print_tree(0);
 
 	weston_log("found %lu views\n", lv.size());
 
@@ -4041,7 +4032,7 @@ void page_t::sync_tree_view() {
 		weston_log("view=%p,output=%p,role='%s',surface=%p,x=%f,y=%f\n", v, v->output, weston_surface_get_role(v->surface), v->surface, v->geometry.x, v->geometry.y);
 	}
 
-	weston_compositor_damage_all(ec);
+	schedule_repaint();
 
 }
 
