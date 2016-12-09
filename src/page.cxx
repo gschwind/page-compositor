@@ -131,7 +131,7 @@ void page_t::schedule_repaint() {
 void page_t::destroy_surface(surface_t * s) {
 	if(s->_master_view.expired())
 		return;
-	s->_master_view.lock()->signal_destroy();
+	detach(s->_master_view.lock());
 	assert(s->_master_view.expired());
 }
 
@@ -2306,7 +2306,7 @@ void page_t::insert_in_tree_using_transient_for(view_p c) {
 //	}
 
 	c->set_managed_type(MANAGED_FLOATING);
-	_root->root_subclients->push_back(c);
+	get_current_workspace()->attach(c);
 	c->update_view();
 	sync_tree_view();
 

@@ -30,7 +30,6 @@ void view_t::add_popup_child(view_p c,
 		int x, int y)
 {
 	_popups_childdren->push_back(c);
-	connect(c->destroy, this, &view_t::destroy_popup_child);
 	weston_view_set_transform_parent(c->get_default_view(), _default_view);
 	weston_view_set_position(c->get_default_view(), x, y);
 	weston_view_schedule_repaint(c->get_default_view());
@@ -38,12 +37,7 @@ void view_t::add_popup_child(view_p c,
 
 void view_t::destroy_popup_child(view_t * c) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	disconnect(c->destroy);
 	_popups_childdren->remove(c->shared_from_this());
-}
-
-void view_t::weston_view_destroyed(struct weston_view * v) {
-	destroy.signal(this);
 }
 
 view_t::view_t(
@@ -464,10 +458,6 @@ void view_t::signal_title_change() {
 
 auto view_t::get_default_view() const -> weston_view * {
 	return _default_view;
-}
-
-void view_t::signal_destroy() {
-	destroy.signal(this);
 }
 
 weston_surface * view_t::surface() const {

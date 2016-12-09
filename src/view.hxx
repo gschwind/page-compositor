@@ -68,11 +68,9 @@ class view_t : public tree_t {
 	bool _has_keyboard_focus;
 
 	listener_t<struct weston_view> weston_view_destroy_listener;
-	void weston_view_destroyed(struct weston_view * v);
 
 public:
 
-	signal_t<view_t*> destroy;
 	signal_t<view_t*> focus_change;
 	signal_t<view_t*> title_change;
 
@@ -132,8 +130,6 @@ public:
 	void set_managed_type(managed_window_type_e type);
 	//void grab_button_focused_unsafe();
 	//void grab_button_unfocused_unsafe();
-
-	void signal_destroy();
 
 	void send_close();
 

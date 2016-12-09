@@ -54,7 +54,6 @@ bool notebook_t::add_client(view_p x, bool prefer_activate) {
 	_client_context_t client_context{this, x};
 	_clients_tab_order.push_front(client_context);
 
-	connect(x->destroy, this, &notebook_t::_client_destroy);
 	connect(x->focus_change, this, &notebook_t::_client_focus_change);
 	connect(x->title_change, this, &notebook_t::_client_title_change);
 
@@ -113,7 +112,6 @@ void notebook_t::_remove_client(view_p x) {
 	// cleanup
 	disconnect(x->title_change);
 	disconnect(x->focus_change);
-	disconnect(x->destroy);
 	x->clear_parent();
 
 	_clients_tab_order.erase(x_client_context);
