@@ -44,8 +44,6 @@ struct xdg_surface_popup_t :
 	int32_t x;
 	int32_t y;
 
-	view_w _master_view;
-
 	signal_t<xdg_surface_popup_t *> destroy;
 
 	auto create_view() -> view_p;

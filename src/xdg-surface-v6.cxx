@@ -73,14 +73,14 @@ auto xdg_surface_v6_t::get(struct wl_resource * r) -> xdg_surface_v6_t * {
 
 auto xdg_surface_v6_t::create_view() -> view_p {
 	auto view = make_shared<view_t>(_ctx, _role);
-	_master_view = view;
+	_role->_master_view = view;
 	return view;
 }
 
 void xdg_surface_v6_t::destroy_all_views() {
-	if(not _master_view.expired()) {
-		_master_view.lock()->signal_destroy();
-		assert(_master_view.expired());
+	if(not _role->_master_view.expired()) {
+		_role->_master_view.lock()->signal_destroy();
+		assert(_role->_master_view.expired());
 	}
 }
 

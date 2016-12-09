@@ -62,8 +62,6 @@ struct xdg_surface_v6_t : public connectable_t, public zxdg_surface_v6_vtable {
 
 	page_surface_interface * _role;
 
-	view_w _master_view;
-
 	void surface_commited(weston_surface * s);
 	void surface_destroyed(weston_surface * s);
 

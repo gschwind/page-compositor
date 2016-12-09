@@ -32,6 +32,7 @@
 #include "wl-shell-client.hxx"
 
 #include "view.hxx"
+#include "page-surface-interface.hxx"
 
 namespace page {
 
@@ -131,6 +132,9 @@ void wl_shell_surface_t::wl_shell_surface_move(wl_client *client,
 		_ctx->grab_start(pointer, new grab_floating_move_t(_ctx, master_view,
 			BTN_LEFT, x, y));
 	}
+
+	// start_move(ps, seat, serial)
+
 }
 
 void wl_shell_surface_t::wl_shell_surface_resize(wl_client *client,
@@ -155,6 +159,8 @@ void wl_shell_surface_t::wl_shell_surface_resize(wl_client *client,
 			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges))); // FIXME: map enum edges.
 	}
 
+	// start_resize(ps, seat, serial)
+
 }
 
 void wl_shell_surface_t::wl_shell_surface_set_toplevel(wl_client *client,
@@ -170,6 +176,8 @@ void wl_shell_surface_t::wl_shell_surface_set_toplevel(wl_client *client,
 		_master_view = xview;
 		_ctx->manage_client(xview);
 	}
+
+	// manage_client(ps)
 
 }
 
@@ -223,6 +231,9 @@ void wl_shell_surface_t::wl_shell_surface_set_popup(wl_client *client,
 		wl_client_flush(_client);
 	}
 
+	// start_popup(ps, ps, x, y)
+	// start_grab_popup(ps, seat)
+
 }
 
 void wl_shell_surface_t::wl_shell_surface_set_maximized(wl_client *client,
@@ -241,6 +252,8 @@ void wl_shell_surface_t::wl_shell_surface_set_title(wl_client *client,
 	if(not _master_view.expired()) {
 		_master_view.lock()->signal_title_change();
 	}
+
+	// update_title(ps)
 
 }
 

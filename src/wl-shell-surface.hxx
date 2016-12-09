@@ -92,8 +92,6 @@ struct wl_shell_surface_t :
 	/* 0 if ack by client, otherwise the last serial sent */
 	uint32_t _ack_serial;
 
-	view_w _master_view;
-
 	signal_t<wl_shell_surface_t *> destroy;
 
 	static auto get(struct wl_resource * r) -> wl_shell_surface_t *;

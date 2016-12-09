@@ -88,6 +88,12 @@ public:
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p = 0;
 	virtual void bind_window(view_p mw, bool activate) = 0;
 
+//	virtual void manage(page_surface_interface * s) = 0;
+//	virtual void unmanage(page_surface_interface * s) = 0;
+//	virtual void show_window_menu(page_surface_interface * s, struct weston_seat *seat, int32_t x, int32_t y);
+//	virtual void start_move(page_surface_interface * s, struct weston_seat *seat, uint32_t serial);
+//	virtual void start_resize(page_surface_interface * s, struct weston_seat *seat, uint32_t serial, int edges);
+
 };
 
 

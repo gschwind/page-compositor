@@ -58,7 +58,7 @@ void xdg_popup_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
 void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(_base->_master_view.expired()) {
+	if(_master_view.expired()) {
 		/* tell weston how to use this data */
 		if (weston_surface_set_role(_base->_surface, "xdg_popup_v6",
 				self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
@@ -67,7 +67,7 @@ void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
 		auto xview = _base->create_view();
 		auto base = xdg_surface_v6_t::get(_parent);
 		weston_log("%p\n", base);
-		auto parent_view = base->_master_view.lock();
+		auto parent_view = _master_view.lock();
 		weston_log("%p\n", parent_view.get());
 
 		weston_log("x=%d, y=%d\n", x_offset, y_offset);

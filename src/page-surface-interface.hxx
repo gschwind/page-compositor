@@ -13,6 +13,8 @@
 
 #include <compositor.h>
 
+#include "tree-types.hxx"
+
 namespace page {
 
 using namespace std;
@@ -21,6 +23,8 @@ using namespace std;
  * This interface allow allow views to communicate to backend
  **/
 struct page_surface_interface {
+
+	view_w _master_view;
 
 	virtual ~page_surface_interface() = default;
 
@@ -36,6 +40,8 @@ struct page_surface_interface {
 
 }
 
+#else
 
+struct page_surface_interface;
 
 #endif /* SRC_PAGE_SURFACE_INTERFACE_HXX_ */

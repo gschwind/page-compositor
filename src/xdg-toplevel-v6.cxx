@@ -47,7 +47,7 @@ void xdg_toplevel_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
 void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(_base->_master_view.expired()) {
+	if(_master_view.expired()) {
 		/* tell weston how to use this data */
 		if (weston_surface_set_role(_base->_surface, "xdg_toplevel_v6",
 				self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
@@ -83,13 +83,13 @@ void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
 
 	if(_pending.title != _current.title) {
 		_current.title = _pending.title;
-		if(not _base->_master_view.expired()) {
-			_base->_master_view.lock()->signal_title_change();
+		if(not _master_view.expired()) {
+			_master_view.lock()->signal_title_change();
 		}
 	}
 
-	if(not _base->_master_view.expired()) {
-		_base->_master_view.lock()->update_view();
+	if(not _master_view.expired()) {
+		_master_view.lock()->update_view();
 	}
 
 	_current = _pending;
@@ -130,7 +130,7 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_show_window_menu(struct wl_client * cli
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_move(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat_resource, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	if(_base->_master_view.expired())
+	if(_master_view.expired())
 		return;
 
 	auto seat = reinterpret_cast<weston_seat*>(
@@ -140,7 +140,7 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_move(struct wl_client * client, struct 
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
 
-	auto master_view = _base->_master_view.lock();
+	auto master_view = _master_view.lock();
 	if(master_view->is(MANAGED_NOTEBOOK)) {
 		_ctx->grab_start(pointer, new grab_bind_client_t{_ctx, master_view,
 			BTN_LEFT, rect(x, y, 1, 1)});
@@ -153,7 +153,7 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_move(struct wl_client * client, struct 
 void xdg_toplevel_v6_t::zxdg_toplevel_v6_resize(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat_resource, uint32_t serial, uint32_t edges)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	if(_base->_master_view.expired())
+	if(_master_view.expired())
 		return;
 
 	auto seat = reinterpret_cast<weston_seat*>(
@@ -163,7 +163,7 @@ void xdg_toplevel_v6_t::zxdg_toplevel_v6_resize(struct wl_client * client, struc
 	double x = wl_fixed_to_double(pointer->x);
 	double y = wl_fixed_to_double(pointer->y);
 
-	auto master_view = _base->_master_view.lock();
+	auto master_view = _master_view.lock();
 	if(master_view->is(MANAGED_FLOATING)) {
 		_ctx->grab_start(pointer, new grab_floating_resize_t(_ctx, master_view,
 			BTN_LEFT, x, y, static_cast<xdg_surface_resize_edge>(edges)));
