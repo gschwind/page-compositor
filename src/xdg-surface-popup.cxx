@@ -66,7 +66,7 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 	_resource = wl_resource_create(client, &xdg_popup_interface, 1, _id);
 	xdg_popup_vtable::set_implementation(_resource);
 
-	_parent = parent->base_master_view();
+	_parent = parent->page_surface();
 	x_offset = x;
 	y_offset = y;
 
@@ -102,7 +102,7 @@ void xdg_surface_popup_t::surface_destroyed(struct weston_surface * s) {
 	wl_resource_destroy(_resource);
 }
 
-page_surface_interface * xdg_surface_popup_t::base_master_view() {
+page_surface_interface * xdg_surface_popup_t::page_surface() {
 	return this;
 }
 

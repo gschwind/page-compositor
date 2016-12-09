@@ -294,7 +294,7 @@ void xdg_surface_toplevel_t::minimize() {
 
 }
 
-page_surface_interface * xdg_surface_toplevel_t::base_master_view() {
+page_surface_interface * xdg_surface_toplevel_t::page_surface() {
 	return this;
 }
 

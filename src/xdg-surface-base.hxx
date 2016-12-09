@@ -62,7 +62,7 @@ struct xdg_surface_base_t {
 
 	auto surface() const -> weston_surface * { return _surface; }
 
-	virtual page_surface_interface * base_master_view() = 0;
+	virtual page_surface_interface * page_surface() = 0;
 	/** called on surface commit */
 	virtual void surface_commited(weston_surface * es) = 0;
 	virtual void surface_destroyed(weston_surface * es) = 0;

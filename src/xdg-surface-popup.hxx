@@ -69,7 +69,7 @@ struct xdg_surface_popup_t :
 
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
 
-	virtual page_surface_interface * base_master_view();
+	virtual page_surface_interface * page_surface();
 
 	/* xdg_popup_vtable */
 	virtual void xdg_popup_destroy(struct wl_client * client, struct wl_resource * resource) override;

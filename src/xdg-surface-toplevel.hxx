@@ -96,7 +96,7 @@ struct xdg_surface_toplevel_t :
 	auto create_view() -> view_p;
 	auto master_view() -> view_w;
 
-	virtual page_surface_interface * base_master_view();
+	virtual page_surface_interface * page_surface();
 
 	void minimize();
 
