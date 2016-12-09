@@ -40,6 +40,8 @@ page_compositor_SOURCES = \
 	pointer-grab-handler.hxx \
 	keyboard-grab-handler.cxx \
 	keyboard-grab-handler.hxx \
+	surface.cxx \
+	surface.hxx \
 	tree.cxx \
 	tree.hxx \
 	page.cxx \

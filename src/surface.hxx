@@ -29,9 +29,13 @@ struct surface_t {
 	/* parent for popup */
 	surface_t * _parent;
 
+	surface_t * _transient_for;
+
 	/* positionner */
 	int32_t x_offset;
 	int32_t y_offset;
+
+	surface_t();
 
 	virtual ~surface_t() = default;
 
