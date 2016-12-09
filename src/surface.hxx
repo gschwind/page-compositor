@@ -35,11 +35,11 @@ struct surface_t {
 
 	virtual ~surface_t() = default;
 
-	virtual struct weston_surface * surface() const = 0;
-	virtual struct weston_view * create_weston_view() = 0;
-	virtual int32_t width() const = 0;
-	virtual int32_t height() const = 0;
-	virtual string const & title() const = 0;
+	virtual auto surface() const -> struct weston_surface * = 0;
+	virtual auto create_weston_view() -> struct weston_view * = 0;
+	virtual auto width() const -> int32_t = 0;
+	virtual auto height() const -> int32_t = 0;
+	virtual auto title() const -> string const & = 0;
 	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) = 0;
 	virtual void send_close() = 0;
 	virtual void send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
