@@ -68,13 +68,6 @@ xdg_surface_toplevel_t::xdg_surface_toplevel_t(
 
 xdg_surface_toplevel_t::~xdg_surface_toplevel_t() {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
-	wl_resource_set_implementation(_resource, nullptr, nullptr, nullptr);
-
-	/* should not be usefull, delete must be call on resource destroy */
-//	if(_resource) {
-//		wl_resource_set_user_data(_resource, nullptr);
-//	}
-
 }
 
 void xdg_surface_toplevel_t::surface_destroyed(struct weston_surface * s) {
