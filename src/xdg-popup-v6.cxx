@@ -27,8 +27,7 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	_base{surface},
 	_id{id},
 	_client{client},
-	_ctx{ctx},
-	_parent{parent}
+	_ctx{ctx}
 {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
@@ -38,9 +37,15 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	connect(_base->destroy, this, &xdg_popup_v6_t::surface_destroyed);
 	connect(_base->commited, this, &xdg_popup_v6_t::surface_commited);
 
+	_parent = xdg_surface_v6_t::get(parent)->_role;
+	assert(_parent != nullptr);
+
 	auto pos = xdg_positioner_v6_t::get(positioner);
 	x_offset = pos->x_offset;
 	y_offset = pos->y_offset;
+
+	/* ask page to configure the popup */
+	_ctx->configure_popup(this);
 
 }
 
@@ -58,32 +63,17 @@ void xdg_popup_v6_t::surface_destroyed(xdg_surface_v6_t * s) {
 void xdg_popup_v6_t::surface_commited(xdg_surface_v6_t * s) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(_master_view.expired()) {
-		/* tell weston how to use this data */
-		if (weston_surface_set_role(_base->_surface, "xdg_popup_v6",
-				self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
-			throw "TODO";
+	if(_base->_ack_config != 0)
+		return;
 
-		auto xview = _base->create_view();
-		auto base = xdg_surface_v6_t::get(_parent);
-		weston_log("%p\n", base);
-		auto parent_view = _master_view.lock();
-		weston_log("%p\n", parent_view.get());
+	if(not _master_view.expired())
+		return;
 
-		weston_log("x=%d, y=%d\n", x_offset, y_offset);
-		if(parent_view != nullptr) {
-			weston_log("x=%d, y=%d\n", x_offset, y_offset);
-			parent_view->add_popup_child(xview, x_offset, y_offset);
+	if (weston_surface_set_role(_base->_surface, "xdg_popup_v6",
+			self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
+		return;
 
-			/* the popup does not get shown if it is not configured */
-			zxdg_popup_v6_send_configure(self_resource, x_offset, y_offset, surface()->width, surface()->height);
-			_base->_ack_config = wl_display_next_serial(_ctx->_dpy);
-			zxdg_surface_v6_send_configure(_base->_resource, _base->_ack_config);
-			wl_client_flush(_client);
-		}
-	}
-
-	_ctx->sync_tree_view();
+	_ctx->manage_popup(this);
 
 }
 
@@ -134,6 +124,14 @@ void xdg_popup_v6_t::send_configure(int32_t width, int32_t height, set<uint32_t>
 
 void xdg_popup_v6_t::send_close() {
 	/* disable */
+}
+
+void xdg_popup_v6_t::send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) {
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+	zxdg_popup_v6_send_configure(self_resource, x, y, width, height);
+	_base->_ack_config = wl_display_next_serial(_ctx->_dpy);
+	zxdg_surface_v6_send_configure(_base->_resource, _base->_ack_config);
+	wl_client_flush(_client);
 }
 
 }

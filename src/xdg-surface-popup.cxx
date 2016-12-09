@@ -29,25 +29,14 @@ void xdg_surface_popup_t::surface_commited(weston_surface * es)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if(_master_view.expired()) {
-		/* tell weston how to use this data */
-		if (weston_surface_set_role(_surface, "xdg_popup",
-				_resource, XDG_SHELL_ERROR_ROLE) < 0)
-			throw "TODO";
+	if(not _master_view.expired())
+		return;
 
-		auto xview = create_view();
-		auto base = parent;
-		weston_log("%p\n", base);
-		auto parent_view = base->base_master_view();
-		weston_log("%p\n", parent_view.get());
+	if (weston_surface_set_role(_surface, "xdg_popup",
+			_resource, XDG_SHELL_ERROR_ROLE) < 0)
+		return;
 
-		if(parent_view != nullptr) {
-			parent_view->add_popup_child(xview, x, y);
-		}
-
-		_ctx->sync_tree_view();
-
-	}
+	_ctx->manage_popup(this);
 
 }
 
@@ -69,16 +58,19 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 		xdg_surface_base_t{ctx, client, surface, id},
 		id{id},
 		_surface{surface},
-		parent{parent},
 		seat{seat},
-		serial{serial},
-		x{x},
-		y{y}
+		serial{serial}
 {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
 	_resource = wl_resource_create(client, &xdg_popup_interface, 1, _id);
 	xdg_popup_vtable::set_implementation(_resource);
+
+	_parent = parent->base_master_view();
+	x_offset = x;
+	y_offset = y;
+
+	_ctx->configure_popup(this);
 
 }
 
@@ -117,8 +109,8 @@ void xdg_surface_popup_t::destroy_all_views() {
 	}
 }
 
-view_p xdg_surface_popup_t::base_master_view() {
-	return _master_view.lock();
+page_surface_interface * xdg_surface_popup_t::base_master_view() {
+	return this;
 }
 
 
@@ -149,6 +141,10 @@ void xdg_surface_popup_t::send_configure(int32_t width, int32_t height, set<uint
 }
 
 void xdg_surface_popup_t::send_close() {
+	/* disabled */
+}
+
+void xdg_surface_popup_t::send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) {
 	/* disabled */
 }
 

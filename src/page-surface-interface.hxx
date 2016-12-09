@@ -26,6 +26,13 @@ struct page_surface_interface {
 
 	view_w _master_view;
 
+	/* parent for popup */
+	page_surface_interface * _parent;
+
+	/* positionner */
+	int32_t x_offset;
+	int32_t y_offset;
+
 	virtual ~page_surface_interface() = default;
 
 	virtual struct weston_surface * surface() const = 0;
@@ -35,6 +42,7 @@ struct page_surface_interface {
 	virtual string const & title() const = 0;
 	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) = 0;
 	virtual void send_close() = 0;
+	virtual void send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
 
 };
 

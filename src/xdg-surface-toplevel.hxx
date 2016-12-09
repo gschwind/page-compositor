@@ -98,7 +98,7 @@ struct xdg_surface_toplevel_t :
 
 	void destroy_all_views();
 
-	virtual view_p base_master_view();
+	virtual page_surface_interface * base_master_view();
 
 	void minimize();
 
@@ -149,6 +149,7 @@ struct xdg_surface_toplevel_t :
 	virtual string const & title() const override;
 	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) override;
 	virtual void send_close() override;
+	virtual void send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) override;
 
 };
 

@@ -38,7 +38,6 @@ struct xdg_surface_popup_t :
 	wl_resource * resource;
 	uint32_t id;
 	weston_surface * _surface;
-	xdg_surface_base_t * parent;
 	weston_seat * seat;
 	uint32_t serial;
 	int32_t x;
@@ -70,7 +69,7 @@ struct xdg_surface_popup_t :
 
 	static auto get(wl_resource * r) -> xdg_surface_popup_t *;
 
-	virtual view_p base_master_view();
+	virtual page_surface_interface * base_master_view();
 
 	void destroy_all_views();
 
@@ -86,6 +85,7 @@ struct xdg_surface_popup_t :
 	virtual string const & title() const override;
 	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) override;
 	virtual void send_close() override;
+	virtual void send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) override;
 
 };
 

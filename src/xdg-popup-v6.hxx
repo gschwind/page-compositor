@@ -23,14 +23,10 @@ struct xdg_popup_v6_t : public connectable_t, public zxdg_popup_v6_vtable, publi
 	page_context_t *       _ctx;
 	wl_client *            _client;
 	uint32_t               _id;
-	struct wl_resource *   _parent;
 
 	struct wl_resource *   self_resource;
 
 	signal_t<xdg_popup_v6_t *> destroy;
-
-	int32_t x_offset;
-	int32_t y_offset;
 
 	xdg_popup_v6_t(xdg_popup_v6_t const &) = delete;
 	xdg_popup_v6_t & operator=(xdg_popup_v6_t const &) = delete;
@@ -61,6 +57,7 @@ struct xdg_popup_v6_t : public connectable_t, public zxdg_popup_v6_vtable, publi
 	virtual string const & title() const override;
 	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) override;
 	virtual void send_close() override;
+	virtual void send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) override;
 
 };
 

@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "tree-types.hxx"
+#include "page-surface-interface.hxx"
 
 #include "utils.hxx"
 #include "listener.hxx"
@@ -61,7 +62,7 @@ struct xdg_surface_base_t {
 
 	auto surface() const -> weston_surface * { return _surface; }
 
-	virtual view_p base_master_view() = 0;
+	virtual page_surface_interface * base_master_view() = 0;
 	/** called on surface commit */
 	virtual void surface_commited(weston_surface * es) = 0;
 	virtual void surface_destroyed(weston_surface * es) = 0;

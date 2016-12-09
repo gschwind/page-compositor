@@ -87,6 +87,7 @@ struct xdg_toplevel_v6_t : public connectable_t, public zxdg_toplevel_v6_vtable,
 	virtual string const & title() const override;
 	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) override;
 	virtual void send_close() override;
+	virtual void send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) override;
 
 };
 

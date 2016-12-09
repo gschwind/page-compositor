@@ -86,7 +86,6 @@ struct wl_shell_surface_t :
 
 	} _current;
 
-	wl_shell_surface_t * _parent;
 	std::string str_class;
 
 	/* 0 if ack by client, otherwise the last serial sent */
@@ -133,6 +132,7 @@ struct wl_shell_surface_t :
 	virtual string const & title() const override;
 	virtual void send_configure(int32_t width, int32_t height, set<uint32_t> const & states) override;
 	virtual void send_close() override;
+	virtual void send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) override;
 
 };
 

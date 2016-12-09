@@ -88,7 +88,7 @@ void xdg_surface_toplevel_t::surface_commited(struct weston_surface * es)
 				_resource, XDG_SHELL_ERROR_ROLE) < 0)
 			throw "TODO";
 
-		_ctx->manage_client(create_view());
+		_ctx->manage_client(this);
 	}
 
 	/* configuration is invalid */
@@ -300,8 +300,8 @@ void xdg_surface_toplevel_t::minimize() {
 
 }
 
-view_p xdg_surface_toplevel_t::base_master_view() {
-	return dynamic_pointer_cast<view_t>(_master_view.lock());
+page_surface_interface * xdg_surface_toplevel_t::base_master_view() {
+	return this;
 }
 
 weston_surface * xdg_surface_toplevel_t::surface() const {
@@ -349,6 +349,9 @@ void xdg_surface_toplevel_t::send_close() {
 	wl_client_flush(_client);
 }
 
+void xdg_surface_toplevel_t::send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) {
+	/* should not be called */
+}
 
 }
 

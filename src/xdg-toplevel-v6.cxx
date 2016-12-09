@@ -52,8 +52,7 @@ void xdg_toplevel_v6_t::surface_commited(xdg_surface_v6_t * s) {
 		if (weston_surface_set_role(_base->_surface, "xdg_toplevel_v6",
 				self_resource, ZXDG_SHELL_V6_ERROR_ROLE) < 0)
 			throw "TODO";
-
-		_ctx->manage_client(_base->create_view());
+		_ctx->manage_client(this);
 	}
 
 	/* configuration is invalid */
@@ -266,6 +265,10 @@ void xdg_toplevel_v6_t::send_close() {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	zxdg_toplevel_v6_send_close(self_resource);
 	wl_client_flush(_client);
+}
+
+void xdg_toplevel_v6_t::send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) {
+	/* should not be called */
 }
 
 }

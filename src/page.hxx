@@ -464,8 +464,10 @@ struct page_t : public page_context_t, public connectable_t {
 //	virtual void make_surface_stats(int & size, int & count);
 //	virtual auto mainloop() -> mainloop_t *;
 	virtual void sync_tree_view();
-	virtual void manage_client(view_p mw);
+	virtual void manage_client(page_surface_interface * s);
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p;
+	virtual void manage_popup(page_surface_interface * s);
+	virtual void configure_popup(page_surface_interface * s);
 
 };
 

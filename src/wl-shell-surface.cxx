@@ -53,8 +53,7 @@ wl_shell_surface_t::wl_shell_surface_t(
 	_client{client},
 	_surface{surface},
 	_current{},
-	_ack_serial{0},
-	_parent{nullptr}
+	_ack_serial{0}
 {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
@@ -171,13 +170,8 @@ void wl_shell_surface_t::wl_shell_surface_set_toplevel(wl_client *client,
 		if (weston_surface_set_role(_surface, "wl_shell_surface_toplevel",
 				_resource, WL_SHELL_ERROR_ROLE) < 0)
 			return;
-
-		auto xview = make_shared<view_t>(_ctx, this);
-		_master_view = xview;
-		_ctx->manage_client(xview);
+		_ctx->manage_client(this);
 	}
-
-	// manage_client(ps)
 
 }
 
@@ -219,17 +213,11 @@ void wl_shell_surface_t::wl_shell_surface_set_popup(wl_client *client,
 			_resource, WL_SHELL_ERROR_ROLE) < 0)
 		return;
 
-	auto xview = create_weston_view();
 	_parent = wl_shell_surface_t::get(parent);
-	auto parent_view = _parent->_master_view.lock();
+	x_offset = x;
+	y_offset = y;
 
-	if(parent_view != nullptr) {
-		auto xview = make_shared<view_t>(_ctx, this);
-		_master_view = xview;
-		weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, x, y);
-		parent_view->add_popup_child(xview, x, y);
-		wl_client_flush(_client);
-	}
+	_ctx->manage_popup(this);
 
 	// start_popup(ps, ps, x, y)
 	// start_grab_popup(ps, seat)
@@ -294,6 +282,9 @@ void wl_shell_surface_t::send_close() {
 	/* cannot send close */
 }
 
+void wl_shell_surface_t::send_configure_popup(int32_t x, int32_t y, int32_t width, int32_t height) {
+	/* should not be called */
+}
 
 }
 

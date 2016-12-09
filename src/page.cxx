@@ -67,6 +67,7 @@
 #include "page.hxx"
 
 #include "popup_alt_tab.hxx"
+#include "view.hxx"
 
 /* ICCCM definition */
 #define _NET_WM_STATE_REMOVE 0
@@ -2569,8 +2570,12 @@ void page_t::remove_viewport(workspace_p d, viewport_p v) {
 ////	}
 //}
 
-void page_t::manage_client(view_p mw) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
+void page_t::manage_client(page_surface_interface * s) {
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+
+	auto view = make_shared<view_t>(this, s);
+	s->_master_view = view;
+
 
 //	if (mw->_pending.fullscreen) {
 //		/**
@@ -2625,11 +2630,30 @@ void page_t::manage_client(view_p mw) {
 //	weston_view_geometry_dirty(view);
 
 	/** case is notebook window **/
-	bind_window(mw, true);
+	bind_window(view, true);
 
 	/** case is floating window **/
 	//insert_in_tree_using_transient_for(mw);
 
+}
+
+void page_t::manage_popup(page_surface_interface * s) {
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+	assert(s->_parent != nullptr);
+
+	auto parent_view = s->_parent->_master_view.lock();
+
+	if(parent_view != nullptr) {
+		auto view = make_shared<view_t>(this, s);
+		s->_master_view = view;
+		weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, s->x_offset, s->y_offset);
+		parent_view->add_popup_child(view, s->x_offset, s->y_offset);
+	}
+}
+
+void page_t::configure_popup(page_surface_interface * s) {
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+	s->send_configure_popup(s->x_offset, s->y_offset, s->width(), s->height());
 }
 
 void page_t::create_unmanaged_window(xcb_window_t w, xcb_atom_t type) {
@@ -3810,18 +3834,18 @@ void page_t::on_output_pending(weston_output * output) {
 //}
 
 
-void page_t::configure_surface(view_p xdg_surface,
-			int32_t sx, int32_t sy) {
-
-	weston_log("ccc %p\n", xdg_surface.get());
-
-	if(xdg_surface->is(MANAGED_UNCONFIGURED)) {
-		manage_client(xdg_surface);
-	} else {
-		/* TODO: update the state if necessary */
-	}
-
-}
+//void page_t::configure_surface(view_p xdg_surface,
+//			int32_t sx, int32_t sy) {
+//
+//	weston_log("ccc %p\n", xdg_surface.get());
+//
+//	if(xdg_surface->is(MANAGED_UNCONFIGURED)) {
+//		manage_client(xdg_surface);
+//	} else {
+//		/* TODO: update the state if necessary */
+//	}
+//
+//}
 
 ///**
 // * the xdg-surface
