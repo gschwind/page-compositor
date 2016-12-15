@@ -327,44 +327,38 @@ page_t::page_t(int argc, char ** argv) :
 
 	_grab_handler = nullptr;
 
-//	bind_page_quit           = _conf.get_string("default", "bind_page_quit");
-//	bind_close               = _conf.get_string("default", "bind_close");
-//	bind_exposay_all         = _conf.get_string("default", "bind_exposay_all");
-//	bind_toggle_fullscreen   = _conf.get_string("default", "bind_toggle_fullscreen");
-//	bind_toggle_compositor   = _conf.get_string("default", "bind_toggle_compositor");
-//	bind_right_desktop       = _conf.get_string("default", "bind_right_desktop");
-//	bind_left_desktop        = _conf.get_string("default", "bind_left_desktop");
-//
-//	bind_bind_window         = _conf.get_string("default", "bind_bind_window");
-//	bind_fullscreen_window   = _conf.get_string("default", "bind_fullscreen_window");
-//	bind_float_window        = _conf.get_string("default", "bind_float_window");
-//
-//	bind_debug_1 = _conf.get_string("default", "bind_debug_1");
-//	bind_debug_2 = _conf.get_string("default", "bind_debug_2");
-//	bind_debug_3 = _conf.get_string("default", "bind_debug_3");
-//	bind_debug_4 = _conf.get_string("default", "bind_debug_4");
-//
-//	bind_cmd[0].key = _conf.get_string("default", "bind_cmd_0");
-//	bind_cmd[1].key = _conf.get_string("default", "bind_cmd_1");
-//	bind_cmd[2].key = _conf.get_string("default", "bind_cmd_2");
-//	bind_cmd[3].key = _conf.get_string("default", "bind_cmd_3");
-//	bind_cmd[4].key = _conf.get_string("default", "bind_cmd_4");
-//	bind_cmd[5].key = _conf.get_string("default", "bind_cmd_5");
-//	bind_cmd[6].key = _conf.get_string("default", "bind_cmd_6");
-//	bind_cmd[7].key = _conf.get_string("default", "bind_cmd_7");
-//	bind_cmd[8].key = _conf.get_string("default", "bind_cmd_8");
-//	bind_cmd[9].key = _conf.get_string("default", "bind_cmd_9");
-//
-//	bind_cmd[0].cmd = _conf.get_string("default", "exec_cmd_0");
-//	bind_cmd[1].cmd = _conf.get_string("default", "exec_cmd_1");
-//	bind_cmd[2].cmd = _conf.get_string("default", "exec_cmd_2");
-//	bind_cmd[3].cmd = _conf.get_string("default", "exec_cmd_3");
-//	bind_cmd[4].cmd = _conf.get_string("default", "exec_cmd_4");
-//	bind_cmd[5].cmd = _conf.get_string("default", "exec_cmd_5");
-//	bind_cmd[6].cmd = _conf.get_string("default", "exec_cmd_6");
-//	bind_cmd[7].cmd = _conf.get_string("default", "exec_cmd_7");
-//	bind_cmd[8].cmd = _conf.get_string("default", "exec_cmd_8");
-//	bind_cmd[9].cmd = _conf.get_string("default", "exec_cmd_9");
+	bind_page_quit           = _conf.get_string("default", "bind_page_quit");
+	bind_close               = _conf.get_string("default", "bind_close");
+	bind_toggle_fullscreen   = _conf.get_string("default", "bind_toggle_fullscreen");
+	bind_toggle_compositor   = _conf.get_string("default", "bind_toggle_compositor");
+	bind_right_desktop       = _conf.get_string("default", "bind_right_desktop");
+	bind_left_desktop        = _conf.get_string("default", "bind_left_desktop");
+
+	bind_bind_window         = _conf.get_string("default", "bind_bind_window");
+	bind_fullscreen_window   = _conf.get_string("default", "bind_fullscreen_window");
+	bind_float_window        = _conf.get_string("default", "bind_float_window");
+
+	bind_cmd[0].key = _conf.get_string("default", "bind_cmd_0");
+	bind_cmd[1].key = _conf.get_string("default", "bind_cmd_1");
+	bind_cmd[2].key = _conf.get_string("default", "bind_cmd_2");
+	bind_cmd[3].key = _conf.get_string("default", "bind_cmd_3");
+	bind_cmd[4].key = _conf.get_string("default", "bind_cmd_4");
+	bind_cmd[5].key = _conf.get_string("default", "bind_cmd_5");
+	bind_cmd[6].key = _conf.get_string("default", "bind_cmd_6");
+	bind_cmd[7].key = _conf.get_string("default", "bind_cmd_7");
+	bind_cmd[8].key = _conf.get_string("default", "bind_cmd_8");
+	bind_cmd[9].key = _conf.get_string("default", "bind_cmd_9");
+
+	bind_cmd[0].cmd = _conf.get_string("default", "exec_cmd_0");
+	bind_cmd[1].cmd = _conf.get_string("default", "exec_cmd_1");
+	bind_cmd[2].cmd = _conf.get_string("default", "exec_cmd_2");
+	bind_cmd[3].cmd = _conf.get_string("default", "exec_cmd_3");
+	bind_cmd[4].cmd = _conf.get_string("default", "exec_cmd_4");
+	bind_cmd[5].cmd = _conf.get_string("default", "exec_cmd_5");
+	bind_cmd[6].cmd = _conf.get_string("default", "exec_cmd_6");
+	bind_cmd[7].cmd = _conf.get_string("default", "exec_cmd_7");
+	bind_cmd[8].cmd = _conf.get_string("default", "exec_cmd_8");
+	bind_cmd[9].cmd = _conf.get_string("default", "exec_cmd_9");
 
 	if(_conf.get_string("default", "auto_refocus") == "true") {
 		configuration._auto_refocus = true;
@@ -531,53 +525,15 @@ void page_t::run() {
 
 	/* setup the keyboard layout (MANDATORY) */
 	xkb_rule_names names = {
-			_conf.get_string("default", "xkb_rules").c_str(),					/*rules*/
-			_conf.get_string("default", "xkb_model").c_str(),			/*model*/
-			_conf.get_string("default", "xkb_layout").c_str(),				/*layout*/
-			_conf.get_string("default", "xkb_variant").c_str(),					/*variant*/
-			_conf.get_string("default", "xkb_options").c_str()					/*option*/
+			/* weston steal those pointers ... */
+			strdup(_conf.get_string("default", "xkb_rules").c_str()),					/*rules*/
+			strdup(_conf.get_string("default", "xkb_model").c_str()),			/*model*/
+			strdup(_conf.get_string("default", "xkb_layout").c_str()),				/*layout*/
+			strdup(_conf.get_string("default", "xkb_variant").c_str()),					/*variant*/
+			strdup(_conf.get_string("default", "xkb_options").c_str())					/*option*/
 	};
+
 	weston_compositor_set_xkb_rule_names(ec, &names);
-
-	weston_compositor_add_key_binding(ec, KEY_J,
-				          MODIFIER_SUPER,
-				          print_tree_binding, this);
-
-	weston_compositor_add_key_binding(ec, KEY_Q, MODIFIER_SUPER,
-	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
-		auto ths = reinterpret_cast<page_t *>(data);
-		wl_display_disconnect(ths->_dpy);
-	}, this);
-
-	weston_compositor_add_key_binding(ec, KEY_X, MODIFIER_SUPER,
-	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
-		auto ths = reinterpret_cast<page_t *>(data);
-		ths->run_cmd("/usr/bin/weston-terminal");
-	}, this);
-
-	weston_compositor_add_key_binding(ec, KEY_0, MODIFIER_SUPER,
-	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
-		auto ths = reinterpret_cast<page_t *>(data);
-		ths->_root->broadcast_trigger_redraw();
-	}, this);
-
-	weston_compositor_add_key_binding(ec, KEY_B, MODIFIER_SUPER,
-	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
-		auto ths = reinterpret_cast<page_t *>(data);
-		ths->switch_focused_to_notebook();
-	}, this);
-
-	weston_compositor_add_key_binding(ec, KEY_V, MODIFIER_SUPER,
-	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
-		auto ths = reinterpret_cast<page_t *>(data);
-		ths->switch_focused_to_floating();
-	}, this);
-
-	weston_compositor_add_key_binding(ec, KEY_F, MODIFIER_SUPER,
-	[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
-		auto ths = reinterpret_cast<page_t *>(data);
-		ths->switch_focused_to_fullscreen();
-	}, this);
 
 	char * display = getenv("DISPLAY");
 	if(display) {
@@ -673,303 +629,89 @@ void page_t::run() {
 //	/* TODO: remove */
 //}
 //
-//void page_t::process_key_press_event(xcb_generic_event_t const * _e) {
-//	auto e = reinterpret_cast<xcb_key_press_event_t const *>(_e);
-//
-//	/* TODO: global key bindings */
-//
-//////	printf("%s key = %d, mod4 = %s, mod1 = %s\n",
-//////			e->response_type == XCB_KEY_PRESS ? "KeyPress" : "KeyRelease",
-//////			e->detail,
-//////			e->state & XCB_MOD_MASK_4 ? "true" : "false",
-//////			e->state & XCB_MOD_MASK_1 ? "true" : "false");
-////
-////	/* get KeyCode for Unmodified Key */
-////
-////	key_desc_t key;
-////
-////	key.ks = _keymap->get(e->detail);
-////	key.mod = e->state;
-////
-////	if (key.ks == 0)
-////		return;
-////
-////
-////	/** XCB_MOD_MASK_2 is num_lock, thus ignore his state **/
-////	if(_keymap->numlock_mod_mask() != 0) {
-////		key.mod &= ~_keymap->numlock_mod_mask();
-////	}
-////
-////	if (key == bind_page_quit) {
-////		_mainloop.stop();
-////	}
-////
-////	if(_grab_handler != nullptr) {
-////		_grab_handler->key_press(e);
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_close) {
-////		shared_ptr<client_managed_t> mw;
-////		if (get_current_workspace()->client_focus_history_front(mw)) {
-////			mw->delete_window(e->time);
-////		}
-////
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_exposay_all) {
-////		auto child = filter_class<notebook_t>(get_current_workspace()->get_all_children());
-////		for (auto c : child) {
-////			c->start_exposay();
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_toggle_fullscreen) {
-////		shared_ptr<client_managed_t> mw;
-////		if (get_current_workspace()->client_focus_history_front(mw)) {
-////			toggle_fullscreen(mw);
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_toggle_compositor) {
-////		if (_compositor == nullptr) {
-////			start_compositor();
-////		} else {
-////			stop_compositor();
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_right_desktop) {
-////		unsigned new_desktop = ((_root->_current_desktop + _root->_desktop_list.size()) + 1) % _root->_desktop_list.size();
-////		shared_ptr<client_managed_t> mw;
-////		if (get_workspace(new_desktop)->client_focus_history_front(mw)) {
-////			mw->activate();
-////			set_focus(mw, e->time);
-////		} else {
-////			switch_to_desktop(new_desktop);
-////			set_focus(nullptr, e->time);
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_left_desktop) {
-////		unsigned new_desktop = ((_root->_current_desktop + _root->_desktop_list.size()) - 1) % _root->_desktop_list.size();
-////		shared_ptr<client_managed_t> mw;
-////		if (get_workspace(new_desktop)->client_focus_history_front(mw)) {
-////			mw->activate();
-////			set_focus(mw, e->time);
-////		} else {
-////			switch_to_desktop(new_desktop);
-////			set_focus(nullptr, e->time);
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_bind_window) {
-////		shared_ptr<client_managed_t> mw;
-////		if (get_current_workspace()->client_focus_history_front(mw)) {
-////			if (mw->is(MANAGED_FULLSCREEN)) {
-////				unfullscreen(mw);
-////			} else if (mw->is(MANAGED_FLOATING)) {
-////				bind_window(mw, true);
-////			}
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_fullscreen_window) {
-////		shared_ptr<client_managed_t> mw;
-////		if (get_current_workspace()->client_focus_history_front(mw)) {
-////			if (not mw->is(MANAGED_FULLSCREEN)) {
-////				fullscreen(mw);
-////			}
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (key == bind_float_window) {
-////		shared_ptr<client_managed_t> mw;
-////		if (get_current_workspace()->client_focus_history_front(mw)) {
-////			if (mw->is(MANAGED_FULLSCREEN)) {
-////				unfullscreen(mw);
-////			}
-////
-////			if (mw->is(MANAGED_NOTEBOOK)) {
-////				unbind_window(mw);
-////			}
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	if (_compositor != nullptr) {
-////		if (key == bind_debug_1) {
-////			if (_root->_fps_overlay == nullptr) {
-////
-////				auto v = get_current_workspace()->get_any_viewport();
-////				int y_pos = v->allocation().y + v->allocation().h - 100;
-////				int x_pos = v->allocation().x + (v->allocation().w - 400)/2;
-////
-////				_root->_fps_overlay = make_shared<compositor_overlay_t>(this, rect{x_pos, y_pos, 400, 100});
-////				_root->push_back(_root->_fps_overlay);
-////				_root->_fps_overlay->show();
-////			} else {
-////				_root->remove(_root->_fps_overlay);
-////				_root->_fps_overlay = nullptr;
-////			}
-////			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////			return;
-////		}
-////
-////		if (key == bind_debug_2) {
-////			if (_compositor->show_damaged()) {
-////				_compositor->set_show_damaged(false);
-////			} else {
-////				_compositor->set_show_damaged(true);
-////			}
-////			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////			return;
-////		}
-////
-////		if (key == bind_debug_3) {
-////			if (_compositor->show_opac()) {
-////				_compositor->set_show_opac(false);
-////			} else {
-////				_compositor->set_show_opac(true);
-////			}
-////			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////			return;
-////		}
-////	}
-////
-////	if (key == bind_debug_4) {
-////		_root->print_tree(0);
-////		for (auto i : net_client_list()) {
-////			switch (i->get_type()) {
-////			case MANAGED_NOTEBOOK:
-////				cout << "[" << i->orig() << "] notebook : " << i->title()
-////						<< endl;
-////				break;
-////			case MANAGED_FLOATING:
-////				cout << "[" << i->orig() << "] floating : " << i->title()
-////						<< endl;
-////				break;
-////			case MANAGED_FULLSCREEN:
-////				cout << "[" << i->orig() << "] fullscreen : " << i->title()
-////						<< endl;
-////				break;
-////			case MANAGED_DOCK:
-////				cout << "[" << i->orig() << "] dock : " << i->title() << endl;
-////				break;
-////			}
-////		}
-////
-////		if(not global_focus_history_is_empty()) {
-////			cout << "active window is : ";
-////			for(auto & focus: global_client_focus_history()) {
-////				cout << focus.lock()->orig() << ",";
-////			}
-////			cout << endl;
-////		} else {
-////			cout << "active window is : " << "NONE" << endl;
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	for(int i; i < bind_cmd.size(); ++i) {
-////		if (key == bind_cmd[i].key) {
-////			run_cmd(bind_cmd[i].cmd);
-////			xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////			return;
-////		}
-////	}
-////
-////	if (key.ks == XK_Tab and (key.mod == XCB_MOD_MASK_1)) {
-////		if (_grab_handler == nullptr) {
-////			start_alt_tab(e->time);
-////		}
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_KEYBOARD, e->time);
-////		return;
-////	}
-////
-////	xcb_allow_events(_dpy->xcb(), XCB_ALLOW_REPLAY_KEYBOARD, e->time);
-//
-//}
-//
-//void page_t::process_key_release_event(xcb_generic_event_t const * _e) {
-//	auto e = reinterpret_cast<xcb_key_release_event_t const *>(_e);
-//
-//	if(_grab_handler != nullptr) {
-//		_grab_handler->key_release(e);
-//		return;
-//	}
-//
-//}
-//
-///* Button event make page to grab pointer */
-//void page_t::process_button_press_event(xcb_generic_event_t const * _e) {
-//	auto e = reinterpret_cast<xcb_button_press_event_t const *>(_e);
-//
-//	/* TODO */
-//
-////	std::cout << "Button Event Press "
-////			<< " event=" << e->event
-////			<< " child=" << e->child
-////			<< " root=" << e->root
-////			<< " button=" << static_cast<int>(e->detail)
-////			<< " mod1=" << (e->state & XCB_MOD_MASK_1 ? "true" : "false")
-////			<< " mod2=" << (e->state & XCB_MOD_MASK_2 ? "true" : "false")
-////			<< " mod3=" << (e->state & XCB_MOD_MASK_3 ? "true" : "false")
-////			<< " mod4=" << (e->state & XCB_MOD_MASK_4 ? "true" : "false")
-////			<< std::endl;
-////
-////
-////	if(_grab_handler != nullptr) {
-////		_grab_handler->button_press(e);
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_POINTER, e->time);
-////		return;
-////	}
-////
-////    if(e->root_x == 0 and e->root_y == 0) {
-////        start_alt_tab(e->time);
-////    } else {
-////        _root->broadcast_button_press(e);
-////    }
-////
-////	/**
-////	 * if no change happened to process mode
-////	 * We allow events (remove the grab), and focus those window.
-////	 **/
-////	if (_grab_handler == nullptr) {
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_REPLAY_POINTER, e->time);
-////		auto mw = find_managed_window_with(e->event);
-////		if (mw != nullptr) {
-////			mw->activate();
-////			set_focus(mw, e->time);
-////		}
-////		/* imediatly replay event, to reduce latency */
-////		xcb_flush(_dpy->xcb());
-////	} else {
-////		/* Do not replay events, grab them and process them until Release Button */
-////		xcb_allow_events(_dpy->xcb(), XCB_ALLOW_ASYNC_POINTER, e->time);
-////	}
-//
-//}
-//
+
+void page_t::handle_quit_page(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	wl_display_terminate(_dpy);
+}
+
+void page_t::handle_toggle_fullscreen(weston_keyboard * wk, uint32_t time, uint32_t key) {
+
+}
+
+void page_t::handle_close_window(weston_keyboard * wk, uint32_t time, uint32_t key) {
+
+}
+
+void page_t::handle_goto_desktop_at_right(weston_keyboard * wk, uint32_t time, uint32_t key) {
+
+}
+
+void page_t::handle_goto_desktop_at_left(weston_keyboard * wk, uint32_t time, uint32_t key) {
+
+}
+
+void page_t::handle_bind_window(weston_keyboard * wk, uint32_t time, uint32_t key) {
+
+}
+
+void page_t::handle_set_fullscreen_window(weston_keyboard * wk, uint32_t time, uint32_t key) {
+
+}
+
+void page_t::handle_set_floating_window(weston_keyboard * wk, uint32_t time, uint32_t key) {
+
+}
+
+void page_t::handle_bind_cmd_0(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[0].cmd);
+}
+
+void page_t::handle_bind_cmd_1(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[1].cmd);
+}
+
+void page_t::handle_bind_cmd_2(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[2].cmd);
+}
+
+void page_t::handle_bind_cmd_3(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[3].cmd);
+}
+
+void page_t::handle_bind_cmd_4(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[4].cmd);
+}
+
+void page_t::handle_bind_cmd_5(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[5].cmd);
+}
+
+void page_t::handle_bind_cmd_6(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[6].cmd);
+}
+
+void page_t::handle_bind_cmd_7(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[7].cmd);
+}
+
+void page_t::handle_bind_cmd_8(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[8].cmd);
+}
+
+void page_t::handle_bind_cmd_9(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	run_cmd(bind_cmd[9].cmd);
+}
+
 //void page_t::process_configure_notify_event(xcb_generic_event_t const * _e) {
 //	auto e = reinterpret_cast<xcb_configure_notify_event_t const *>(_e);
 //
@@ -2835,74 +2577,102 @@ void replace(shared_ptr<page_component_t> const & src, shared_ptr<page_component
 	throw exception_t{"Unexpectected use of page::replace function\n"};
 }
 
-inline void grab_key(xcb_connection_t * xcb, xcb_window_t w, key_desc_t & key, keymap_t * _keymap) {
-//	int kc = 0;
-//	if ((kc = _keymap->find_keysim(key.ks))) {
-//		xcb_grab_key(xcb, true, w, key.mod, kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-//		if(_keymap->numlock_mod_mask() != 0) {
-//			xcb_grab_key(xcb, true, w, key.mod|_keymap->numlock_mod_mask(), kc, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-//		}
-//	}
 
-	/** TODO **/
+static bool is_keycode_for_keysym(struct xkb_keymap *keymap,
+		xkb_keycode_t keycode, xkb_keysym_t keysym) {
+	xkb_layout_index_t num_layouts = xkb_keymap_num_layouts_for_key(keymap,
+			keycode);
+	for (xkb_layout_index_t i = 0; i < num_layouts; i++) {
+		xkb_level_index_t num_levels = xkb_keymap_num_levels_for_key(keymap,
+				keycode, i);
+		for (xkb_level_index_t j = 0; j < num_levels; j++) {
+			const xkb_keysym_t *syms;
+			int num_syms = xkb_keymap_key_get_syms_by_level(keymap, keycode, i,
+					j, &syms);
+			for (int k = 0; k < num_syms; k++) {
+				if (syms[k] == keysym)
+					return true;
+			}
+		}
+	}
+	return false;
+}
 
+static void xkb_keymap_key_iter(struct xkb_keymap *keymap, xkb_keycode_t key, void *data) {
+	auto input = reinterpret_cast<pair<xkb_keysym_t, xkb_keycode_t>*>(data);
+	if(is_keycode_for_keysym(keymap, key, input->first)) {
+		input->second = key;
+	}
+}
+
+
+static xkb_keycode_t find_keycode_for_keysim(xkb_keymap * keymap, xkb_keysym_t ks) {
+	xkb_keymap_key_iter_t iter;
+	pair<xkb_keysym_t, xkb_keycode_t> data = {ks, XKB_KEYCODE_INVALID};
+	xkb_keymap_key_for_each(keymap, &xkb_keymap_key_iter, &data);
+	return data.second;
+}
+
+template<void (page_t::*func)(weston_keyboard *, uint32_t, uint32_t)>
+void page_t::bind_key(xkb_keymap * keymap, key_desc_t & key) {
+	xkb_keysym_t ks = xkb_keysym_from_name(key.keysym_name.c_str(), XKB_KEYSYM_NO_FLAGS);
+	if(ks == XKB_KEY_NoSymbol)
+		return;
+	int kc = find_keycode_for_keysim(keymap, ks);
+	weston_log("bind '%s' : %d, %d\n", key.keysym_name.c_str(), kc, ks);
+
+	if (kc != XKB_KEYCODE_INVALID) {
+		/* HOWTO lose time: there is a fixes offset (8) between keycode from xkbcommon and
+		 * scancode from linux and obbiously weston use scancode... ref: xkbcommon.h */
+		weston_compositor_add_key_binding(ec, kc - 8, (enum weston_keyboard_modifier)key.mod,
+		[](weston_keyboard * keyboard, uint32_t time, uint32_t key, void *data) {
+			auto ths = reinterpret_cast<page_t *>(data);
+			(ths->*func)(keyboard, time, key);
+		}, this);
+	}
 }
 
 /**
  * Update grab keys aware of current _keymap
  */
-//void page_t::update_grabkey() {
-//	/** TODO **/
-//
-//
-////
-////	assert(_keymap != nullptr);
-////
-////	/** ungrab all previews key **/
-////	xcb_ungrab_key(_dpy->xcb(), XCB_GRAB_ANY, _dpy->root(), XCB_MOD_MASK_ANY);
-////
-////	int kc = 0;
-////
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_1, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_2, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_3, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_debug_4, _keymap);
-////
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[0].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[1].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[2].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[3].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[4].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[5].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[6].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[7].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[8].key, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_cmd[9].key, _keymap);
-////
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_page_quit, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_close, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_exposay_all, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_toggle_fullscreen, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_toggle_compositor, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_right_desktop, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_left_desktop, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_bind_window, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_fullscreen_window, _keymap);
-////	grab_key(_dpy->xcb(), _dpy->root(), bind_float_window, _keymap);
-////
-////	/* Alt-Tab */
-////	if ((kc = _keymap->find_keysim(XK_Tab))) {
-////		xcb_grab_key(_dpy->xcb(), true, _dpy->root(), XCB_MOD_MASK_1, kc,
-////				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-////		if (_keymap->numlock_mod_mask() != 0) {
-////			xcb_grab_key(_dpy->xcb(), true, _dpy->root(),
-////					XCB_MOD_MASK_1 | _keymap->numlock_mod_mask(), kc,
-////					XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC);
-////		}
-////	}
-//
-//}
-//
+void page_t::bind_all_keys(weston_seat * seat) {
+
+
+}
+
+void page_t::on_seat_created(weston_seat * seat) {
+	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
+
+	auto xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+	auto keymap = xkb_keymap_new_from_names(xkb_ctx, &ec->xkb_names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+
+	bind_key<&page_t::handle_quit_page>(keymap, bind_page_quit);
+	bind_key<&page_t::handle_toggle_fullscreen>(keymap, bind_toggle_fullscreen);
+	bind_key<&page_t::handle_close_window>(keymap, bind_close);
+
+	bind_key<&page_t::handle_goto_desktop_at_right>(keymap, bind_right_desktop);
+	bind_key<&page_t::handle_goto_desktop_at_left>(keymap, bind_left_desktop);
+
+	bind_key<&page_t::handle_bind_window>(keymap, bind_bind_window);
+	bind_key<&page_t::handle_set_fullscreen_window>(keymap, bind_fullscreen_window);
+	bind_key<&page_t::handle_set_floating_window>(keymap, bind_float_window);
+
+	bind_key<&page_t::handle_bind_cmd_0>(keymap, bind_cmd[0].key);
+	bind_key<&page_t::handle_bind_cmd_1>(keymap, bind_cmd[1].key);
+	bind_key<&page_t::handle_bind_cmd_2>(keymap, bind_cmd[2].key);
+	bind_key<&page_t::handle_bind_cmd_3>(keymap, bind_cmd[3].key);
+	bind_key<&page_t::handle_bind_cmd_4>(keymap, bind_cmd[4].key);
+	bind_key<&page_t::handle_bind_cmd_5>(keymap, bind_cmd[5].key);
+	bind_key<&page_t::handle_bind_cmd_6>(keymap, bind_cmd[6].key);
+	bind_key<&page_t::handle_bind_cmd_7>(keymap, bind_cmd[7].key);
+	bind_key<&page_t::handle_bind_cmd_8>(keymap, bind_cmd[8].key);
+	bind_key<&page_t::handle_bind_cmd_9>(keymap, bind_cmd[9].key);
+
+	xkb_keymap_unref(keymap);
+	xkb_context_unref(xkb_ctx);
+
+}
+
 //void page_t::update_keymap() {
 //	/* TODO */
 //
@@ -3660,8 +3430,7 @@ void page_t::connect_all() {
 	wl_list_init(&hide_input_panel.link);
 	wl_list_init(&update_input_panel.link);
 
-
-	wl_list_init(&seat_created.link);
+	seat_created.connect(&ec->seat_created_signal, this, &page_t::on_seat_created);
 
 	wl_list_init(&output_destroyed.link);
 	wl_list_init(&output_moved.link);
@@ -3678,7 +3447,6 @@ void page_t::connect_all() {
     show_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::show_input_panel\n"); };
     hide_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::hide_input_panel\n"); };
     update_input_panel.notify = [](wl_listener *l, void *data) { weston_log("compositor::update_input_panel\n"); };
-    seat_created.notify = [](wl_listener *l, void *data) { weston_log("compositor::seat_created\n"); };
 
     output_destroyed.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_destroyed\n"); };
     output_moved.notify = [](wl_listener *l, void *data) { weston_log("compositor::output_moved\n"); };
@@ -3696,7 +3464,6 @@ void page_t::connect_all() {
     wl_signal_add(&ec->show_input_panel_signal, &show_input_panel);
     wl_signal_add(&ec->hide_input_panel_signal, &hide_input_panel);
     wl_signal_add(&ec->update_input_panel_signal, &update_input_panel);
-    wl_signal_add(&ec->seat_created_signal, &seat_created);
 
     wl_signal_add(&ec->output_destroyed_signal, &output_destroyed);
     wl_signal_add(&ec->output_moved_signal, &output_moved);
@@ -3707,61 +3474,8 @@ void page_t::connect_all() {
 
 void page_t::on_output_created(weston_output * output) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-//	auto stest = weston_surface_create(ec);
-//	weston_surface_set_size(stest, output->width, output->height);
-//    pixman_region32_fini(&stest->opaque);
-//    pixman_region32_init_rect(&stest->opaque, 0, 0, output->width,
-//    		output->height);
-//    weston_surface_damage(stest);
-//
-//    auto surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, output->width,
-//    		output->height);
-//
-//    auto cr = cairo_create(surf);
-//    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-//    cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
-//    cairo_paint(cr);
-//    cairo_destroy(cr);
-
-//    auto sbuffer = weston_buffer_from_memory(output->width, output->height,
-//    		cairo_image_surface_get_stride(surf), WL_SHM_FORMAT_ARGB8888, cairo_image_surface_get_data(surf));
-//    weston_surface_attach(stest, sbuffer);
-//    weston_surface_damage(stest);
-//
-//    auto sview = weston_view_create(stest);
-//	weston_view_set_position(sview, output->x, output->y);
-//	stest->timeline.force_refresh = 1;
-//	weston_layer_entry_insert(&default_layer.view_list, &sview->layer_link);
-//    weston_surface_commit(stest);
-
-
-	/** create the solid color background **/
-//	auto background = weston_surface_create(ec);
-//	weston_surface_set_color(background, 0.5, 0.5, 0.5, 1.0);
-//    weston_surface_set_size(background, output->width, output->height);
-//    pixman_region32_fini(&background->opaque);
-//    pixman_region32_init_rect(&background->opaque, output->x, output->y, output->width, output->width);
-//    weston_surface_damage(background);
-//    //pixman_region32_fini(&s->input);
-//    //pixman_region32_init_rect(&s->input, 0, 0, w, h);
-//
-//    auto bview = weston_view_create(background);
-//	weston_view_set_position(bview, 0, 0);
-//	background->timeline.force_refresh = 1;
-//	weston_layer_entry_insert(&default_layer.view_list, &bview->layer_link);
-
-//	if(use_x11_backend) {
-//		repaint_functions[output] = output->repaint;
-//		output->repaint = &page_t::page_repaint;
-//
-//		start_repaint_loop_functions[output] = output->start_repaint_loop;
-//		output->start_repaint_loop = &page_t::page_start_repaint_loop;
-//	}
-
 	_outputs.push_back(output);
 	update_viewport_layout();
-
 }
 
 void page_t::on_output_pending(weston_output * output) {
@@ -3802,268 +3516,25 @@ void page_t::on_output_pending(weston_output * output) {
 
 }
 
-//
-//void page_t::xdg_shell_destroy(wl_client * client,
-//		  wl_resource * resource) {
-//	/* TODO */
-//}
-//
-//void page_t::xdg_shell_use_unstable_version(wl_client * client, wl_resource * resource, int32_t version) {
-//	/* TODO */
-//}
-//
-//void page_t::xdg_shell_get_xdg_surface(wl_client * client,
-//		    wl_resource * resource,
-//		    uint32_t id,
-//		    wl_resource * surface_resource) {
-//
-//	auto surface =
-//		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
-//	auto c = client_shell_t::get(resource);
-//
-//	auto xdg_surface = make_shared<xdg_surface_toplevel_t>(dynamic_cast<page_context_t*>(this), client, surface, id);
-//	c->xdg_shell_surfaces.push_back(xdg_surface);
-//
-//	wl_resource_set_implementation(xdg_surface->resource(),
-//			&display_compositor_t::xdg_surface_implementation,
-//			xdg_surface.get(), &xdg_surface_toplevel_t::xdg_surface_delete);
-//
-//	printf("create (%p)\n", xdg_surface.get());
-//
-//	/* tell weston how to use this data */
-//	if (weston_surface_set_role(surface, "xdg_surface",
-//				    resource, XDG_SHELL_ERROR_ROLE) < 0)
-//		throw "TODO";
-//
-//	auto s = xdg_surface->on_configure.connect(this, &page_t::configure_surface);
-//	_slots.push_back(s);
-//
-//	/* the first output */
-////	weston_output* output = wl_container_of(ec->output_list.next,
-////		    output, link);
-////	surface->output = output;
-//
-//
-//	weston_log("exit %s\n", __PRETTY_FUNCTION__);
-//
-//}
-//
-//void
-//page_t::xdg_shell_get_xdg_popup(wl_client * client,
-//		  wl_resource * resource,
-//		  uint32_t id,
-//		  wl_resource * surface_resource,
-//		  wl_resource * parent_resource,
-//		  wl_resource * seat_resource,
-//		  uint32_t serial,
-//		  int32_t x, int32_t y) {
-//	weston_log("call %s\n", __PRETTY_FUNCTION__);
-////	/* In our case nullptr */
-////	auto surface =
-////		reinterpret_cast<weston_surface *>(wl_resource_get_user_data(surface_resource));
-////	auto shell = xdg_shell_t::get(resource);
-////
-////	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
-////
-////	auto xdg_popup = new xdg_popup_t(client, id, surface, x, y);
-//
-//}
-//
-//void
-//page_t::xdg_shell_pong(struct wl_client *client,
-//	 struct wl_resource *resource, uint32_t serial)
-//{
-//	weston_log("call %s\n", __PRETTY_FUNCTION__);
-//}
-
-
-//void page_t::configure_surface(view_p xdg_surface,
-//			int32_t sx, int32_t sy) {
-//
-//	weston_log("ccc %p\n", xdg_surface.get());
-//
-//	if(xdg_surface->is(MANAGED_UNCONFIGURED)) {
-//		manage_client(xdg_surface);
-//	} else {
-//		/* TODO: update the state if necessary */
-//	}
-//
-//}
-
-///**
-// * the xdg-surface
-// **/
-//
-//void page_t::xdg_surface_destroy(struct wl_client *client,
-//		struct wl_resource *resource)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	wl_resource_destroy(resource);
-//}
-//
-//void page_t::xdg_surface_set_parent(wl_client * client,
-//		wl_resource * resource, wl_resource * parent_resource)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//
-//	if(parent_resource) {
-//		auto parent = reinterpret_cast<xdg_surface_toplevel_t*>(wl_resource_get_user_data(resource));
-//		xdg_surface->set_transient_for(parent);
-//	} else {
-//		xdg_surface->set_transient_for(nullptr);
-//	}
-//
-//}
-//
-//void
-//page_t::xdg_surface_set_app_id(struct wl_client *client,
-//		       struct wl_resource *resource,
-//		       const char *app_id)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//
-//}
-//
-//void
-//page_t::xdg_surface_show_window_menu(wl_client *client,
-//			     wl_resource *surface_resource,
-//			     wl_resource *seat_resource,
-//			     uint32_t serial,
-//			     int32_t x,
-//			     int32_t y)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(surface_resource);
-//
-//}
-//
-//void
-//page_t::xdg_surface_set_title(wl_client *client,
-//			wl_resource *resource, const char *title)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	xdg_surface->set_title(title);
-//}
-//
-//void
-//page_t::xdg_surface_move(struct wl_client *client, struct wl_resource *resource,
-//		 struct wl_resource *seat_resource, uint32_t serial)
-//{
-//	weston_log("call %s\n", __PRETTY_FUNCTION__);
-//
-////	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-////
-////	auto seat = reinterpret_cast<weston_seat*>(wl_resource_get_user_data(seat_resource));
-////	auto xdg_surface = xdg_surface_t::get(resource);
-////	auto pointer = weston_seat_get_pointer(seat);
-////
-////	weston_pointer_grab_move_t * grab_data =
-////			reinterpret_cast<weston_pointer_grab_move_t *>(malloc(sizeof *grab_data));
-////	/** TODO: memory error **/
-////
-////	grab_data->base.interface = &move_grab_interface;
-////	grab_data->base.pointer = nullptr;
-////
-////	/* relative client position from the cursor */
-////	grab_data->origin_x = xdg_surface->view->geometry.x - wl_fixed_to_double(pointer->grab_x);
-////	grab_data->origin_y = xdg_surface->view->geometry.y - wl_fixed_to_double(pointer->grab_y);
-////
-////	wl_list_remove(&(xdg_surface->view->layer_link.link));
-////	wl_list_insert(&(cmp->default_layer.view_list.link),
-////			&(xdg_surface->view->layer_link.link));
-////
-////	weston_pointer_start_grab(seat->pointer_state, &grab_data->base);
-//
-//}
-//
-//void
-//page_t::xdg_surface_resize(struct wl_client *client, struct wl_resource *resource,
-//		   struct wl_resource *seat_resource, uint32_t serial,
-//		   uint32_t edges)
-//{
-//	weston_log("call %s\n", __PRETTY_FUNCTION__);
-//}
-//
-//void page_t::xdg_surface_ack_configure(wl_client *client,
-//		wl_resource * resource,
-//		uint32_t serial)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//
-//	//weston_layer_entry_insert(&cmp->default_layer.view_list, &xdg_surface->view->layer_link);
-//
-//}
-//
-//void
-//page_t::xdg_surface_set_window_geometry(struct wl_client *client,
-//				struct wl_resource *resource,
-//				int32_t x,
-//				int32_t y,
-//				int32_t width,
-//				int32_t height)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	xdg_surface->set_window_geometry(x, y, width, height);
-//}
-//
-//void
-//page_t::xdg_surface_set_maximized(struct wl_client *client,
-//			  struct wl_resource *resource)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	xdg_surface->set_maximized();
-//}
-//
-//void
-//page_t::xdg_surface_unset_maximized(struct wl_client *client,
-//			    struct wl_resource *resource)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	xdg_surface->unset_maximized();
-//}
-//
-//void
-//page_t::xdg_surface_set_fullscreen(struct wl_client *client,
-//			   struct wl_resource *resource,
-//			   struct wl_resource *output_resource)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	xdg_surface->set_fullscreen();
-//}
-//
-//void
-//page_t::xdg_surface_unset_fullscreen(struct wl_client *client,
-//			     struct wl_resource *resource)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	xdg_surface->unset_fullscreen();
-//}
-//
-//void
-//page_t::xdg_surface_set_minimized(struct wl_client *client,
-//			    struct wl_resource *resource)
-//{
-//	auto xdg_surface = xdg_surface_toplevel_t::get(resource);
-//	xdg_surface->set_minimized();
-//}
-
 /**
  * This function synchronize the page tree with the weston scene graph. The side
  * effects are damage all outputs and schedule repaint for all outputs.
  **/
 void page_t::sync_tree_view() {
 
-	list<weston_view *> lv;
+	/* create the list of weston views */
+	list<weston_view *> views;
 	auto children = _root->get_all_children();
 	weston_log("found %lu children\n", children.size());
 	for(auto x: children) {
 		auto v = x->get_default_view();
 		if(v)
-			lv.push_back(v);
+			views.push_back(v);
 	}
 
 	//_root->print_tree(0);
 
-	weston_log("found %lu views\n", lv.size());
+	weston_log("found %lu views\n", views.size());
 
 	/* remove all existing views */
 	weston_layer_entry * nxt;
@@ -4073,7 +3544,7 @@ void page_t::sync_tree_view() {
 		weston_layer_entry_remove(&v->layer_link);
 	}
 
-	for(auto v: lv) {
+	for(auto v: views) {
 		weston_layer_entry_insert(&default_layer.view_list, &v->layer_link);
 		weston_view_geometry_dirty(v);
 		weston_view_update_transform(v);

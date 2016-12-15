@@ -138,7 +138,7 @@ struct page_t : public page_context_t, public connectable_t {
 	wl_listener hide_input_panel;
 	wl_listener update_input_panel;
 
-	wl_listener seat_created;
+	listener_t<weston_seat> seat_created;
 	listener_t<weston_output> output_created;
 	listener_t<weston_output> output_pending;
 	wl_listener output_destroyed;
@@ -172,28 +172,21 @@ struct page_t : public page_context_t, public connectable_t {
 	wl_global * _global_xdg_shell_v6;
 	wl_global * _global_buffer_manager;
 
-//	key_desc_t bind_page_quit;
-//	key_desc_t bind_toggle_fullscreen;
-//	key_desc_t bind_toggle_compositor;
-//	key_desc_t bind_close;
-//
-//	key_desc_t bind_exposay_all;
-//
-//	key_desc_t bind_right_desktop;
-//	key_desc_t bind_left_desktop;
-//
-//	key_desc_t bind_bind_window;
-//	key_desc_t bind_fullscreen_window;
-//	key_desc_t bind_float_window;
-//
-//	keymap_t * _keymap;
-//
-//	key_desc_t bind_debug_1;
-//	key_desc_t bind_debug_2;
-//	key_desc_t bind_debug_3;
-//	key_desc_t bind_debug_4;
-//
-//	array<key_bind_cmd_t, 10> bind_cmd;
+	key_desc_t bind_page_quit;
+	key_desc_t bind_toggle_fullscreen;
+	key_desc_t bind_toggle_compositor;
+	key_desc_t bind_close;
+
+	key_desc_t bind_right_desktop;
+	key_desc_t bind_left_desktop;
+
+	key_desc_t bind_bind_window;
+	key_desc_t bind_fullscreen_window;
+	key_desc_t bind_float_window;
+
+	keymap_t * _keymap;
+
+	array<key_bind_cmd_t, 10> bind_cmd;
 
 	//xcb_timestamp_t _last_focus_time;
 	//xcb_timestamp_t _last_button_press;
@@ -226,7 +219,29 @@ struct page_t : public page_context_t, public connectable_t {
 	void switch_focused_to_floating();
 	void switch_focused_to_notebook();
 
-//	void set_default_pop(shared_ptr<notebook_t> x);
+	void handle_quit_page(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_toggle_fullscreen(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_close_window(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_goto_desktop_at_right(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_goto_desktop_at_left(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_window(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_set_fullscreen_window(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_set_floating_window(weston_keyboard * wk, uint32_t time, uint32_t key);
+
+
+	void handle_bind_cmd_0(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_1(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_2(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_3(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_4(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_5(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_6(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_7(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_8(weston_keyboard * wk, uint32_t time, uint32_t key);
+	void handle_bind_cmd_9(weston_keyboard * wk, uint32_t time, uint32_t key);
+
+
+	//	void set_default_pop(shared_ptr<notebook_t> x);
 //	display_compositor_t * get_render_context();
 //
 //	/** user inputs **/
@@ -359,8 +374,13 @@ struct page_t : public page_context_t, public connectable_t {
 //	bool check_for_destroyed_window(xcb_window_t w);
 //
 //	void update_keymap();
-//	void update_grabkey();
-//
+
+	template<void (page_t::*func)(weston_keyboard *, uint32_t, uint32_t)>
+	void bind_key(xkb_keymap * keymap, key_desc_t & key);
+	void bind_all_keys(weston_seat * seat);
+
+	void on_seat_created(weston_seat * seat);
+
 //	shared_ptr<xdg_surface_toplevel_t> find_hidden_client_with(xcb_window_t w);
 //
 //	vector<page_event_t> compute_page_areas(viewport_t * v) const;
