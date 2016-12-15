@@ -64,8 +64,8 @@ page_compositor_SOURCES = \
 	xdg-shell-v6-popup.hxx \
 	xdg-shell-v6-positioner.cxx \
 	xdg-shell-v6-positioner.hxx \
-	wl-shell-client.cxx \
-	wl-shell-client.hxx \
+	wl-shell-shell.cxx \
+	wl-shell-shell.hxx \
 	wl-shell-surface.cxx \
 	wl-shell-surface.hxx \
 	page-context.hxx \

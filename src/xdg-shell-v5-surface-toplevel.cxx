@@ -13,6 +13,7 @@
 
 #include <linux/input.h>
 #include <compositor.h>
+#include <wl-shell-shell.hxx>
 #include <xdg-shell-v5-shell.hxx>
 #include <xdg-shell-v5-surface-toplevel.hxx>
 
@@ -20,8 +21,6 @@
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
-#include "wl-shell-client.hxx"
-
 #include "view.hxx"
 
 namespace page {

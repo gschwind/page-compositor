@@ -25,12 +25,11 @@
 #include <linux/input.h>
 #include <compositor.h>
 #include <surface.hxx>
+#include <wl-shell-shell.hxx>
 #include "renderable_floating_outer_gradien.hxx"
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
-#include "wl-shell-client.hxx"
-
 #include "view.hxx"
 
 namespace page {

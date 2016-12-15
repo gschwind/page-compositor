@@ -18,7 +18,7 @@
  *
  */
 
-#include "wl-shell-client.hxx"
+#include <wl-shell-shell.hxx>
 #include "wl-shell-surface.hxx"
 
 namespace page {
