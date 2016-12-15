@@ -5,12 +5,12 @@
  *      Author: gschwind
  */
 
-#ifndef SRC_XDG_POPUP_V6_HXX_
-#define SRC_XDG_POPUP_V6_HXX_
+#ifndef SRC_XDG_SHELL_V6_POPUP_HXX_
+#define SRC_XDG_SHELL_V6_POPUP_HXX_
 
 #include "surface.hxx"
 #include "xdg-shell-unstable-v6-interface.hxx"
-#include "xdg-surface-v6.hxx"
+#include "xdg-shell-v6-surface.hxx"
 
 namespace page {
 
@@ -72,4 +72,4 @@ namespace page {
 struct xdg_popup_v6_t;
 }
 
-#endif /* SRC_XDG_POPUP_V6_HXX_ */
+#endif /* SRC_XDG_SHELL_V6_POPUP_HXX_ */

@@ -57,7 +57,7 @@
 #include "xdg-shell-v5-surface-popup.hxx"
 #include "xdg-shell-v5-surface-toplevel.hxx"
 
-#include "xdg-shell-v6-client.hxx"
+#include "xdg-shell-v6-shell.hxx"
 
 namespace page {
 

@@ -4,8 +4,8 @@
  *
  */
 
-#ifndef SRC_XDG_SHELL_V6_CLIENT_HXX_
-#define SRC_XDG_SHELL_V6_CLIENT_HXX_
+#ifndef SRC_XDG_SHELL_V6_SHELL_HXX_
+#define SRC_XDG_SHELL_V6_SHELL_HXX_
 
 #include <list>
 #include <map>
@@ -14,11 +14,11 @@
 
 #include "page_context.hxx"
 
-#include "xdg-surface-v6.hxx"
-#include "xdg-positioner-v6.hxx"
 #include "xdg-shell-v5-surface-base.hxx"
 #include "xdg-shell-v5-surface-popup.hxx"
 #include "xdg-shell-v5-surface-toplevel.hxx"
+#include "xdg-shell-v6-positioner.hxx"
+#include "xdg-shell-v6-surface.hxx"
 
 
 namespace page {

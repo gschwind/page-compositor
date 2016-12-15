@@ -8,10 +8,10 @@
 #include "xdg-shell-unstable-v6-server-protocol.h"
 
 #include <compositor.h>
+#include <xdg-shell-v6-shell.hxx>
 
 #include "utils.hxx"
-#include "xdg-shell-v6-client.hxx"
-#include "xdg-surface-v6.hxx"
+#include "xdg-shell-v6-surface.hxx"
 
 namespace page {
 

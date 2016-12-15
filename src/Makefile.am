@@ -54,16 +54,16 @@ page_compositor_SOURCES = \
 	xdg-shell-v5-surface-toplevel.hxx \
 	xdg-shell-v5-surface-popup.cxx \
 	xdg-shell-v5-surface-popup.hxx \
-	xdg-shell-v6-client.cxx \
-	xdg-shell-v6-client.hxx \
-	xdg-surface-v6.cxx \
-	xdg-surface-v6.hxx \
-	xdg-toplevel-v6.cxx \
-	xdg-toplevel-v6.hxx \
-	xdg-popup-v6.cxx \
-	xdg-popup-v6.hxx \
-	xdg-positioner-v6.cxx \
-	xdg-positioner-v6.hxx \
+	xdg-shell-v6-shell.cxx \
+	xdg-shell-v6-shell.hxx \
+	xdg-shell-v6-surface.cxx \
+	xdg-shell-v6-surface.hxx \
+	xdg-shell-v6-toplevel.cxx \
+	xdg-shell-v6-toplevel.hxx \
+	xdg-shell-v6-popup.cxx \
+	xdg-shell-v6-popup.hxx \
+	xdg-shell-v6-positioner.cxx \
+	xdg-shell-v6-positioner.hxx \
 	wl-shell-client.cxx \
 	wl-shell-client.hxx \
 	wl-shell-surface.cxx \

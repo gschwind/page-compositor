@@ -5,7 +5,7 @@
  *      Author: gschwind
  */
 
-#include "xdg-surface-v6.hxx"
+#include "xdg-shell-v6-surface.hxx"
 
 #include "xdg-shell-unstable-v6-server-protocol.h"
 

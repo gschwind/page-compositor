@@ -30,9 +30,9 @@
 
 #include "tree.hxx"
 #include "page_context.hxx"
+#include "xdg-shell-v6-popup.hxx"
 
-#include "xdg-toplevel-v6.hxx"
-#include "xdg-popup-v6.hxx"
+#include "xdg-shell-v6-toplevel.hxx"
 
 namespace page {
 

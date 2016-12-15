@@ -5,12 +5,12 @@
  *      Author: gschwind
  */
 
-#ifndef SRC_XDG_TOPLEVEL_V6_HXX_
-#define SRC_XDG_TOPLEVEL_V6_HXX_
+#ifndef SRC_XDG_SHELL_V6_TOPLEVEL_HXX_
+#define SRC_XDG_SHELL_V6_TOPLEVEL_HXX_
 
 #include "xdg-shell-unstable-v6-interface.hxx"
-#include "xdg-surface-v6.hxx"
 #include "view.hxx"
+#include "xdg-shell-v6-surface.hxx"
 
 namespace page {
 
@@ -106,4 +106,4 @@ namespace page {
 struct xdg_toplevel_v6_t;
 }
 
-#endif /* SRC_XDG_TOPLEVEL_V6_HXX_ */
+#endif /* SRC_XDG_SHELL_V6_TOPLEVEL_HXX_ */

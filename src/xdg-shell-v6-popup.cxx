@@ -6,8 +6,8 @@
  */
 
 
-#include "xdg-popup-v6.hxx"
-#include "xdg-positioner-v6.hxx"
+#include <xdg-shell-v6-popup.hxx>
+#include <xdg-shell-v6-positioner.hxx>
 #include "xdg-shell-unstable-v6-server-protocol.h"
 #include "xdg-shell-unstable-v5-server-protocol.h"
 

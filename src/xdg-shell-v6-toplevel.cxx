@@ -6,9 +6,8 @@
  */
 
 
-#include "xdg-toplevel-v6.hxx"
-
 #include <linux/input.h>
+#include <xdg-shell-v6-toplevel.hxx>
 
 #include "xdg-shell-unstable-v6-server-protocol.h"
 #include "grab_handlers.hxx"
