@@ -25,8 +25,8 @@
 #include "renderable_floating_outer_gradien.hxx"
 #include "renderable_pixmap.hxx"
 #include "surface.hxx"
-#include "xdg-surface-base.hxx"
-#include "xdg-surface-popup.hxx"
+#include "xdg-shell-v5-surface-base.hxx"
+#include "xdg-shell-v5-surface-popup.hxx"
 
 namespace page {
 

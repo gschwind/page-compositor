@@ -26,7 +26,7 @@
 #include "renderable_thumbnail.hxx"
 #include "renderable_unmanaged_gaussian_shadow.hxx"
 #include "dropdown_menu.hxx"
-#include "xdg-surface-toplevel.hxx"
+#include "xdg-shell-v5-surface-toplevel.hxx"
 
 namespace page {
 

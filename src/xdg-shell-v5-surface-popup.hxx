@@ -21,7 +21,7 @@
 #include "renderable_unmanaged_gaussian_shadow.hxx"
 #include "renderable_pixmap.hxx"
 #include "surface.hxx"
-#include "xdg-surface-base.hxx"
+#include "xdg-shell-v5-surface-base.hxx"
 
 namespace page {
 

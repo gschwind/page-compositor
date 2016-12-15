@@ -17,8 +17,8 @@
 #include "page_context.hxx"
 #include "viewport.hxx"
 #include "renderable_pixmap.hxx"
-#include "xdg-surface-popup.hxx"
-#include "xdg-surface-toplevel.hxx"
+#include "xdg-shell-v5-surface-popup.hxx"
+#include "xdg-shell-v5-surface-toplevel.hxx"
 
 namespace page {
 

@@ -10,7 +10,7 @@
 
 #include "tree.hxx"
 #include "pixmap.hxx"
-#include "xdg-surface-toplevel.hxx"
+#include "xdg-shell-v5-surface-toplevel.hxx"
 
 namespace page {
 

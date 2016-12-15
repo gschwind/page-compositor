@@ -20,7 +20,7 @@
 #include "icon_handler.hxx"
 #include "renderable_thumbnail.hxx"
 
-#include "xdg-surface-toplevel.hxx"
+#include "xdg-shell-v5-surface-toplevel.hxx"
 
 
 namespace page {

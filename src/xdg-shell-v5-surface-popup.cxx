@@ -7,12 +7,9 @@
  *
  */
 
-#include "xdg-surface-popup.hxx"
-
-#include "xdg-shell-client.hxx"
-#include "xdg-surface-popup.hxx"
-#include "xdg-surface-toplevel.hxx"
-
+#include <xdg-shell-v5-shell.hxx>
+#include <xdg-shell-v5-surface-popup.hxx>
+#include <xdg-shell-v5-surface-toplevel.hxx>
 #include "view.hxx"
 
 #include "xdg-shell-unstable-v5-server-protocol.h"

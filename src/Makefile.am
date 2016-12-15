@@ -46,8 +46,14 @@ page_compositor_SOURCES = \
 	tree.hxx \
 	page.cxx \
 	page.hxx \
-	xdg-shell-client.cxx \
-	xdg-shell-client.hxx \
+	xdg-shell-v5-shell.cxx \
+	xdg-shell-v5-shell.hxx \
+	xdg-shell-v5-surface-base.cxx \
+	xdg-shell-v5-surface-base.hxx \
+	xdg-shell-v5-surface-toplevel.cxx \
+	xdg-shell-v5-surface-toplevel.hxx \
+	xdg-shell-v5-surface-popup.cxx \
+	xdg-shell-v5-surface-popup.hxx \
 	xdg-shell-v6-client.cxx \
 	xdg-shell-v6-client.hxx \
 	xdg-surface-v6.cxx \
@@ -63,12 +69,6 @@ page_compositor_SOURCES = \
 	wl-shell-surface.cxx \
 	wl-shell-surface.hxx \
 	page-context.hxx \
-	xdg-surface-base.cxx \
-	xdg-surface-base.hxx \
-	xdg-surface-toplevel.cxx \
-	xdg-surface-toplevel.hxx \
-	xdg-surface-popup.cxx \
-	xdg-surface-popup.hxx \
 	view.cxx \
 	view.hxx \
 	utils.cxx \

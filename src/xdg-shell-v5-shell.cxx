@@ -5,8 +5,7 @@
  *      Author: gschwind
  */
 
-#include "xdg-shell-client.hxx"
-
+#include <xdg-shell-v5-shell.hxx>
 #include "xdg-shell-unstable-v5-server-protocol.h"
 
 namespace page {

@@ -51,12 +51,11 @@
 #include "page_root.hxx"
 #include "listener.hxx"
 #include "wl-shell-client.hxx"
-#include "xdg-shell-client.hxx"
-#include "xdg-surface-base.hxx"
-#include "xdg-surface-popup.hxx"
-#include "xdg-surface-toplevel.hxx"
-
 #include "view.hxx"
+#include "xdg-shell-v5-shell.hxx"
+#include "xdg-shell-v5-surface-base.hxx"
+#include "xdg-shell-v5-surface-popup.hxx"
+#include "xdg-shell-v5-surface-toplevel.hxx"
 
 #include "xdg-shell-v6-client.hxx"
 

@@ -16,10 +16,10 @@
 
 #include "xdg-surface-v6.hxx"
 #include "xdg-positioner-v6.hxx"
+#include "xdg-shell-v5-surface-base.hxx"
+#include "xdg-shell-v5-surface-popup.hxx"
+#include "xdg-shell-v5-surface-toplevel.hxx"
 
-#include "xdg-surface-base.hxx"
-#include "xdg-surface-popup.hxx"
-#include "xdg-surface-toplevel.hxx"
 
 namespace page {
 

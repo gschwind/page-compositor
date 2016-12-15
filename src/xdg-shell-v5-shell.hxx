@@ -5,17 +5,17 @@
  *      Author: gschwind
  */
 
-#ifndef SRC_XDG_SHELL_CLIENT_HXX_
-#define SRC_XDG_SHELL_CLIENT_HXX_
+#ifndef SRC_XDG_SHELL_V5_SHELL_HXX_
+#define SRC_XDG_SHELL_V5_SHELL_HXX_
 
 #include <list>
 
 #include "xdg-shell-unstable-v5-interface.hxx"
 #include "page_context.hxx"
+#include "xdg-shell-v5-surface-base.hxx"
+#include "xdg-shell-v5-surface-popup.hxx"
+#include "xdg-shell-v5-surface-toplevel.hxx"
 
-#include "xdg-surface-base.hxx"
-#include "xdg-surface-popup.hxx"
-#include "xdg-surface-toplevel.hxx"
 
 namespace page {
 
@@ -70,4 +70,4 @@ public xdg_shell_vtable {
 
 }
 
-#endif /* SRC_XDG_SHELL_CLIENT_HXX_ */
+#endif /* SRC_XDG_SHELL_V5_SHELL_HXX_ */

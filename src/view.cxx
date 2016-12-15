@@ -11,12 +11,12 @@
 
 #include <cairo.h>
 #include <linux/input.h>
+#include <xdg-shell-v5-surface-toplevel.hxx>
 
 #include "renderable_floating_outer_gradien.hxx"
 #include "notebook.hxx"
 #include "utils.hxx"
 #include "grab_handlers.hxx"
-#include "xdg-surface-toplevel.hxx"
 
 namespace page {
 
