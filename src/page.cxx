@@ -528,13 +528,14 @@ void page_t::run() {
 
 	connect_all();
 
+
 	/* setup the keyboard layout (MANDATORY) */
 	xkb_rule_names names = {
-			"",					/*rules*/
-			"pc104",			/*model*/
-			"us",				/*layout*/
-			"",					/*variant*/
-			""					/*option*/
+			_conf.get_string("default", "xkb_rules").c_str(),					/*rules*/
+			_conf.get_string("default", "xkb_model").c_str(),			/*model*/
+			_conf.get_string("default", "xkb_layout").c_str(),				/*layout*/
+			_conf.get_string("default", "xkb_variant").c_str(),					/*variant*/
+			_conf.get_string("default", "xkb_options").c_str()					/*option*/
 	};
 	weston_compositor_set_xkb_rule_names(ec, &names);
 
