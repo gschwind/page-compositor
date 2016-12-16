@@ -132,7 +132,7 @@ auto view_t::shared_from_this() -> view_p {
 void view_t::update_view() {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 
-	if (is(MANAGED_NOTEBOOK)) {
+	if (is(MANAGED_NOTEBOOK) or is(MANAGED_FULLSCREEN)) {
 		_wished_position = _notebook_wished_position;
 
 		double ratio = compute_ratio_to_fit(_page_surface->width(),
@@ -199,6 +199,8 @@ void view_t::reconfigure() {
 
 	_page_surface->send_configure(_wished_position.w,
 			_wished_position.h, state);
+
+	update_view();
 
 }
 
