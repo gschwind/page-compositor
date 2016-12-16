@@ -687,6 +687,17 @@ void page_t::handle_set_fullscreen_window(weston_keyboard * wk, uint32_t time, u
 }
 
 void page_t::handle_set_floating_window(weston_keyboard * wk, uint32_t time, uint32_t key) {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	if(_current_focus.expired())
+		return;
+	auto v = _current_focus.lock();
+	if(v->is(MANAGED_FULLSCREEN)) {
+		unfullscreen(v);
+	}
+
+	if(v->is(MANAGED_NOTEBOOK)) {
+		unbind_window(v);
+	}
 
 }
 
