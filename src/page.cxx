@@ -670,10 +670,12 @@ void page_t::handle_bind_window(weston_keyboard * wk, uint32_t time, uint32_t ke
 	auto v = _current_focus.lock();
 	if(v->is(MANAGED_FULLSCREEN)) {
 		unfullscreen(v);
-		bind_window(v, true);
-	} else if (v->is(MANAGED_FLOATING)) {
+	}
+
+	if (v->is(MANAGED_FLOATING)) {
 		bind_window(v, true);
 	}
+
 }
 
 void page_t::handle_set_fullscreen_window(weston_keyboard * wk, uint32_t time, uint32_t key) {
