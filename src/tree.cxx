@@ -83,7 +83,7 @@ void tree_t::remove(shared_ptr<tree_t> t) {
 	assert(has_key(_children, t));
 	_children.remove(t);
 	t->clear_parent();
-
+	queue_redraw();
 }
 
 void tree_t::clear()
