@@ -648,7 +648,11 @@ void page_t::handle_toggle_fullscreen(weston_keyboard * wk, uint32_t time, uint3
 }
 
 void page_t::handle_close_window(weston_keyboard * wk, uint32_t time, uint32_t key) {
-
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	if(_current_focus.expired())
+		return;
+	auto v = _current_focus.lock();
+	v->send_close();
 }
 
 void page_t::handle_goto_desktop_at_right(weston_keyboard * wk, uint32_t time, uint32_t key) {
