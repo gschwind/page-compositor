@@ -42,8 +42,8 @@ xdg_popup_v6_t::xdg_popup_v6_t(
 	assert(_parent != nullptr);
 
 	auto pos = xdg_positioner_v6_t::get(positioner);
-	x_offset = pos->x_offset;
-	y_offset = pos->y_offset;
+	_x_offset = pos->x_offset;
+	_y_offset = pos->y_offset;
 
 }
 
@@ -102,7 +102,8 @@ void xdg_popup_v6_t::zxdg_popup_v6_destroy(struct wl_client * client, struct wl_
 void xdg_popup_v6_t::zxdg_popup_v6_grab(struct wl_client * client, struct wl_resource * resource, struct wl_resource * seat, uint32_t serial)
 {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	/* TODO */
+	_seat = resource_get<weston_seat>(seat);
+	_serial = serial;
 }
 
 void xdg_popup_v6_t::zxdg_popup_v6_delete_resource(struct wl_resource * resource)

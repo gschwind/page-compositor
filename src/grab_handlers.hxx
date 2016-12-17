@@ -30,6 +30,23 @@ enum notebook_area_e {
 	NOTEBOOK_AREA_CENTER
 };
 
+struct grab_popup_t : public pointer_grab_handler_t {
+	page_context_t * _ctx;
+	surface_t * _surface;
+
+	grab_popup_t(page_context_t * ctx, surface_t * s);
+
+	virtual ~grab_popup_t();
+	virtual void focus();
+	virtual void button(uint32_t time, uint32_t button, uint32_t state);
+	virtual void motion(uint32_t time, weston_pointer_motion_event *event);
+	virtual void axis(uint32_t time, weston_pointer_axis_event *event);
+	virtual void axis_source(uint32_t source);
+	virtual void frame();
+	virtual void cancel();
+
+};
+
 class grab_split_t : public pointer_grab_handler_t {
 	page_context_t * _ctx;
 	weak_ptr<split_t> _split;

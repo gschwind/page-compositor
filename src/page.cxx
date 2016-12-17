@@ -130,6 +130,11 @@ void page_t::schedule_repaint() {
 void page_t::destroy_surface(surface_t * s) {
 	if(s->_master_view.expired())
 		return;
+
+	if(_grab_handler and s->_has_popup_grab) {
+		grab_stop(_grab_handler->base.grab.pointer);
+	}
+
 	detach(s->_master_view.lock());
 	assert(s->_master_view.expired());
 	weston_compositor_damage_all(ec);
@@ -1983,20 +1988,36 @@ void page_t::manage_popup(surface_t * s) {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 	assert(s->_parent != nullptr);
 
+	auto grab = dynamic_cast<grab_popup_t *>(_grab_handler);
+
+	/* starting popup while another grab is ongoing is wrong */
+	if(s->_seat and _grab_handler and grab == nullptr)
+		return;
+
 	auto parent_view = s->_parent->_master_view.lock();
 
 	if(parent_view != nullptr) {
 		auto view = make_shared<view_t>(this, s);
 		s->_master_view = view;
-		weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, s->x_offset, s->y_offset);
-		parent_view->add_popup_child(view, s->x_offset, s->y_offset);
+		weston_log("%s x=%d, y=%d\n", __PRETTY_FUNCTION__, s->_x_offset, s->_y_offset);
+		parent_view->add_popup_child(view, s->_x_offset, s->_y_offset);
 		sync_tree_view();
+		if(s->_seat) {
+
+			if(grab) {
+				grab->_surface->_has_popup_grab = false;
+				grab_stop(grab->base.grab.pointer);
+			}
+
+			s->_has_popup_grab = true;
+			grab_start(weston_seat_get_pointer(s->_seat), new grab_popup_t{this, s});
+		}
 	}
 }
 
 void page_t::configure_popup(surface_t * s) {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
-	s->send_configure_popup(s->x_offset, s->y_offset, s->width(), s->height());
+	s->send_configure_popup(s->_x_offset, s->_y_offset, s->width(), s->height());
 }
 
 void page_t::create_unmanaged_window(xcb_window_t w, xcb_atom_t type) {
@@ -3130,6 +3151,7 @@ auto page_t::create_pixmap(uint32_t width, uint32_t height) -> pixmap_p {
  * needed.
  **/
 void page_t::process_focus(weston_pointer_grab * grab) {
+
 	struct weston_pointer *pointer = grab->pointer;
 	struct weston_view *view;
 	wl_fixed_t sx, sy;
@@ -3145,118 +3167,15 @@ void page_t::process_focus(weston_pointer_grab * grab) {
 		weston_pointer_set_focus(pointer, view, sx, sy);
 }
 
-//static void
-//weston_pointer_send_relative_motion(struct weston_pointer *pointer,
-//				    uint32_t time,
-//				    struct weston_pointer_motion_event *event)
-//{
-//	uint64_t time_usec;
-//	double dx, dy, dx_unaccel, dy_unaccel;
-//	wl_fixed_t dxf, dyf, dxf_unaccel, dyf_unaccel;
-//	struct wl_list *resource_list;
-//	struct wl_resource *resource;
-//
-//	if (!pointer->focus_client)
-//		return;
-//
-//	if (!weston_pointer_motion_to_rel(pointer, event,
-//					  &dx, &dy,
-//					  &dx_unaccel, &dy_unaccel))
-//		return;
-//
-//	resource_list = &pointer->focus_client->relative_pointer_resources;
-//	time_usec = event->time_usec;
-//	if (time_usec == 0)
-//		time_usec = time * 1000ULL;
-//
-//	dxf = wl_fixed_from_double(dx);
-//	dyf = wl_fixed_from_double(dy);
-//	dxf_unaccel = wl_fixed_from_double(dx_unaccel);
-//	dyf_unaccel = wl_fixed_from_double(dy_unaccel);
-//
-//	wl_resource_for_each(resource, resource_list) {
-//		zwp_relative_pointer_v1_send_relative_motion(
-//			resource,
-//			(uint32_t) (time_usec >> 32),
-//			(uint32_t) time_usec,
-//			dxf, dyf,
-//			dxf_unaccel, dyf_unaccel);
-//	}
-//}
-
-static void
-weston_pointer_send_motion(struct weston_pointer *pointer, uint32_t time,
-			   wl_fixed_t sx, wl_fixed_t sy)
-{
-	struct wl_list *resource_list;
-	struct wl_resource *resource;
-
-	if (!pointer->focus_client)
-		return;
-
-	resource_list = &pointer->focus_client->pointer_resources;
-	wl_resource_for_each(resource, resource_list)
-		wl_pointer_send_motion(resource, time, sx, sy);
-}
-
 void page_t::process_motion(weston_pointer_grab * grab, uint32_t time, weston_pointer_motion_event *event) {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-
+	weston_pointer_send_motion(grab->pointer, time, event);
 	_root->broadcast_motion(grab, time, event);
-
-	struct weston_pointer *pointer = grab->pointer;
-	wl_fixed_t x, y;
-	wl_fixed_t old_sx = pointer->sx;
-	wl_fixed_t old_sy = pointer->sy;
-
-	if (pointer->focus) {
-		weston_pointer_motion_to_abs(pointer, event, &x, &y);
-		weston_view_from_global_fixed(pointer->focus, x, y,
-					      &pointer->sx, &pointer->sy);
-	}
-
-	weston_pointer_move(pointer, event);
-
-	if (old_sx != pointer->sx || old_sy != pointer->sy) {
-		weston_pointer_send_motion(pointer, time,
-					   pointer->sx, pointer->sy);
-	}
-
-	//weston_pointer_send_relative_motion(pointer, time, event);
-
 }
 
 void page_t::process_button(weston_pointer_grab * grab, uint32_t time,
 		uint32_t button, uint32_t state) {
-	//weston_log("call %s\n", __PRETTY_FUNCTION__);
-//	weston_compositor_set_default_pointer_grab(ec, NULL);
-//	(*grab->pointer->default_grab.interface->button)(grab, time, button, state);
-//	weston_compositor_set_default_pointer_grab(ec, &default_grab_pod.grab_interface);
-
-	struct weston_pointer *pointer = grab->pointer;
-	struct weston_compositor *compositor = pointer->seat->compositor;
-	struct weston_view *view;
-	struct wl_resource *resource;
-	uint32_t serial;
-	struct wl_display *display = compositor->wl_display;
-	wl_fixed_t sx, sy;
-	struct wl_list *resource_list = NULL;
-
-	if (pointer->focus_client)
-		resource_list = &pointer->focus_client->pointer_resources;
-	if (resource_list && !wl_list_empty(resource_list)) {
-		resource_list = &pointer->focus_client->pointer_resources;
-		serial = wl_display_next_serial(display);
-		wl_resource_for_each(resource, resource_list)
-			wl_pointer_send_button(resource,
-					       serial,
-					       time,
-					       button,
-					       state);
-	}
-
+	weston_pointer_send_button(grab->pointer, time, button, state);
 	_root->broadcast_button(grab, time, button, state);
-
 }
 
 void page_t::process_axis(weston_pointer_grab * grab, uint32_t time, weston_pointer_axis_event *event) {
@@ -3272,7 +3191,7 @@ void page_t::process_frame(weston_pointer_grab * grab) {
 }
 
 void page_t::process_cancel(weston_pointer_grab * grab) {
-	/* never cancel default grab ? */
+
 }
 
 void page_t::xdg_shell_v5_client_destroy(xdg_shell_client_t * c) {

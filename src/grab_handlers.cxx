@@ -15,6 +15,60 @@ namespace page {
 
 using namespace std;
 
+
+grab_popup_t::grab_popup_t(page_context_t * ctx, surface_t * s) :
+		_ctx{ctx},
+		_surface{s}
+{
+
+}
+
+grab_popup_t::~grab_popup_t() {
+
+}
+
+void grab_popup_t::focus() {
+	auto pointer = base.grab.pointer;
+	struct weston_view *view;
+	wl_fixed_t sx, sy;
+
+	if (pointer->button_count > 0)
+		return;
+
+	view = weston_compositor_pick_view(pointer->seat->compositor,
+					   pointer->x, pointer->y,
+					   &sx, &sy);
+
+	if (pointer->focus != view || pointer->sx != sx || pointer->sy != sy)
+		weston_pointer_set_focus(pointer, view, sx, sy);
+
+}
+
+void grab_popup_t::button(uint32_t time, uint32_t button, uint32_t state) {
+	weston_pointer_send_button(base.grab.pointer, time, button, state);
+}
+
+void grab_popup_t::motion(uint32_t time, weston_pointer_motion_event *event) {
+	weston_pointer_send_motion(base.grab.pointer, time, event);
+}
+
+void grab_popup_t::axis(uint32_t time, weston_pointer_axis_event *event) {
+	weston_pointer_send_axis(base.grab.pointer, time, event);
+}
+
+void grab_popup_t::axis_source(uint32_t source) {
+	weston_pointer_send_axis_source(base.grab.pointer, source);
+}
+void grab_popup_t::frame() {
+	weston_pointer_send_frame(base.grab.pointer);
+}
+
+void grab_popup_t::cancel() {
+	weston_log("call %s\n", __PRETTY_FUNCTION__);
+	_ctx->grab_stop(base.grab.pointer);
+}
+
+
 grab_split_t::grab_split_t(page_context_t * ctx, split_p s) :
 		_ctx{ctx},
 		_split{s}

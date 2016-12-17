@@ -37,8 +37,6 @@ struct xdg_surface_popup_t :
 	wl_resource * resource;
 	uint32_t id;
 	weston_surface * _surface;
-	weston_seat * seat;
-	uint32_t serial;
 	int32_t x;
 	int32_t y;
 

@@ -26,14 +26,18 @@ struct surface_t {
 
 	view_w _master_view;
 
-	/* parent for popup */
-	surface_t * _parent;
-
+	/* data related to toplevel */
 	surface_t * _transient_for;
 
-	/* positionner */
-	int32_t x_offset;
-	int32_t y_offset;
+
+	/* data related to popup */
+	surface_t * _parent;
+	struct weston_seat * _seat;
+	uint32_t _serial;
+	int32_t _x_offset;
+	int32_t _y_offset;
+
+	bool _has_popup_grab;
 
 	surface_t();
 

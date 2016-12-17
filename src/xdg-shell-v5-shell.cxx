@@ -59,7 +59,7 @@ void xdg_shell_client_t::xdg_shell_get_xdg_popup(wl_client * client,
 	/* In our case nullptr */
 	auto surface = resource_get<weston_surface>(surface_resource);
 	auto parent = resource_get<weston_surface>(parent_resource);
-	auto seat = resource_get<weston_seat>(parent_resource);
+	auto seat = resource_get<weston_seat>(seat_resource);
 
 	weston_log("p=%p, x=%d, y=%d\n", surface, x, y);
 

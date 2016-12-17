@@ -60,9 +60,7 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 		  int32_t x, int32_t y) :
 		xdg_surface_base_t{ctx, client, surface, id},
 		id{id},
-		_surface{surface},
-		seat{seat},
-		serial{serial}
+		_surface{surface}
 {
 	weston_log("call %s %p\n", __PRETTY_FUNCTION__, this);
 
@@ -73,8 +71,11 @@ xdg_surface_popup_t::xdg_surface_popup_t(
 	on_surface_destroy.connect(&_surface->destroy_signal, this, &xdg_surface_popup_t::surface_destroyed);
 
 	_parent = parent->page_surface();
-	x_offset = x;
-	y_offset = y;
+	_x_offset = x;
+	_y_offset = y;
+
+	this->_seat = seat;
+	this->_serial = serial;
 
 	_ctx->configure_popup(this);
 

@@ -190,8 +190,10 @@ void wl_shell_surface_t::wl_shell_surface_set_popup(wl_client *client,
 		return;
 
 	_parent = wl_shell_surface_t::get(parent);
-	x_offset = x;
-	y_offset = y;
+	_x_offset = x;
+	_y_offset = y;
+	_seat = resource_get<weston_seat>(seat);
+	_serial = serial;
 
 	_ctx->manage_popup(this);
 
