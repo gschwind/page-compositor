@@ -2003,6 +2003,7 @@ void page_t::manage_popup(surface_t * s) {
 		parent_view->add_popup_child(view, s->_x_offset, s->_y_offset);
 		sync_tree_view();
 		if(s->_seat) {
+			set_keyboard_focus(weston_seat_get_pointer(s->_seat), parent_view);
 
 			if(grab) {
 				grab->_surface->_has_popup_grab = false;
