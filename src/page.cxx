@@ -132,6 +132,7 @@ void page_t::destroy_surface(surface_t * s) {
 		return;
 	detach(s->_master_view.lock());
 	assert(s->_master_view.expired());
+	weston_compositor_damage_all(ec);
 	sync_tree_view();
 }
 
@@ -1432,6 +1433,9 @@ void page_t::set_keyboard_focus(weston_pointer * pointer,
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	assert(new_focus != nullptr);
 	assert(new_focus->get_default_view() != nullptr);
+
+	if(new_focus->is(MANAGED_POPUP))
+		return;
 
 	if(!_current_focus.expired()) {
 		if(_current_focus.lock() == new_focus)

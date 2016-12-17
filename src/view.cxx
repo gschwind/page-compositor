@@ -29,6 +29,7 @@ void view_t::add_transient_child(view_p c) {
 void view_t::add_popup_child(view_p c,
 		int x, int y)
 {
+	c->set_managed_type(MANAGED_POPUP);
 	_popups_childdren->push_back(c);
 	weston_view_set_transform_parent(c->get_default_view(), _default_view);
 	weston_view_set_position(c->get_default_view(), x, y);
@@ -243,9 +244,9 @@ bool view_t::is(managed_window_type_e type) {
 //
 //}
 
-bool view_t::is_fullscreen() {
-	return _managed_type == MANAGED_FULLSCREEN;
-}
+//bool view_t::is_fullscreen() {
+//	return _managed_type == MANAGED_FULLSCREEN;
+//}
 
 //bool xdg_surface_toplevel_t::skip_task_bar() {
 //	return false;
