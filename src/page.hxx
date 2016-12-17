@@ -228,6 +228,8 @@ struct page_t : public page_context_t, public connectable_t {
 	void handle_set_fullscreen_window(weston_keyboard * wk, uint32_t time, uint32_t key);
 	void handle_set_floating_window(weston_keyboard * wk, uint32_t time, uint32_t key);
 
+	void handle_alt_left_button(struct weston_pointer *pointer, uint32_t time, uint32_t button);
+	void handle_alt_right_button(struct weston_pointer *pointer, uint32_t time, uint32_t button);
 
 	void handle_bind_cmd_0(weston_keyboard * wk, uint32_t time, uint32_t key);
 	void handle_bind_cmd_1(weston_keyboard * wk, uint32_t time, uint32_t key);
@@ -240,6 +242,8 @@ struct page_t : public page_context_t, public connectable_t {
 	void handle_bind_cmd_8(weston_keyboard * wk, uint32_t time, uint32_t key);
 	void handle_bind_cmd_9(weston_keyboard * wk, uint32_t time, uint32_t key);
 
+
+	view_p lookup_for_view(struct weston_view * v);
 
 	//	void set_default_pop(shared_ptr<notebook_t> x);
 //	display_compositor_t * get_render_context();

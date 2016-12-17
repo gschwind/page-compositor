@@ -704,6 +704,48 @@ void page_t::handle_set_floating_window(weston_keyboard * wk, uint32_t time, uin
 
 }
 
+void page_t::handle_alt_left_button(struct weston_pointer *pointer, uint32_t time, uint32_t button) {
+	wl_fixed_t sx, sy;
+
+	auto v = weston_compositor_pick_view(ec, pointer->x, pointer->y, &sx, &sy);
+	if(not v)
+		return;
+	auto view = lookup_for_view(v);
+	if(not view)
+		return;
+
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	if(view->is(MANAGED_NOTEBOOK)) {
+		grab_start(pointer, new grab_bind_client_t{this, view,
+			BTN_LEFT, rect(x, y, 1, 1)});
+	} else if(view->is(MANAGED_FLOATING)) {
+		grab_start(pointer, new grab_floating_move_t(this, view,
+			BTN_LEFT, x, y));
+	}
+
+}
+
+void page_t::handle_alt_right_button(struct weston_pointer *pointer, uint32_t time, uint32_t button) {
+	wl_fixed_t sx, sy;
+
+	auto v = weston_compositor_pick_view(ec, pointer->x, pointer->y, &sx, &sy);
+	if(not v)
+		return;
+	auto view = lookup_for_view(v);
+	if(not view)
+		return;
+
+	double x = wl_fixed_to_double(pointer->x);
+	double y = wl_fixed_to_double(pointer->y);
+
+	if(view->is(MANAGED_FLOATING)) {
+		grab_start(pointer, new grab_floating_resize_t(this, view,
+			BTN_LEFT, x, y, EDGE_BOTTOM_RIGHT));
+	}
+}
+
 void page_t::handle_bind_cmd_0(weston_keyboard * wk, uint32_t time, uint32_t key) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	run_cmd(bind_cmd[0].cmd);
@@ -752,6 +794,18 @@ void page_t::handle_bind_cmd_8(weston_keyboard * wk, uint32_t time, uint32_t key
 void page_t::handle_bind_cmd_9(weston_keyboard * wk, uint32_t time, uint32_t key) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	run_cmd(bind_cmd[9].cmd);
+}
+
+
+view_p page_t::lookup_for_view(struct weston_view * v) {
+	auto children = filter_class<view_t>(_root->get_all_children());
+	for(auto x: children) {
+		if(v == x->get_default_view()) {
+			return x;
+		}
+	}
+
+	return nullptr;
 }
 
 //void page_t::process_configure_notify_event(xcb_generic_event_t const * _e) {
@@ -2162,6 +2216,20 @@ void page_t::on_seat_created(weston_seat * seat) {
 
 	xkb_keymap_unref(keymap);
 	xkb_context_unref(xkb_ctx);
+
+	weston_compositor_add_button_binding(ec, BTN_LEFT, MODIFIER_ALT,
+	[](struct weston_pointer *pointer, uint32_t time, uint32_t button, void *data) {
+		auto ths = reinterpret_cast<page_t*>(data);
+		ths->handle_alt_left_button(pointer, time, button);
+	}
+	, this);
+
+	weston_compositor_add_button_binding(ec, BTN_RIGHT, MODIFIER_ALT,
+	[](struct weston_pointer *pointer, uint32_t time, uint32_t button, void *data) {
+		auto ths = reinterpret_cast<page_t*>(data);
+		ths->handle_alt_right_button(pointer, time, button);
+	}
+	, this);
 
 }
 
