@@ -36,11 +36,6 @@ void view_t::add_popup_child(view_p c,
 	weston_view_schedule_repaint(c->get_default_view());
 }
 
-void view_t::destroy_popup_child(view_t * c) {
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-	_popups_childdren->remove(c->shared_from_this());
-}
-
 view_t::view_t(
 		page_context_t * ctx,
 		surface_t * xdg_surface) :
@@ -77,43 +72,11 @@ view_t::view_t(
 
 	_is_visible = true;
 
-//	/** if x == 0 then place window at center of the screen **/
-//	if (_floating_wished_position.x == 0 and not is(MANAGED_DOCK)) {
-//		_floating_wished_position.x =
-//				(_client_proxy->geometry().width - _floating_wished_position.w) / 2;
-//	}
-//
-//	if(_floating_wished_position.x - _ctx->theme()->floating.margin.left < 0) {
-//		_floating_wished_position.x = _ctx->theme()->floating.margin.left;
-//	}
-//
-//	/**
-//	 * if y == 0 then place window at center of the screen
-//	 **/
-//	if (_floating_wished_position.y == 0 and not is(MANAGED_DOCK)) {
-//		_floating_wished_position.y = (_client_proxy->geometry().height - _floating_wished_position.h) / 2;
-//	}
-//
-//	if(_floating_wished_position.y - _ctx->theme()->floating.margin.top < 0) {
-//		_floating_wished_position.y = _ctx->theme()->floating.margin.top;
-//	}
-
 	/**
 	 * Create the base window, window that will content managed window
 	 **/
 
 	rect b = _floating_wished_position;
-
-	//update_floating_areas();
-
-	uint32_t cursor;
-
-	//cursor = cnx()->xc_top_side;
-
-	//select_inputs_unsafe();
-
-	//update_icon();
-
 	show();
 
 }
@@ -184,8 +147,6 @@ void view_t::reconfigure() {
 		_wished_position = _floating_wished_position;
 	}
 
-	//_xdg_surface->_ack_serial = wl_display_next_serial(_ctx->_dpy);
-
 	set<uint32_t> state;
 
 	if(is(MANAGED_NOTEBOOK)) {
@@ -216,67 +177,9 @@ rect view_t::get_base_position() const {
 	return _wished_position;
 }
 
-managed_window_type_e view_t::get_type() {
-	return _managed_type;
-}
-
 bool view_t::is(managed_window_type_e type) {
 	return _managed_type == type;
 }
-
-
-/**
- * set usual passive button grab for a focused client.
- *
- * unsafe: need to lock the _orig window to use it.
- **/
-//void xdg_surface_toplevel_t::grab_button_focused_unsafe() {
-//
-//
-//}
-
-/**
- * set usual passive button grab for a not focused client.
- *
- * unsafe: need to lock the _orig window to use it.
- **/
-//void xdg_surface_toplevel_t::grab_button_unfocused_unsafe() {
-//
-//}
-
-//bool view_t::is_fullscreen() {
-//	return _managed_type == MANAGED_FULLSCREEN;
-//}
-
-//bool xdg_surface_toplevel_t::skip_task_bar() {
-//	return false;
-//}
-//
-//void xdg_surface_toplevel_t::net_wm_state_delete() {
-//
-//}
-
-//void xdg_surface_toplevel_t::normalize() {
-//	if(not _is_iconic)
-//		return;
-//	_is_iconic = false;
-//}
-//
-//void xdg_surface_toplevel_t::iconify() {
-//	if(_is_iconic)
-//		return;
-//	_is_iconic = true;
-//	_is_activated = false;
-//}
-
-//void xdg_surface_toplevel_t::wm_state_delete() {
-//	/**
-//	 * This one is for removing the window manager tag, thus only check if the window
-//	 * still exist. (don't need lock);
-//	 **/
-//
-//	//_client_proxy->delete_wm_state();
-//}
 
 void view_t::set_floating_wished_position(rect const & pos) {
 	_floating_wished_position = pos;
@@ -293,10 +196,6 @@ rect const & view_t::get_wished_position() {
 rect const & view_t::get_floating_wished_position() {
 	return _floating_wished_position;
 }
-//
-//bool xdg_surface_toplevel_t::has_window(xcb_window_t w) const {
-//	return false;
-//}
 
 string view_t::get_node_name() const {
 	string s = _get_node_name<'T'>();
@@ -305,21 +204,9 @@ string view_t::get_node_name() const {
 	return oss.str();
 }
 
-//rect const & xdg_surface_toplevel_t::base_position() const {
-//	return _wished_position;
-//}
-//
-//rect const & xdg_surface_toplevel_t::orig_position() const {
-//	return _wished_position;
-//}
-
 void view_t::update_layout(time64_t const time) {
 	if(not _is_visible)
 		return;
-
-}
-
-void view_t::render_finished() {
 
 }
 
@@ -331,47 +218,11 @@ void view_t::set_focus_state(bool is_focused) {
 
 void view_t::hide() {
 
-//	for(auto x: _children) {
-//		x->hide();
-//	}
-//
-//	if(_default_view) {
-//		weston_view_unmap(_default_view);
-//		weston_view_destroy(_default_view);
-//		_default_view = nullptr;
-//		_ctx->sync_tree_view();
-//	}
-
-//	_is_visible = false;
 }
 
 void view_t::show() {
-//	_is_visible = true;
-//
-//	if(not _default_view) {
-//		_default_view = weston_view_create(_xdg_surface->_surface);
-//		reconfigure();
-//		weston_log("bbXX %p\n", _xdg_surface->_surface->compositor);
-//		//_ctx->sync_tree_view();
-//	}
-//
-////	for(auto x: _children) {
-////		x->show();
-////	}
 
 }
-
-//bool xdg_surface_toplevel_t::is_iconic() {
-//	return _is_iconic;
-//}
-
-//bool xdg_surface_toplevel_t::is_stiky() {
-//	return false;
-//}
-//
-//bool xdg_surface_toplevel_t::is_modal() {
-//	return false;
-//}
 
 void view_t::activate() {
 	if(_parent != nullptr) {
@@ -443,15 +294,6 @@ string const & view_t::title() const {
 
 bool view_t::has_focus() {
 	return _has_keyboard_focus;
-}
-
-void view_t::weston_configure(struct weston_surface * es,
-		int32_t sx, int32_t sy)
-{
-	weston_log("call %s\n", __PRETTY_FUNCTION__);
-
-	/* IS NEVER CALLED */
-
 }
 
 void view_t::signal_title_change() {

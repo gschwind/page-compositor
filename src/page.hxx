@@ -165,10 +165,10 @@ struct page_t : public page_context_t, public connectable_t {
 	list<xdg_shell_client_t *> _xdg_shell_v5_clients;
 	list<xdg_shell_v6_client_t *> _xdg_shell_v6_clients;
 
-	wl_global * _global_wl_shell;
-	wl_global * _global_xdg_shell_v5;
-	wl_global * _global_xdg_shell_v6;
-	wl_global * _global_buffer_manager;
+	struct wl_global * _global_wl_shell;
+	struct wl_global * _global_xdg_shell_v5;
+	struct wl_global * _global_xdg_shell_v6;
+	struct wl_global * _global_buffer_manager;
 
 	key_desc_t bind_page_quit;
 	key_desc_t bind_toggle_fullscreen;

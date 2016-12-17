@@ -62,12 +62,8 @@ class view_t : public tree_t {
 
 	void set_theme(theme_t const * theme);
 
-	static void xdg_surface_delete(wl_resource *resource);
-
 	bool _has_change;
 	bool _has_keyboard_focus;
-
-	listener_t<struct weston_view> weston_view_destroy_listener;
 
 public:
 
@@ -81,12 +77,7 @@ public:
 
 	weston_surface * surface() const;
 
-	void destroy_popup_child(view_t * c);
-
 	auto shared_from_this() -> shared_ptr<view_t>;
-
-	/** called on surface commit */
-	void weston_configure(weston_surface * es, int32_t sx, int32_t sy);
 
 	view_t(page_context_t * ctx, surface_t * s);
 	virtual ~view_t();
@@ -103,43 +94,13 @@ public:
 	void set_floating_wished_position(rect const & pos);
 	rect get_base_position() const;
 	void reconfigure();
-//	void normalize();
-//	void iconify();
-//	bool has_focus() const;
-//	bool is_iconic();
-	//void delete_window(xcb_timestamp_t);
-//	auto icon() const -> shared_ptr<icon16>;
 	void set_notebook_wished_position(rect const & pos);
-	//void set_current_desktop(unsigned int n);
-	//bool is_stiky();
-	//bool is_modal();
-	//void net_wm_state_add(atom_e atom);
-	//void net_wm_state_remove(atom_e atom);
-	//void net_wm_state_delete();
-	//void wm_state_delete();
-	bool is_fullscreen();
-	//bool skip_task_bar();
+	bool is_fullscreen()  __attribute__((deprecated));
 	auto get_floating_wished_position() -> rect const & ;
-	//bool lock();
-	//void unlock();
 	void set_focus_state(bool is_focused);
-	//void set_demands_attention(bool x);
-	//bool demands_attention();
-	//void focus(xcb_timestamp_t t);
-	auto get_type() -> managed_window_type_e;
 	void set_managed_type(managed_window_type_e type);
-	//void grab_button_focused_unsafe();
-	//void grab_button_unfocused_unsafe();
 
 	void send_close();
-
-	void set_maximized();
-	void unset_maximized();
-	void set_fullscreen();
-	void unset_fullscreen();
-	void set_minimized();
-
-	void set_window_geometry(int32_t x, int32_t y, int32_t w, int32_t h);
 
 	/**
 	 * tree_t virtual API
@@ -153,7 +114,7 @@ public:
 	// virtual void children(vector<shared_ptr<tree_t>> & out) const;
 	virtual void update_layout(time64_t const time);
 	//virtual void render(cairo_t * cr, region const & area);
-	virtual void render_finished();
+	//virtual void render_finished()  __attribute__((deprecated));
 
 	//virtual auto get_opaque_region() -> region;
 	//virtual auto get_visible_region() -> region;
