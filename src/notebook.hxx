@@ -242,7 +242,7 @@ public:
 	void start_exposay();
 	void update_client_position(view_p c);
 	void iconify_client(view_p x);
-	bool add_client(view_p c, bool prefer_activate);
+	bool add_client(view_p c);
 
 	/* TODO : remove it */
 	friend grab_bind_client_t;

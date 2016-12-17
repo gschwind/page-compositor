@@ -77,14 +77,14 @@ public:
 	virtual void grab_start(weston_pointer * pointer, pointer_grab_handler_t * handler) = 0;
 	virtual void grab_stop(weston_pointer * pointer) = 0;
 	virtual void detach(tree_p t) = 0;
-	virtual void insert_window_in_notebook(view_p x, notebook_p n, bool prefer_activate) = 0;
+	virtual void insert_window_in_notebook(view_p x, notebook_p n = nullptr) = 0;
 	virtual void fullscreen_client_to_viewport(view_p c, viewport_p v) = 0;
 	virtual void unbind_window(view_p mw) = 0;
 	virtual void split_left(notebook_p nbk, view_p c) = 0;
 	virtual void split_right(notebook_p nbk, view_p c) = 0;
 	virtual void split_top(notebook_p nbk, view_p c) = 0;
 	virtual void split_bottom(notebook_p nbk, view_p c) = 0;
-	virtual void set_keyboard_focus(weston_pointer * pointer, view_p w) = 0;
+	virtual void set_keyboard_focus(struct weston_seat * seat, view_p w) = 0;
 	virtual void notebook_close(notebook_p nbk) = 0;
 //	virtual int  left_most_border() = 0;
 //	virtual int  top_most_border() = 0;
@@ -98,7 +98,7 @@ public:
 	virtual void sync_tree_view() = 0;
 	virtual void manage_client(surface_t * s) = 0;
 	virtual auto create_pixmap(uint32_t width, uint32_t height) -> pixmap_p = 0;
-	virtual void bind_window(view_p mw, bool activate) = 0;
+	virtual void bind_window(view_p mw) = 0;
 	virtual void manage_popup(surface_t * s) = 0;
 	virtual void configure_popup(surface_t * s) = 0;
 	virtual void schedule_repaint() = 0;

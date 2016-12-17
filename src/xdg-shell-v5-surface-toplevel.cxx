@@ -288,7 +288,7 @@ void xdg_surface_toplevel_t::minimize() {
 	auto master_view = _master_view.lock();
 
 	if(not master_view->is(MANAGED_NOTEBOOK)) {
-		_ctx->bind_window(master_view, true);
+		_ctx->bind_window(master_view);
 	}
 
 }

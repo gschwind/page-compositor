@@ -20,8 +20,6 @@
 
 #include "config.hxx"
 
-#include "buffer-manager.hxx"
-
 #include "time.hxx"
 
 #include "config_handler.hxx"
@@ -184,8 +182,6 @@ struct page_t : public page_context_t, public connectable_t {
 	key_desc_t bind_fullscreen_window;
 	key_desc_t bind_float_window;
 
-	keymap_t * _keymap;
-
 	array<key_bind_cmd_t, 10> bind_cmd;
 
 	//xcb_timestamp_t _last_focus_time;
@@ -336,7 +332,7 @@ struct page_t : public page_context_t, public connectable_t {
 //	void logical_raise(shared_ptr<xdg_surface_base_t> c);
 //
 //	/* attach floating window in a notebook */
-	void bind_window(shared_ptr<view_t> mw, bool activate);
+	void bind_window(shared_ptr<view_t> mw);
 //	void grab_pointer();
 //	/* if grab is linked to a given window remove this grab */
 //	void cleanup_grab();
@@ -472,14 +468,14 @@ struct page_t : public page_context_t, public connectable_t {
 	virtual void grab_start(weston_pointer * pointer, pointer_grab_handler_t * handler);
 	virtual void grab_stop(weston_pointer * pointer);
 	virtual void detach(tree_p t);
-	virtual void insert_window_in_notebook(view_p x, notebook_p n, bool prefer_activate);
+	virtual void insert_window_in_notebook(view_p x, notebook_p n = nullptr);
 	virtual void fullscreen_client_to_viewport(view_p c, viewport_p v);
 	virtual void unbind_window(view_p mw);
 	virtual void split_left(notebook_p nbk, view_p c);
 	virtual void split_right(notebook_p nbk, view_p c);
 	virtual void split_top(notebook_p nbk, view_p c);
 	virtual void split_bottom(notebook_p nbk, view_p c);
-	virtual void set_keyboard_focus(weston_pointer * pointer, view_p w);
+	virtual void set_keyboard_focus(struct weston_seat * seat, view_p w);
 	virtual void notebook_close(notebook_p nbk);
 //	virtual int  left_most_border();
 //	virtual int  top_most_border();

@@ -409,8 +409,7 @@ bool view_t::button(weston_pointer_grab * grab, uint32_t time, uint32_t button, 
 
 	if (pointer->button_count == 0 &&
 			 state == WL_POINTER_BUTTON_STATE_RELEASED) {
-		_ctx->set_keyboard_focus(pointer, shared_from_this());
-		weston_pointer_set_focus(pointer, _default_view, view_ix, view_iy);
+		_ctx->set_keyboard_focus(pointer->seat, shared_from_this());
 	}
 
 	return true;

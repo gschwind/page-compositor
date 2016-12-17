@@ -43,7 +43,7 @@ notebook_t::~notebook_t() {
 	_clients_tab_order.clear();
 }
 
-bool notebook_t::add_client(view_p x, bool prefer_activate) {
+bool notebook_t::add_client(view_p x) {
 	assert(not _has_client(x));
 	assert(x != nullptr);
 
@@ -57,13 +57,14 @@ bool notebook_t::add_client(view_p x, bool prefer_activate) {
 	connect(x->focus_change, this, &notebook_t::_client_focus_change);
 	connect(x->title_change, this, &notebook_t::_client_title_change);
 
-	if(prefer_activate and not _exposay) {
+	if(not _selected_has_focus) {
 		_set_selected(x);
 	}
 
 	_schedule_repaint();
 	_ctx->sync_tree_view();
 	return true;
+
 }
 
 rect notebook_t::_get_new_client_size() {
@@ -1201,9 +1202,10 @@ void notebook_t::_client_destroy(view_t * c) {
 }
 
 void notebook_t::_client_focus_change(view_t * c) {
-	if(_selected.get() == c) {
-		_selected_has_focus = c->has_focus();
+	if(_selected.get() != c and c->has_focus()) {
+		_set_selected(c->shared_from_this());
 	}
+	_selected_has_focus = c->has_focus();
 	_schedule_repaint();
 }
 

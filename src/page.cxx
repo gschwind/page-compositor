@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include <wayland-util.h>
 #include <linux/input.h>
 #include <compositor.h>
 #include <compositor-x11.h>
@@ -48,7 +49,6 @@
 #include "xdg-shell-unstable-v6-server-protocol.h"
 
 #include "buffer-manager-server-protocol.h"
-#include "buffer-manager-client-protocol.h"
 
 #include "utils.hxx"
 
@@ -74,6 +74,8 @@
 #define _NET_WM_STATE_TOGGLE 2
 
 namespace page {
+
+void buffer_manager_main(int fd);
 
 static void _default_grab_focus(weston_pointer_grab * grab) {
 	page_t::_default_grab_interface_t * pod = wl_container_of(grab->interface, pod, grab_interface);
@@ -522,9 +524,7 @@ void page_t::run() {
 			&page_t::bind_xdg_shell_v5);
 	_global_xdg_shell_v6 = wl_global_create(_dpy, &zxdg_shell_v6_interface, 1, this,
 			&page_t::bind_xdg_shell_v6);
-	_global_buffer_manager = wl_global_create(_dpy,
-			&zzz_buffer_manager_interface, 1, this,
-			&page_t::bind_zzz_buffer_manager);
+	_global_buffer_manager = wl_global_create(_dpy, &zzz_buffer_manager_interface, 1, this, &page_t::bind_zzz_buffer_manager);
 
 
 	connect_all();
@@ -679,7 +679,8 @@ void page_t::handle_bind_window(weston_keyboard * wk, uint32_t time, uint32_t ke
 	}
 
 	if (v->is(MANAGED_FLOATING)) {
-		bind_window(v, true);
+		bind_window(v);
+		set_keyboard_focus(wk->seat, v);
 	}
 
 }
@@ -1419,7 +1420,7 @@ void page_t::unfullscreen(view_p mw) {
 			n = data.revert_notebook.lock();
 		}
 		mw->set_managed_type(MANAGED_NOTEBOOK);
-		n->add_client(mw, true);
+		n->add_client(mw);
 		mw->reconfigure();
 	} else {
 		mw->set_managed_type(MANAGED_FLOATING);
@@ -1454,15 +1455,12 @@ void page_t::toggle_fullscreen(view_p c) {
 //	}
 //}
 
-void page_t::insert_window_in_notebook(
-		view_p x,
-		notebook_p n,
-		bool prefer_activate) {
+void page_t::insert_window_in_notebook(view_p x, notebook_p n) {
 	assert(x != nullptr);
 	if (n == nullptr)
 		n = get_current_workspace()->default_pop();
 	assert(n != nullptr);
-	n->add_client(x, prefer_activate);
+	n->add_client(x);
 }
 
 /* update viewport and childs allocation */
@@ -1487,7 +1485,7 @@ void page_t::insert_window_in_notebook(
 //
 //}
 
-void page_t::set_keyboard_focus(weston_pointer * pointer,
+void page_t::set_keyboard_focus(struct weston_seat * seat,
 		shared_ptr<view_t> new_focus) {
 	weston_log("call %s\n", __PRETTY_FUNCTION__);
 	assert(new_focus != nullptr);
@@ -1502,7 +1500,7 @@ void page_t::set_keyboard_focus(weston_pointer * pointer,
 		_current_focus.lock()->set_focus_state(false);
 	}
 
-	weston_seat_set_keyboard_focus(pointer->seat, new_focus->surface());
+	weston_seat_set_keyboard_focus(seat, new_focus->surface());
 
 	_current_focus = new_focus;
 
@@ -1548,7 +1546,7 @@ void page_t::split_left(notebook_p nbk, view_p c) {
 	split->set_pack1(nbk);
 	if (c != nullptr) {
 		detach(c);
-		insert_window_in_notebook(c, n, true);
+		insert_window_in_notebook(c, n);
 	}
 	split->show();
 }
@@ -1562,7 +1560,7 @@ void page_t::split_right(notebook_p nbk, view_p c) {
 	split->set_pack1(n);
 	if (c != nullptr) {
 		detach(c);
-		insert_window_in_notebook(c, n, true);
+		insert_window_in_notebook(c, n);
 	}
 	split->show();
 }
@@ -1576,7 +1574,7 @@ void page_t::split_top(notebook_p nbk, view_p c) {
 	split->set_pack1(nbk);
 	if (c != nullptr) {
 		detach(c);
-		insert_window_in_notebook(c, n, true);
+		insert_window_in_notebook(c, n);
 	}
 	split->show();
 }
@@ -1590,7 +1588,7 @@ void page_t::split_bottom(notebook_p nbk, view_p c) {
 	split->set_pack1(n);
 	if (c != nullptr) {
 		detach(c);
-		insert_window_in_notebook(c, n, true);
+		insert_window_in_notebook(c, n);
 	}
 	split->show();
 }
@@ -1639,7 +1637,7 @@ void page_t::notebook_close(notebook_p nbk) {
 //		if(i->has_focus())
 //			notebook_has_focus = true;
 		nbk->remove(i);
-		insert_window_in_notebook(i, nullptr, false);
+		insert_window_in_notebook(i, nullptr);
 	}
 
 	/**
@@ -1734,9 +1732,9 @@ void page_t::fullscreen_client_to_viewport(view_p c, viewport_p v) {
 	}
 }
 
-void page_t::bind_window(view_p mw, bool activate) {
+void page_t::bind_window(view_p mw) {
 	detach(mw);
-	insert_window_in_notebook(mw, nullptr, activate);
+	insert_window_in_notebook(mw, nullptr);
 }
 
 void page_t::unbind_window(view_p mw) {
@@ -1906,7 +1904,7 @@ void page_t::remove_viewport(workspace_p d, viewport_p v) {
 	/* Transfer clients to a valid notebook */
 	for (auto nbk : filter_class<notebook_t>(v->get_all_children())) {
 		for (auto c : filter_class<view_t>(nbk->children())) {
-			d->default_pop()->add_client(c, false);
+			d->default_pop()->add_client(c);
 		}
 	}
 
@@ -1974,9 +1972,14 @@ void page_t::manage_client(surface_t * s) {
 	/** case is notebook window **/
 
 	if(s->_transient_for == nullptr) {
-		bind_window(view, true);
+		bind_window(view);
 	} else {
 		insert_in_tree_using_transient_for(view);
+	}
+
+	weston_seat * seat;
+	wl_list_for_each(seat, &ec->seat_list, link) {
+		set_keyboard_focus(seat, view);
 	}
 
 	/** case is floating window **/
@@ -2003,7 +2006,7 @@ void page_t::manage_popup(surface_t * s) {
 		parent_view->add_popup_child(view, s->_x_offset, s->_y_offset);
 		sync_tree_view();
 		if(s->_seat) {
-			set_keyboard_focus(weston_seat_get_pointer(s->_seat), parent_view);
+			set_keyboard_focus(s->_seat, parent_view);
 
 			if(grab) {
 				grab->_surface->_has_popup_grab = false;
@@ -3234,7 +3237,7 @@ void page_t::switch_focused_to_notebook() {
 	if(_current_focus.expired())
 		return;
 	auto current = _current_focus.lock();
-	bind_window(current, true);
+	bind_window(current);
 }
 
 

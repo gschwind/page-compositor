@@ -55,8 +55,6 @@ struct buffer_manager_t {
 	std::map<uint32_t, buffer_t *> buffers;
 };
 
-void buffer_manager_main(int fd);
-
 }
 
 #endif /* SRC_BUFFER_MANAGER_HXX_ */

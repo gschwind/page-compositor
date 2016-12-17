@@ -166,7 +166,7 @@ create_cursors(buffer_manager_t *bm)
 
 	bm->cursor_theme = wl_cursor_theme_load(NULL, 32, bm->shm);
 	if (!bm->cursor_theme) {
-		fprintf(stderr, "could not load theme '%s'\n", NULL);
+		fprintf(stderr, "could not load theme '%s'\n", "null");
 		return;
 	}
 	bm->cursors = reinterpret_cast<wl_cursor **>(
@@ -422,8 +422,8 @@ os_create_anonymous_file(off_t size)
 		return -1;
 	}
 
-	asprintf(&name, "%s%s", path, tpl);
-	if (!name)
+	ret = asprintf(&name, "%s%s", path, tpl);
+	if (!name or ret < 0)
 		return -1;
 
 	weston_log("XXXX %s\n", name);

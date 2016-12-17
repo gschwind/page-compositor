@@ -293,12 +293,10 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 				or start_position.is_inside(x, y)) {
 			if(c->is(MANAGED_FLOATING)) {
 				ctx->detach(c);
-				ctx->insert_window_in_notebook(c, nullptr, true);
-			} else {
-				c->activate();
-				ctx->set_keyboard_focus(pointer, c);
+				ctx->insert_window_in_notebook(c, nullptr);
 			}
 
+			ctx->set_keyboard_focus(pointer->seat, c);
 			ctx->sync_tree_view();
 			ctx->grab_stop(pointer);
 			return;
@@ -311,9 +309,8 @@ void grab_bind_client_t::button(uint32_t time, uint32_t button, uint32_t state)
 				new_target->queue_redraw();
 				c->queue_redraw();
 				ctx->detach(c);
-				ctx->insert_window_in_notebook(c, new_target, true);
-				c->activate();
-				//ctx->set_focus(c, time);
+				ctx->insert_window_in_notebook(c, new_target);
+				ctx->set_keyboard_focus(pointer->seat, c);
 			}
 			break;
 		case NOTEBOOK_AREA_TOP:
