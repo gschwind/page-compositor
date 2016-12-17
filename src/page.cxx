@@ -412,19 +412,18 @@ page_t::~page_t() {
 	//cairo_debug_reset_static_data();
 }
 
-static int xxvprintf(const char * fmt, va_list args) {
-	static FILE * log = 0;
-	if(not log) {
-		log = fopen("/tmp/page-compositor.log", "w");
-	}
-
-	int ret = vfprintf(log, fmt, args);
-	fflush(log);
-	return ret;
-
+static FILE * g_logfile = nullptr;
+static int page_log_print(const char * fmt, va_list args) {
+	return vfprintf(g_logfile, fmt, args);
 }
 
 void page_t::run() {
+
+	if(g_logfile) {
+		fclose(g_logfile);
+	}
+
+	g_logfile = fopen(_conf.get_string("default", "log_file").c_str() ,"w");
 
 	/** initialize the empty desktop **/
 	_root = make_shared<page_root_t>(this);
@@ -476,7 +475,7 @@ void page_t::run() {
 	//_mainloop.run();
 
 
-    weston_log_set_handler(&xxvprintf, &xxvprintf);
+    weston_log_set_handler(&page_log_print, &page_log_print);
 
 	/* first create the wayland serveur */
 	_dpy = wl_display_create();
@@ -524,7 +523,7 @@ void page_t::run() {
 			&page_t::bind_xdg_shell_v5);
 	_global_xdg_shell_v6 = wl_global_create(_dpy, &zxdg_shell_v6_interface, 1, this,
 			&page_t::bind_xdg_shell_v6);
-	_global_buffer_manager = wl_global_create(_dpy, &zzz_buffer_manager_interface, 1, this, &page_t::bind_zzz_buffer_manager);
+	_global_buffer_manager = wl_global_create(_dpy, &::zzz_buffer_manager_interface, 1, this, &page_t::bind_zzz_buffer_manager);
 
 
 	connect_all();
